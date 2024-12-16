@@ -2,5 +2,15 @@
 
 .focusedElement {
     color: blue;
-    transition: 'color 0.3s ease';
-  }
+    transition: 'color 0.5s ease';
+}
+
+.App {
+    background-color: lightblue;
+    min-height: 100vh;
+    padding: 5rem;
+}
+
+.mockWebElement {
+    margin: 1rem;
+}
