@@ -8,6 +8,7 @@ import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
 import MockWebpage from "./MockWebpage.js";
 import WebsiteForm from "./WebsiteForm.js";
+import WebsiteIndex from "./WebsiteIndex.js";
 
 function App() {
   const [isURLInputFocused, setIsURLInputFocused] = useState(false);
@@ -48,6 +49,7 @@ function App() {
           </Grid>
         </Grid>
       </Paper>
+      <WebsiteIndex />
     </div>
   );
 }

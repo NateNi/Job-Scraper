@@ -14,3 +14,9 @@
 .mockWebElement {
     margin: 1rem;
 }
+
+.indexWebsiteIcon {
+    width: 2.125rem;
+    height: 2.125rem;
+    margin-right: 20px;
+}

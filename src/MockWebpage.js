@@ -4,6 +4,7 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import "./App.css";
+import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -36,10 +37,10 @@ export default function MockWebpage({
           borderBottom: "1px solid #ccc",
         }}
       >
-        <ArrowBackIcon sx={{ padding: "0.5rem" }} />
-        <ArrowForwardIcon sx={{ padding: "0.5rem" }} />
-        <RefreshIcon sx={{ padding: "0.5rem" }} />
-        <HomeIcon sx={{ padding: "0.5rem" }} />
+        <ArrowBackIcon sx={{ padding: "0.5rem", color: "#ccc" }} />
+        <ArrowForwardIcon sx={{ padding: "0.5rem", color: "#ccc" }} />
+        <RefreshIcon sx={{ padding: "0.5rem", color: "#ccc" }} />
+        <HomeIcon sx={{ padding: "0.5rem", color: "#ccc" }} />
 
         <Box
           sx={{
@@ -63,13 +64,15 @@ export default function MockWebpage({
           padding: "3rem",
         }}
       >
-        <h2>
+        <Typography variant="h4" sx={{ color: "#ccc" }}>
           Welcome to{" "}
           <span className={emphasizeCompany ? "focusedElement" : ""}>
             COMPANY
           </span>
-        </h2>
-        <h3>Job Results</h3>
+        </Typography>
+        <Typography variant="h5" sx={{ color: "#ccc" }}>
+          Job Results
+        </Typography>
         {[...Array(3)].map((value, index) => (
           <Box
             key={value}
