@@ -43,7 +43,7 @@ export default function WebsiteIndex() {
           }}
         >
           <img
-            src={`data:image/png;base64,${website.image}`}
+            src={`data:image/png;base64,${website.favicon}`}
             className="indexWebsiteIcon"
           />
           <Typography variant="h4" sx={{ display: "inline-block" }}>
