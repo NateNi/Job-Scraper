@@ -10,9 +10,18 @@ import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Fab from "@mui/material/Fab";
 import EditIcon from "@mui/icons-material/Edit";
+import AddIcon from "@mui/icons-material/Add";
 
-export default function WebsiteIndex() {
+export default function WebsiteIndex({
+  setVisibleComponent,
+  setCurrentWebsiteRecordId,
+}) {
   const [websites, setWebsites] = useState([]);
+
+  const setEditView = (websiteId) => {
+    setVisibleComponent("WebsiteEdit");
+    setCurrentWebsiteRecordId(websiteId);
+  };
 
   useEffect(() => {
     const fetchWebsites = async () => {
@@ -31,8 +40,18 @@ export default function WebsiteIndex() {
         maxWidth: "70%",
         marginLeft: "auto",
         marginRight: "auto",
+        textAlign: "right",
       }}
     >
+      <Fab
+        color="primary"
+        variant="extended"
+        sx={{ mb: "14px" }}
+        onClick={() => setVisibleComponent("WebsiteCreate")}
+      >
+        <AddIcon sx={{ mr: 1 }} />
+        New
+      </Fab>
       {[...websites].map((website, index) => (
         <Box
           sx={{
@@ -40,6 +59,7 @@ export default function WebsiteIndex() {
             borderRadius: "8px",
             border: "1px solid #ccc",
             marginBottom: "24px",
+            textAlign: "start",
           }}
         >
           <img
@@ -53,6 +73,7 @@ export default function WebsiteIndex() {
             color="secondary"
             aria-label="edit"
             sx={{ float: "right", backgroundColor: "#1976d2" }}
+            onClick={() => setEditView(website.id)}
           >
             <EditIcon />
           </Fab>

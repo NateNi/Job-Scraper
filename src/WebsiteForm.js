@@ -15,6 +15,8 @@ export default function WebsiteForm({
   setContainerFocus,
   setTitleFocus,
   setLinkFocus,
+  setVisibleComponent,
+  currentWebsiteRecordId = null,
 }) {
   const [websiteFormData, setWebsiteFormData] = useState({
     url: "",
@@ -28,15 +30,35 @@ export default function WebsiteForm({
   const createWebsiteSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(
-        "http://localhost:5000/website",
-        websiteFormData
-      );
-      console.log("Response:", response.data);
+      let response = null;
+      if (currentWebsiteRecordId) {
+        response = await axios.put(
+          "http://localhost:5000/website/" + currentWebsiteRecordId,
+          websiteFormData
+        );
+      } else {
+        response = await axios.post(
+          "http://localhost:5000/website",
+          websiteFormData
+        );
+      }
+      if (response.status == 200) {
+        setVisibleComponent("WebsiteIndex");
+      }
     } catch (error) {
       console.error("Error:", error);
     }
   };
+
+  useEffect(() => {
+    const fetchWebsite = async () => {
+      const response = await axios.get("/website/" + currentWebsiteRecordId);
+      setWebsiteFormData(response.data.website);
+    };
+    if (currentWebsiteRecordId) {
+      fetchWebsite();
+    }
+  }, []);
 
   const handleChange = (event) => {
     setWebsiteFormData({
@@ -59,6 +81,7 @@ export default function WebsiteForm({
           onFocus={() => setURLFocus(true)}
           onBlur={() => setURLFocus(false)}
           onChange={handleChange}
+          value={websiteFormData.url}
         />
 
         <TextField
@@ -71,6 +94,7 @@ export default function WebsiteForm({
           onFocus={() => setCompanyFocus(true)}
           onBlur={() => setCompanyFocus(false)}
           onChange={handleChange}
+          value={websiteFormData.company}
         />
 
         <TextField
@@ -83,6 +107,7 @@ export default function WebsiteForm({
           onFocus={() => setContainerFocus(true)}
           onBlur={() => setContainerFocus(false)}
           onChange={handleChange}
+          value={websiteFormData.containerXpath}
         />
 
         <TextField
@@ -95,6 +120,7 @@ export default function WebsiteForm({
           onFocus={() => setTitleFocus(true)}
           onBlur={() => setTitleFocus(false)}
           onChange={handleChange}
+          value={websiteFormData.titleXpath}
         />
 
         <TextField
@@ -107,6 +133,7 @@ export default function WebsiteForm({
           onFocus={() => setTitleFocus(true)}
           onBlur={() => setTitleFocus(false)}
           onChange={handleChange}
+          value={websiteFormData.titleAttribute}
         />
 
         <TextField
@@ -119,9 +146,16 @@ export default function WebsiteForm({
           onFocus={() => setLinkFocus(true)}
           onBlur={() => setLinkFocus(false)}
           onChange={handleChange}
+          value={websiteFormData.linkXpath}
         />
         <Button variant="contained" type="submit">
           Submit
+        </Button>
+        <Button
+          variant="contained"
+          onClick={() => setVisibleComponent("WebsiteIndex")}
+        >
+          Cancel
         </Button>
       </form>
     </Paper>
