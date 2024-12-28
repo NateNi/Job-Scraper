@@ -9,9 +9,14 @@ import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
 import MockWebpage from "./MockWebpage.js";
 import WebsiteForm from "./WebsiteForm.js";
+import Grow from "@mui/material/Grow";
 
 export default function WebsiteRecord({
   setVisibleComponent,
+  setOpenLoader,
+  setJobs,
+  setWebsiteFormData,
+  websiteFormData,
   currentWebsiteRecordId = null,
 }) {
   const [isURLInputFocused, setIsURLInputFocused] = useState(false);
@@ -21,37 +26,43 @@ export default function WebsiteRecord({
   const [isLinkInputFocused, setIsLinkInputFocused] = useState(false);
 
   return (
-    <Paper
-      elevation={24}
-      sx={{
-        padding: "4rem",
-        maxWidth: "70%",
-        marginLeft: "auto",
-        marginRight: "auto",
-      }}
-    >
-      <Grid container spacing={6}>
-        <Grid key={1} item xs={12} md={6}>
-          <WebsiteForm
-            setURLFocus={setIsURLInputFocused}
-            setCompanyFocus={setIsCompanyInputFocused}
-            setContainerFocus={setIsContainerInputFocused}
-            setTitleFocus={setIsTitleInputFocused}
-            setLinkFocus={setIsLinkInputFocused}
-            setVisibleComponent={setVisibleComponent}
-            currentWebsiteRecordId={currentWebsiteRecordId}
-          />
+    <Grow in={true}>
+      <Paper
+        elevation={24}
+        sx={{
+          padding: "4rem",
+          maxWidth: "70%",
+          marginLeft: "auto",
+          marginRight: "auto",
+        }}
+      >
+        <Grid container spacing={6}>
+          <Grid key={1} item xs={12} md={6}>
+            <WebsiteForm
+              setURLFocus={setIsURLInputFocused}
+              setCompanyFocus={setIsCompanyInputFocused}
+              setContainerFocus={setIsContainerInputFocused}
+              setTitleFocus={setIsTitleInputFocused}
+              setLinkFocus={setIsLinkInputFocused}
+              setVisibleComponent={setVisibleComponent}
+              setOpenLoader={setOpenLoader}
+              setJobs={setJobs}
+              setWebsiteFormData={setWebsiteFormData}
+              currentWebsiteRecordId={currentWebsiteRecordId}
+              websiteFormData={websiteFormData}
+            />
+          </Grid>
+          <Grid key={2} item xs={12} md={6}>
+            <MockWebpage
+              emphasizeURL={isURLInputFocused}
+              emphasizeCompany={isCompanyInputFocused}
+              emphasizeContainer={isContainerInputFocused}
+              emphasizeTitle={isTitleInputFocused}
+              emphasizeLink={isLinkInputFocused}
+            />
+          </Grid>
         </Grid>
-        <Grid key={2} item xs={12} md={6}>
-          <MockWebpage
-            emphasizeURL={isURLInputFocused}
-            emphasizeCompany={isCompanyInputFocused}
-            emphasizeContainer={isContainerInputFocused}
-            emphasizeTitle={isTitleInputFocused}
-            emphasizeLink={isLinkInputFocused}
-          />
-        </Grid>
-      </Grid>
-    </Paper>
+      </Paper>
+    </Grow>
   );
 }

@@ -16,38 +16,39 @@ export default function WebsiteForm({
   setTitleFocus,
   setLinkFocus,
   setVisibleComponent,
+  setOpenLoader,
+  setJobs,
+  setWebsiteFormData,
   currentWebsiteRecordId = null,
+  websiteFormData,
 }) {
-  const [websiteFormData, setWebsiteFormData] = useState({
-    url: "",
-    company: "",
-    containerXpath: "",
-    titleXpath: "",
-    titleAttribute: "",
-    linkXpath: "",
-  });
-
-  const createWebsiteSubmit = async (e) => {
+  const testWebsiteSubmit = async (e) => {
     e.preventDefault();
+    setOpenLoader(true);
     try {
       let response = null;
-      if (currentWebsiteRecordId) {
-        response = await axios.put(
-          "http://localhost:5000/website/" + currentWebsiteRecordId,
-          websiteFormData
-        );
-      } else {
-        response = await axios.post(
-          "http://localhost:5000/website",
-          websiteFormData
-        );
-      }
+      response = await axios.get(
+        "http://localhost:5000/website/test?url=" +
+          websiteFormData.url +
+          "&company=" +
+          websiteFormData.company +
+          "&containerXpath=" +
+          websiteFormData.containerXpath +
+          "&titleXpath=" +
+          websiteFormData.titleXpath +
+          "&titleAttribute=" +
+          websiteFormData.titleAttribute +
+          "&linkXpath=" +
+          websiteFormData.linkXpath
+      );
       if (response.status == 200) {
-        setVisibleComponent("WebsiteIndex");
+        setJobs(response.data.jobs);
+        setVisibleComponent("WebsiteTest");
       }
     } catch (error) {
       console.error("Error:", error);
     }
+    setOpenLoader(false);
   };
 
   useEffect(() => {
@@ -70,7 +71,7 @@ export default function WebsiteForm({
   return (
     <Paper elevation={24} sx={{ padding: "4rem" }}>
       <h2>Website Details</h2>
-      <form onSubmit={createWebsiteSubmit}>
+      <form onSubmit={testWebsiteSubmit}>
         <TextField
           id="outlined-basic"
           fullWidth
@@ -148,7 +149,7 @@ export default function WebsiteForm({
           onChange={handleChange}
           value={websiteFormData.linkXpath}
         />
-        <Button variant="contained" type="submit">
+        <Button variant="contained" type="submit" sx={{ marginRight: "1rem" }}>
           Submit
         </Button>
         <Button

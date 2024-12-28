@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 import sqlite3
 import requests
 import base64
+import time
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
@@ -14,11 +15,7 @@ from selenium.webdriver.support.ui import Select
 app = Flask(__name__)
 CORS(app)
 
-def getFavicon(url):
-    driver = webdriver.Chrome()
-    driver.get(url)
-    html = driver.page_source
-    driver.quit()
+def getFavicon(html):
     soup = BeautifulSoup(html, 'html.parser')
     favicon_tag = soup.find('link', rel=lambda rel: rel and 'icon' in rel.lower())
     if favicon_tag:
@@ -32,6 +29,37 @@ def getFavicon(url):
             return None
     return None
 
+def getJobs(url, company, containerXpath, titleXpath, linkXpath, titleAttribute):
+    jobs = []
+    driver = webdriver.Chrome()
+    driver.get(url)
+    # Wait for the JavaScript content to load
+    time.sleep(5)
+
+    jobContainers = driver.find_elements(By.XPATH, containerXpath)
+    for option in jobContainers:
+        try:
+            if (titleXpath):
+                titleElement = option.find_element(By.XPATH, titleXpath)
+                title = titleElement.get_attribute(titleAttribute) if titleAttribute else titleElement.text
+            else:
+                title = f'New {company} Job'
+            if (linkXpath):
+                link = option.find_element(By.XPATH, linkXpath).get_attribute('href')
+            else:
+                link = url
+            jobs.append({'title': title, 'link': link})
+        except NoSuchElementException:
+            print("Element not found")
+    driver.quit()
+    return jobs
+
+@app.route('/website/test', methods=['GET'])
+def test_website():
+    data = request.args.to_dict()
+    jobs = getJobs(data['url'], data['company'], data['containerXpath'], data['titleXpath'], data['linkXpath'], data['titleAttribute'])
+    return jsonify({'jobs': jobs})
+
 @app.route('/website', methods=['POST'])
 def create_website():
     data = request.get_json()
@@ -39,7 +67,11 @@ def create_website():
     cursor = conn.cursor()
     userId = 1
     channel = '#jobstest'
-    favicon = getFavicon(data['url'])
+    driver = webdriver.Chrome()
+    driver.get(data['url'])
+    html = driver.page_source
+    driver.close()
+    favicon = getFavicon(html)
     cursor.execute('''CREATE TABLE IF NOT EXISTS jobWebsites (id INTEGER PRIMARY KEY, userId INTEGER, url VARCHAR, favicon BLOB, company VARCHAR, channel VARCHAR, containerXpath VARCHAR, titleXpath VARCHAR, linkXpath VARCHAR, titleAttribute VARCHAR)''')
     cursor.execute('''INSERT INTO jobWebsites (url, userId, favicon, company, channel, containerXpath, titleXpath, linkXpath, titleAttribute) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ''', (data['url'], userId, favicon, data['company'], channel, data['containerXpath'], data['titleXpath'], data['linkXpath'], data['titleAttribute']))
     conn.commit()
