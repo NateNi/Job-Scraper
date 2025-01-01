@@ -21,6 +21,7 @@ function App() {
     titleAttribute: "",
     linkXpath: "",
   });
+  const [websiteFilterData, setWebsiteFilterData] = useState([]);
   const [openLoader, setOpenLoader] = useState(false);
   const [jobs, setJobs] = useState([]);
 
@@ -40,8 +41,10 @@ function App() {
             setVisibleComponent={setVisibleComponent}
             setOpenLoader={setOpenLoader}
             setJobs={setJobs}
+            websiteFilterData={websiteFilterData}
             websiteFormData={websiteFormData}
             setWebsiteFormData={setWebsiteFormData}
+            setWebsiteFilterData={setWebsiteFilterData}
           />
         );
       case "WebsiteEdit":
@@ -51,8 +54,10 @@ function App() {
             setOpenLoader={setOpenLoader}
             setJobs={setJobs}
             websiteFormData={websiteFormData}
+            websiteFilterData={websiteFilterData}
             currentWebsiteRecordId={currentWebsiteRecordId}
             setWebsiteFormData={setWebsiteFormData}
+            setWebsiteFilterData={setWebsiteFilterData}
           />
         );
       case "WebsiteTest":
@@ -63,6 +68,7 @@ function App() {
             currentWebsiteRecordId={currentWebsiteRecordId}
             websiteFormData={websiteFormData}
             setVisibleComponent={setVisibleComponent}
+            websiteFilterData={websiteFilterData}
           />
         );
       default:

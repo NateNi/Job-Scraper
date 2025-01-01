@@ -35,7 +35,6 @@ export default function WebsiteIndex({
 
     fetchWebsites();
   }, []);
-
   return (
     <Grow in={true}>
       <Paper
@@ -57,33 +56,47 @@ export default function WebsiteIndex({
           <AddIcon sx={{ mr: 1 }} />
           New
         </Fab>
-        {[...websites].map((website, index) => (
-          <Box
+
+        {websites.length == 0 ? (
+          <Typography
+            variant="h4"
             sx={{
-              padding: "24px 24px",
-              borderRadius: "8px",
-              border: "1px solid #ccc",
-              marginBottom: "24px",
-              textAlign: "start",
+              display: "block",
+              width: "100%",
+              textAlign: "center",
             }}
           >
-            <img
-              src={`data:image/png;base64,${website.favicon}`}
-              className="indexWebsiteIcon"
-            />
-            <Typography variant="h4" sx={{ display: "inline-block" }}>
-              {website.company}
-            </Typography>
-            <Fab
-              color="secondary"
-              aria-label="edit"
-              sx={{ float: "right", backgroundColor: "#1976d2" }}
-              onClick={() => setEditView(website.id)}
+            No Websites Added
+          </Typography>
+        ) : (
+          [...websites].map((website, index) => (
+            <Box
+              sx={{
+                padding: "24px 24px",
+                borderRadius: "8px",
+                border: "1px solid #ccc",
+                marginBottom: "24px",
+                textAlign: "start",
+              }}
             >
-              <EditIcon />
-            </Fab>
-          </Box>
-        ))}
+              <img
+                src={`data:image/png;base64,${website.favicon}`}
+                className="indexWebsiteIcon"
+              />
+              <Typography variant="h4" sx={{ display: "inline-block" }}>
+                {website.company}
+              </Typography>
+              <Fab
+                color="secondary"
+                aria-label="edit"
+                sx={{ float: "right", backgroundColor: "#1976d2" }}
+                onClick={() => setEditView(website.id)}
+              >
+                <EditIcon />
+              </Fab>
+            </Box>
+          ))
+        )}
       </Paper>
     </Grow>
   );

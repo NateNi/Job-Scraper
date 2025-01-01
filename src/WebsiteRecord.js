@@ -16,7 +16,9 @@ export default function WebsiteRecord({
   setOpenLoader,
   setJobs,
   setWebsiteFormData,
+  setWebsiteFilterData,
   websiteFormData,
+  websiteFilterData,
   currentWebsiteRecordId = null,
 }) {
   const [isURLInputFocused, setIsURLInputFocused] = useState(false);
@@ -47,9 +49,11 @@ export default function WebsiteRecord({
               setVisibleComponent={setVisibleComponent}
               setOpenLoader={setOpenLoader}
               setJobs={setJobs}
+              setWebsiteFilterData={setWebsiteFilterData}
               setWebsiteFormData={setWebsiteFormData}
               currentWebsiteRecordId={currentWebsiteRecordId}
               websiteFormData={websiteFormData}
+              websiteFilterData={websiteFilterData}
             />
           </Grid>
           <Grid key={2} item xs={12} md={6}>

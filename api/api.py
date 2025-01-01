@@ -29,12 +29,24 @@ def getFavicon(html):
             return None
     return None
 
-def getJobs(url, company, containerXpath, titleXpath, linkXpath, titleAttribute):
+def getJobs(url, company, containerXpath, titleXpath, linkXpath, titleAttribute, request):
     jobs = []
     driver = webdriver.Chrome()
     driver.get(url)
     # Wait for the JavaScript content to load
     time.sleep(5)
+
+    for key, value in request.args.items():
+        if key.startswith('filter') and '_filterXpath' in key:
+            filterName = key.split('_')[0]
+            filterXpath = value
+            type = request.args.get(f'{filterName}_type', '')
+            selectValue = request.args.get(f'{filterName}_selectValue', '')
+            match type:
+                case 'select':
+                    select = Select(driver.find_element(By.XPATH, filterXpath))
+                    select.select_by_value(selectValue)
+                    time.sleep(5)
 
     jobContainers = driver.find_elements(By.XPATH, containerXpath)
     for option in jobContainers:
@@ -57,7 +69,7 @@ def getJobs(url, company, containerXpath, titleXpath, linkXpath, titleAttribute)
 @app.route('/website/test', methods=['GET'])
 def test_website():
     data = request.args.to_dict()
-    jobs = getJobs(data['url'], data['company'], data['containerXpath'], data['titleXpath'], data['linkXpath'], data['titleAttribute'])
+    jobs = getJobs(data['url'], data['company'], data['containerXpath'], data['titleXpath'], data['linkXpath'], data['titleAttribute'], request)
     return jsonify({'jobs': jobs})
 
 @app.route('/website', methods=['POST'])
@@ -74,6 +86,10 @@ def create_website():
     favicon = getFavicon(html)
     cursor.execute('''CREATE TABLE IF NOT EXISTS jobWebsites (id INTEGER PRIMARY KEY, userId INTEGER, url VARCHAR, favicon BLOB, company VARCHAR, channel VARCHAR, containerXpath VARCHAR, titleXpath VARCHAR, linkXpath VARCHAR, titleAttribute VARCHAR)''')
     cursor.execute('''INSERT INTO jobWebsites (url, userId, favicon, company, channel, containerXpath, titleXpath, linkXpath, titleAttribute) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ''', (data['url'], userId, favicon, data['company'], channel, data['containerXpath'], data['titleXpath'], data['linkXpath'], data['titleAttribute']))
+    cursor.execute(''' CREATE TABLE IF NOT EXISTS jobWebsiteFilters (id INTEGER PRIMARY KEY, jobWebsiteId INT, filterXpath VARCHAR, selectValue VARCHAR, type VARCHAR) ''')
+    jobWebsiteId = cursor.lastrowid
+    for filter in data['filters']:
+        cursor.execute('INSERT INTO jobWebsiteFilters (jobWebsiteId, filterXpath, selectValue, type) VALUES (?, ?, ?, ?)', (jobWebsiteId, filter['filterXpath'], filter['selectValue'], filter['type']))
     conn.commit()
     conn.close()
     return jsonify({'success': 1})
@@ -113,6 +129,8 @@ def update_website(website_id):
     favicon = getFavicon(data['url'])
     cursor.execute('''CREATE TABLE IF NOT EXISTS jobWebsites (id INTEGER PRIMARY KEY, userId INTEGER, url VARCHAR, favicon BLOB, company VARCHAR, channel VARCHAR, containerXpath VARCHAR, titleXpath VARCHAR, linkXpath VARCHAR, titleAttribute VARCHAR)''')
     cursor.execute('''UPDATE jobWebsites SET url = ?, userId = ?, favicon = ?, company = ?, channel = ?, containerXpath = ?, titleXpath = ?, linkXpath = ?, titleAttribute = ? WHERE id = ? ''', (data['url'], userId, favicon, data['company'], channel, data['containerXpath'], data['titleXpath'], data['linkXpath'], data['titleAttribute'], website_id))
+    cursor.execute(''' CREATE TABLE IF NOT EXISTS jobWebsiteFilters (id INTEGER PRIMARY KEY, jobWebsiteId INT, filterXpath VARCHAR, selectValue VARCHAR, type VARCHAR) ''')
+    cursor.execute(''' INSERT INTO jobWebsiteFilters (jobWebsiteId, filterXpath, selectValue, type) VALUES (3, './/*[@id="sortselect"]', 'Most recent', 'select') ''')
     conn.commit()
     conn.close()
     return jsonify({'success': 1})

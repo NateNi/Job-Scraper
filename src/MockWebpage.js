@@ -51,6 +51,7 @@ export default function MockWebpage({
             padding: "0.5rem",
             paddingLeft: "1rem",
             borderRadius: 50,
+            color: "#ccc",
           }}
         >
           Enter URL

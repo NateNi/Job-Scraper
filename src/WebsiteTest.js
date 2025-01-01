@@ -17,6 +17,7 @@ export default function WebsiteTest({
   currentWebsiteRecordId = null,
   websiteFormData,
   setVisibleComponent,
+  websiteFilterData,
 }) {
   const createWebsiteSubmit = async () => {
     setOpenLoader(true);
@@ -25,13 +26,13 @@ export default function WebsiteTest({
       if (currentWebsiteRecordId) {
         response = await axios.put(
           "http://localhost:5000/website/" + currentWebsiteRecordId,
-          websiteFormData
+          { ...websiteFormData, filters: websiteFilterData }
         );
       } else {
-        response = await axios.post(
-          "http://localhost:5000/website",
-          websiteFormData
-        );
+        response = await axios.post("http://localhost:5000/website", {
+          ...websiteFormData,
+          filters: websiteFilterData,
+        });
       }
       if (response.status == 200) {
         setVisibleComponent("WebsiteIndex");
