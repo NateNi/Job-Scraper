@@ -37,7 +37,7 @@ def getJobs(url, company, containerXpath, titleXpath, linkXpath, titleAttribute,
     time.sleep(5)
 
     for key, value in request.args.items():
-        if key.startswith('filter') and '_filterXpath' in key:
+        if (key.startswith('filter') or key.startswith('newFilter')) and '_filterXpath' in key:
             filterName = key.split('_')[0]
             filterXpath = value
             type = request.args.get(f'{filterName}_type', '')
@@ -104,7 +104,7 @@ def get_websites():
     conn.close()
     websites = []
     for row in jobWebsitesResults:
-        image_base64 = base64.b64encode(row[3]).decode('utf-8')
+        image_base64 = base64.b64encode(row[3]).decode('utf-8') if row[3] is not None else None
         websites.append({'id': row[0], 'userId': row[1], 'url': row[2], 'favicon': image_base64, 'company': row[4], 'channel': row[5], 'containerXpath': row[6], 'titleXpath': row[7], 'linkXpath': row[8], 'titleAttribute': row[9]})
     return jsonify({'websites': websites})
 
@@ -114,10 +114,13 @@ def edit_website(website_id):
     cursor = conn.cursor()
     cursor.execute('''SELECT * FROM jobWebsites WHERE id = ? ''', (website_id,))
     websiteResult = cursor.fetchone()
+    cursor.execute('''SELECT * FROM jobWebsiteFilters WHERE jobWebsiteId = ? ''', (website_id,))
+    filterResults = cursor.fetchall()
     conn.commit()
     conn.close()
     website = {'id': websiteResult[0], 'userId': websiteResult[1], 'url': websiteResult[2], 'company' : websiteResult[4], 'channel': websiteResult[5], 'containerXpath': websiteResult[6], 'titleXpath': websiteResult[7], 'linkXpath': websiteResult[8], 'titleAttribute' : websiteResult[9]}
-    return jsonify({'website': website})
+    filters = [{'id': filterResult[0], 'filterXpath': filterResult[2], 'selectValue': filterResult[3], 'type': filterResult[4]} for filterResult in filterResults]
+    return jsonify({'website': website, 'filters': filters})
 
 @app.route('/website/<int:website_id>', methods=['PUT'])
 def update_website(website_id):
@@ -126,11 +129,30 @@ def update_website(website_id):
     cursor = conn.cursor()
     userId = 1
     channel = '#jobstest'
-    favicon = getFavicon(data['url'])
+    driver = webdriver.Chrome()
+    driver.get(data['url'])
+    html = driver.page_source
+    driver.close()
+    favicon = getFavicon(html)
     cursor.execute('''CREATE TABLE IF NOT EXISTS jobWebsites (id INTEGER PRIMARY KEY, userId INTEGER, url VARCHAR, favicon BLOB, company VARCHAR, channel VARCHAR, containerXpath VARCHAR, titleXpath VARCHAR, linkXpath VARCHAR, titleAttribute VARCHAR)''')
     cursor.execute('''UPDATE jobWebsites SET url = ?, userId = ?, favicon = ?, company = ?, channel = ?, containerXpath = ?, titleXpath = ?, linkXpath = ?, titleAttribute = ? WHERE id = ? ''', (data['url'], userId, favicon, data['company'], channel, data['containerXpath'], data['titleXpath'], data['linkXpath'], data['titleAttribute'], website_id))
-    cursor.execute(''' CREATE TABLE IF NOT EXISTS jobWebsiteFilters (id INTEGER PRIMARY KEY, jobWebsiteId INT, filterXpath VARCHAR, selectValue VARCHAR, type VARCHAR) ''')
-    cursor.execute(''' INSERT INTO jobWebsiteFilters (jobWebsiteId, filterXpath, selectValue, type) VALUES (3, './/*[@id="sortselect"]', 'Most recent', 'select') ''')
+    for filter in data['newFilters']:
+        cursor.execute('INSERT INTO jobWebsiteFilters (jobWebsiteId, filterXpath, selectValue, type) VALUES (?, ?, ?, ?)', (website_id, filter['filterXpath'], filter['selectValue'], filter['type']))
+    filterIds = {filter["id"] for filter in data['filters']}
+    cursor.execute("SELECT id FROM jobWebsiteFilters WHERE jobWebsiteId = ?", (website_id,))
+    existingFilterIds = {row[0] for row in cursor.fetchall()}
+    idsToDelete = existingFilterIds - filterIds
+    if idsToDelete:
+        cursor.execute(
+            f"DELETE FROM jobWebsiteFilters WHERE id IN ({','.join(['?'] * len(idsToDelete))}) AND jobWebsiteId = ?",
+            tuple(idsToDelete) + (website_id,)
+        )
+    for filter in data['filters']:
+        cursor.execute(
+            "UPDATE jobWebsiteFilters SET (filterXpath = ?, type = ?, selectValue = ?) WHERE id = ?",
+            (filter['filterXpath'], filter['type'], filter['selectValue'], filter['id'])
+        )
+
     conn.commit()
     conn.close()
     return jsonify({'success': 1})
