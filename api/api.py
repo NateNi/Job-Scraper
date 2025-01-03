@@ -15,6 +15,8 @@ from selenium.webdriver.support.ui import Select
 app = Flask(__name__)
 CORS(app)
 
+webpageSourceData = None
+
 def getFavicon(html):
     soup = BeautifulSoup(html, 'html.parser')
     favicon_tag = soup.find('link', rel=lambda rel: rel and 'icon' in rel.lower())
@@ -63,6 +65,8 @@ def getJobs(url, company, containerXpath, titleXpath, linkXpath, titleAttribute,
             jobs.append({'title': title, 'link': link})
         except NoSuchElementException:
             print("Element not found")
+    global webpageSourceData 
+    webpageSourceData = driver.page_source
     driver.quit()
     return jobs
 
@@ -79,11 +83,7 @@ def create_website():
     cursor = conn.cursor()
     userId = 1
     channel = '#jobstest'
-    driver = webdriver.Chrome()
-    driver.get(data['url'])
-    html = driver.page_source
-    driver.close()
-    favicon = getFavicon(html)
+    favicon = getFavicon(webpageSourceData)
     cursor.execute('''CREATE TABLE IF NOT EXISTS jobWebsites (id INTEGER PRIMARY KEY, userId INTEGER, url VARCHAR, favicon BLOB, company VARCHAR, channel VARCHAR, containerXpath VARCHAR, titleXpath VARCHAR, linkXpath VARCHAR, titleAttribute VARCHAR)''')
     cursor.execute('''INSERT INTO jobWebsites (url, userId, favicon, company, channel, containerXpath, titleXpath, linkXpath, titleAttribute) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ''', (data['url'], userId, favicon, data['company'], channel, data['containerXpath'], data['titleXpath'], data['linkXpath'], data['titleAttribute']))
     cursor.execute(''' CREATE TABLE IF NOT EXISTS jobWebsiteFilters (id INTEGER PRIMARY KEY, jobWebsiteId INT, filterXpath VARCHAR, selectValue VARCHAR, type VARCHAR) ''')
@@ -129,11 +129,7 @@ def update_website(website_id):
     cursor = conn.cursor()
     userId = 1
     channel = '#jobstest'
-    driver = webdriver.Chrome()
-    driver.get(data['url'])
-    html = driver.page_source
-    driver.close()
-    favicon = getFavicon(html)
+    favicon = getFavicon(webpageSourceData)
     cursor.execute('''CREATE TABLE IF NOT EXISTS jobWebsites (id INTEGER PRIMARY KEY, userId INTEGER, url VARCHAR, favicon BLOB, company VARCHAR, channel VARCHAR, containerXpath VARCHAR, titleXpath VARCHAR, linkXpath VARCHAR, titleAttribute VARCHAR)''')
     cursor.execute('''UPDATE jobWebsites SET url = ?, userId = ?, favicon = ?, company = ?, channel = ?, containerXpath = ?, titleXpath = ?, linkXpath = ?, titleAttribute = ? WHERE id = ? ''', (data['url'], userId, favicon, data['company'], channel, data['containerXpath'], data['titleXpath'], data['linkXpath'], data['titleAttribute'], website_id))
     for filter in data['newFilters']:
