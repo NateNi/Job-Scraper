@@ -74,7 +74,7 @@ export default function MockWebpage({
         <Typography variant="h5" sx={{ color: "#ccc" }}>
           Job Results
         </Typography>
-        {[...Array(3)].map((value, index) => (
+        {[1, 2, 3].map((value, index) => (
           <Box
             key={value}
             sx={{

@@ -12,6 +12,7 @@ import Fab from "@mui/material/Fab";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
 import Grow from "@mui/material/Grow";
+import Divider from "@mui/material/Divider";
 
 export default function WebsiteIndex({
   setVisibleComponent,
@@ -44,18 +45,51 @@ export default function WebsiteIndex({
           maxWidth: "70%",
           marginLeft: "auto",
           marginRight: "auto",
-          textAlign: "right",
         }}
       >
-        <Fab
-          color="primary"
-          variant="extended"
-          sx={{ mb: "14px" }}
-          onClick={() => setVisibleComponent("WebsiteCreate")}
+        <img
+          src={`${process.env.PUBLIC_URL}/ScraperLogo.png`}
+          className="websiteLogo"
+        />
+        <Typography
+          variant="h2"
+          sx={{
+            display: "inline-block",
+            textAlign: "left",
+          }}
         >
-          <AddIcon sx={{ mr: 1 }} />
-          New
-        </Fab>
+          Job Scraper
+        </Typography>
+        <Divider
+          orientation="horizontal"
+          flexItem
+          sx={{ marginTop: "1rem", marginBottom: "2rem" }}
+        />
+        <Box
+          sx={{
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: "1rem",
+          }}
+        >
+          <Typography
+            variant="h3"
+            sx={{
+              display: "inline-block",
+            }}
+          >
+            Websites
+          </Typography>
+          <Fab
+            color="primary"
+            sx={{ mb: "14px" }}
+            onClick={() => setVisibleComponent("WebsiteCreate")}
+          >
+            <AddIcon sx={{ fontSize: "2rem" }} />
+          </Fab>
+        </Box>
 
         {websites.length == 0 ? (
           <Typography
@@ -71,29 +105,41 @@ export default function WebsiteIndex({
         ) : (
           [...websites].map((website, index) => (
             <Box
+              key={website.id}
               sx={{
-                padding: "24px 24px",
+                padding: "24px 34px",
                 borderRadius: "8px",
                 border: "1px solid #ccc",
                 marginBottom: "24px",
                 textAlign: "start",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
               }}
             >
-              <img
-                src={
-                  website.favicon
-                    ? `data:image/png;base64,${website.favicon}`
-                    : `${process.env.PUBLIC_URL}/ScraperLogo.png`
-                }
-                className="indexWebsiteIcon"
-              />
-              <Typography variant="h4" sx={{ display: "inline-block" }}>
-                {website.company}
-              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <img
+                  src={
+                    website.favicon
+                      ? `data:image/png;base64,${website.favicon}`
+                      : `${process.env.PUBLIC_URL}/ScraperLogo.png`
+                  }
+                  className="indexWebsiteIcon"
+                />
+                <Typography variant="h4" sx={{ display: "inline-block" }}>
+                  {website.company}
+                </Typography>
+              </Box>
               <Fab
-                color="secondary"
+                color="primary"
                 aria-label="edit"
-                sx={{ float: "right", backgroundColor: "#1976d2" }}
+                sx={{ float: "right" }}
                 onClick={() => setEditView(website.id)}
               >
                 <EditIcon />

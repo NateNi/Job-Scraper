@@ -19,5 +19,19 @@
 .indexWebsiteIcon {
     width: 2.125rem;
     height: 2.125rem;
-    margin-right: 20px;
+    margin-right: 2rem;
+}
+
+.websiteLogo {
+    margin-right: 1.5rem;
+    width: 3rem;
+    height: 3rem;
+}
+
+.tooltipLink {
+    color: white !important;
+}
+
+.liSpacing {
+    margin-bottom: 0.5rem;
 }
