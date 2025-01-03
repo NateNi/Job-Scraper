@@ -18,6 +18,7 @@ export default function WebsiteTest({
   websiteFormData,
   setVisibleComponent,
   websiteFilterData,
+  websiteNewFilterData,
 }) {
   const createWebsiteSubmit = async () => {
     setOpenLoader(true);
@@ -26,12 +27,16 @@ export default function WebsiteTest({
       if (currentWebsiteRecordId) {
         response = await axios.put(
           "http://localhost:5000/website/" + currentWebsiteRecordId,
-          { ...websiteFormData, filters: websiteFilterData }
+          {
+            ...websiteFormData,
+            filters: websiteFilterData,
+            newFilters: websiteNewFilterData,
+          }
         );
       } else {
         response = await axios.post("http://localhost:5000/website", {
           ...websiteFormData,
-          filters: websiteFilterData,
+          filters: [...websiteFilterData, ...websiteNewFilterData],
         });
       }
       if (response.status == 200) {

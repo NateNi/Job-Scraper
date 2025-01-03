@@ -80,7 +80,11 @@ export default function WebsiteIndex({
               }}
             >
               <img
-                src={`data:image/png;base64,${website.favicon}`}
+                src={
+                  website.favicon
+                    ? `data:image/png;base64,${website.favicon}`
+                    : `${process.env.PUBLIC_URL}/ScraperLogo.png`
+                }
                 className="indexWebsiteIcon"
               />
               <Typography variant="h4" sx={{ display: "inline-block" }}>

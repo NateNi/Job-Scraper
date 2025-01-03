@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import axios from "axios";
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
@@ -27,9 +27,11 @@ export default function WebsiteForm({
   setJobs,
   setWebsiteFormData,
   setWebsiteFilterData,
+  setWebsiteNewFilterData,
   currentWebsiteRecordId = null,
   websiteFormData,
   websiteFilterData,
+  websiteNewFilterData,
 }) {
   const testWebsiteSubmit = async (e) => {
     e.preventDefault();
@@ -48,6 +50,18 @@ export default function WebsiteForm({
             )}`
         )
         .join("&");
+      const newFilterQueryString = websiteNewFilterData
+        .map(
+          (filter, index) =>
+            `newFilter${index + 1}_filterXpath=${encodeURIComponent(
+              filter.filterXpath
+            )}&newFilter${index + 1}_type=${encodeURIComponent(
+              filter.type
+            )}&newFilter${index + 1}_selectValue=${encodeURIComponent(
+              filter.selectValue
+            )}`
+        )
+        .join("&");
       response = await axios.get(
         "http://localhost:5000/website/test?url=" +
           websiteFormData.url +
@@ -62,9 +76,11 @@ export default function WebsiteForm({
           "&linkXpath=" +
           websiteFormData.linkXpath +
           "&" +
-          filterQueryString
+          filterQueryString +
+          "&" +
+          newFilterQueryString
       );
-      if (response.status == 200) {
+      if (response.status === 200) {
         setJobs(response.data.jobs);
         setVisibleComponent("WebsiteTest");
       }
@@ -78,9 +94,20 @@ export default function WebsiteForm({
     const fetchWebsite = async () => {
       const response = await axios.get("/website/" + currentWebsiteRecordId);
       setWebsiteFormData(response.data.website);
+      setWebsiteFilterData(response.data.filters);
     };
     if (currentWebsiteRecordId) {
       fetchWebsite();
+    } else {
+      setWebsiteFormData({
+        url: "",
+        company: "",
+        containerXpath: "",
+        titleXpath: "",
+        titleAttribute: "",
+        linkXpath: "",
+      });
+      setWebsiteFilterData([]);
     }
   }, []);
 
@@ -93,8 +120,8 @@ export default function WebsiteForm({
 
   const addNewFilter = () => {
     let maxFilterId = 0;
-    if (websiteFilterData.length > 0) {
-      let maxFilterIdRecord = websiteFilterData.reduce(function (
+    if (websiteNewFilterData.length > 0) {
+      let maxFilterIdRecord = websiteNewFilterData.reduce(function (
         prev,
         current
       ) {
@@ -102,8 +129,8 @@ export default function WebsiteForm({
       });
       maxFilterId = maxFilterIdRecord.id;
     }
-    setWebsiteFilterData([
-      ...websiteFilterData,
+    setWebsiteNewFilterData([
+      ...websiteNewFilterData,
       { id: maxFilterId + 1, filterXpath: "", type: "", selectValue: "" },
     ]);
   };
@@ -114,9 +141,23 @@ export default function WebsiteForm({
     );
   };
 
+  const removeNewFilter = (id) => {
+    setWebsiteNewFilterData(
+      websiteNewFilterData.filter((filter) => filter.id !== id)
+    );
+  };
+
   const handleFilterChange = (id, field, value) => {
     setWebsiteFilterData(
       websiteFilterData.map((filter) =>
+        filter.id === id ? { ...filter, [field]: value } : filter
+      )
+    );
+  };
+
+  const handleNewFilterChange = (id, field, value) => {
+    setWebsiteNewFilterData(
+      websiteNewFilterData.map((filter) =>
         filter.id === id ? { ...filter, [field]: value } : filter
       )
     );
@@ -249,7 +290,7 @@ export default function WebsiteForm({
               onChange={(e) =>
                 handleFilterChange(filter.id, "filterXpath", e.target.value)
               }
-              // value={websiteFormData.linkXpath}
+              value={filter.filterXpath}
             />
             <Select
               labelId="filter-type-label"
@@ -259,6 +300,68 @@ export default function WebsiteForm({
               sx={{ display: "block", marginBottom: "2rem" }}
               onChange={(e) =>
                 handleFilterChange(filter.id, "type", e.target.value)
+              }
+              value={filter.type}
+            >
+              <MenuItem value={"select"} selected={filter.type === "select"}>
+                Select
+              </MenuItem>
+            </Select>
+            <TextField
+              id="outlined-basic"
+              fullWidth
+              name="selectValue"
+              label="Select Value"
+              variant="outlined"
+              sx={{ display: "block" }}
+              onChange={(e) =>
+                handleFilterChange(filter.id, "selectValue", e.target.value)
+              }
+              value={filter.selectValue}
+            />
+          </Box>
+        ))}
+
+        {websiteNewFilterData.map((filter) => (
+          <Box
+            key={filter.id}
+            sx={{
+              padding: "24px 24px",
+              borderRadius: "8px",
+              border: "1px solid #ccc",
+              marginBottom: "24px",
+            }}
+          >
+            <Grid container spacing={6} sx={{ marginBottom: "1rem" }}>
+              <Grid key={1} item xs={12}>
+                <Fab
+                  color="primary"
+                  aria-label="remove"
+                  onClick={() => removeNewFilter(filter.id)}
+                >
+                  <DeleteIcon />
+                </Fab>
+              </Grid>
+            </Grid>
+            <TextField
+              id="outlined-basic"
+              fullWidth
+              name="filterXpath"
+              label="Filter Xpath"
+              variant="outlined"
+              sx={{ display: "block", marginBottom: "2rem" }}
+              onChange={(e) =>
+                handleNewFilterChange(filter.id, "filterXpath", e.target.value)
+              }
+            />
+            <Select
+              labelId="filter-type-label"
+              id="type"
+              //value={age}
+              label="Filter Type"
+              sx={{ display: "block", marginBottom: "2rem" }}
+              onChange={(e) =>
+                handleNewFilterChange(filter.id, "type", e.target.value)
               }
             >
               <MenuItem value={"select"}>Select</MenuItem>
@@ -271,9 +374,8 @@ export default function WebsiteForm({
               variant="outlined"
               sx={{ display: "block" }}
               onChange={(e) =>
-                handleFilterChange(filter.id, "selectValue", e.target.value)
+                handleNewFilterChange(filter.id, "selectValue", e.target.value)
               }
-              // value={websiteFormData.linkXpath}
             />
           </Box>
         ))}

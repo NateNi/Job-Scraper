@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useState } from "react";
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
@@ -17,8 +16,10 @@ export default function WebsiteRecord({
   setJobs,
   setWebsiteFormData,
   setWebsiteFilterData,
+  setWebsiteNewFilterData,
   websiteFormData,
   websiteFilterData,
+  websiteNewFilterData,
   currentWebsiteRecordId = null,
 }) {
   const [isURLInputFocused, setIsURLInputFocused] = useState(false);
@@ -50,10 +51,12 @@ export default function WebsiteRecord({
               setOpenLoader={setOpenLoader}
               setJobs={setJobs}
               setWebsiteFilterData={setWebsiteFilterData}
+              setWebsiteNewFilterData={setWebsiteNewFilterData}
               setWebsiteFormData={setWebsiteFormData}
               currentWebsiteRecordId={currentWebsiteRecordId}
               websiteFormData={websiteFormData}
               websiteFilterData={websiteFilterData}
+              websiteNewFilterData={websiteNewFilterData}
             />
           </Grid>
           <Grid key={2} item xs={12} md={6}>

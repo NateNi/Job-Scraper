@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
@@ -22,6 +22,7 @@ function App() {
     linkXpath: "",
   });
   const [websiteFilterData, setWebsiteFilterData] = useState([]);
+  const [websiteNewFilterData, setWebsiteNewFilterData] = useState([]);
   const [openLoader, setOpenLoader] = useState(false);
   const [jobs, setJobs] = useState([]);
 
@@ -42,9 +43,11 @@ function App() {
             setOpenLoader={setOpenLoader}
             setJobs={setJobs}
             websiteFilterData={websiteFilterData}
+            websiteNewFilterData={websiteNewFilterData}
             websiteFormData={websiteFormData}
             setWebsiteFormData={setWebsiteFormData}
             setWebsiteFilterData={setWebsiteFilterData}
+            setWebsiteNewFilterData={setWebsiteNewFilterData}
           />
         );
       case "WebsiteEdit":
@@ -55,9 +58,11 @@ function App() {
             setJobs={setJobs}
             websiteFormData={websiteFormData}
             websiteFilterData={websiteFilterData}
+            websiteNewFilterData={websiteNewFilterData}
             currentWebsiteRecordId={currentWebsiteRecordId}
             setWebsiteFormData={setWebsiteFormData}
             setWebsiteFilterData={setWebsiteFilterData}
+            setWebsiteNewFilterData={setWebsiteNewFilterData}
           />
         );
       case "WebsiteTest":
@@ -69,6 +74,7 @@ function App() {
             websiteFormData={websiteFormData}
             setVisibleComponent={setVisibleComponent}
             websiteFilterData={websiteFilterData}
+            websiteNewFilterData={websiteNewFilterData}
           />
         );
       default:
