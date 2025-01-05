@@ -8,6 +8,7 @@ import sqlite3
 import requests
 import base64
 import time
+import datetime
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
@@ -16,6 +17,7 @@ app = Flask(__name__)
 CORS(app)
 
 webpageSourceData = None
+jobResults = None
 
 def getFavicon(html):
     soup = BeautifulSoup(html, 'html.parser')
@@ -36,7 +38,7 @@ def getJobs(url, company, containerXpath, titleXpath, linkXpath, titleAttribute,
     driver = webdriver.Chrome()
     driver.get(url)
     # Wait for the JavaScript content to load
-    time.sleep(5)
+    time.sleep(4)
 
     for key, value in request.args.items():
         if (key.startswith('filter') or key.startswith('newFilter')) and '_filterXpath' in key:
@@ -67,6 +69,8 @@ def getJobs(url, company, containerXpath, titleXpath, linkXpath, titleAttribute,
             print("Element not found")
     global webpageSourceData 
     webpageSourceData = driver.page_source
+    global jobResults
+    jobResults = jobs
     driver.quit()
     return jobs
 
@@ -90,6 +94,9 @@ def create_website():
     jobWebsiteId = cursor.lastrowid
     for filter in data['filters']:
         cursor.execute('INSERT INTO jobWebsiteFilters (jobWebsiteId, filterXpath, selectValue, type) VALUES (?, ?, ?, ?)', (jobWebsiteId, filter['filterXpath'], filter['selectValue'], filter['type']))
+    cursor.execute('''CREATE TABLE IF NOT EXISTS jobLinks (id INTEGER PRIMARY KEY, link VARCHAR, title VARCHAR, jobWebsiteId INTEGER, created_at TIMESTAMP)''')
+    for job in jobResults:
+        cursor.execute(f"INSERT OR IGNORE INTO jobLinks(link, title, jobWebsiteId, created_at) VALUES(?, ?, ?, ?)", (job['link'], job['title'], jobWebsiteId, datetime.datetime.now()))
     conn.commit()
     conn.close()
     return jsonify({'success': 1})
@@ -107,6 +114,21 @@ def get_websites():
         image_base64 = base64.b64encode(row[3]).decode('utf-8') if row[3] is not None else None
         websites.append({'id': row[0], 'userId': row[1], 'url': row[2], 'favicon': image_base64, 'company': row[4], 'channel': row[5], 'containerXpath': row[6], 'titleXpath': row[7], 'linkXpath': row[8], 'titleAttribute': row[9]})
     return jsonify({'websites': websites})
+
+@app.route('/links/<int:website_id>', methods=['GET'])
+def get_links_list(website_id):
+    conn = sqlite3.connect('jobs.db')
+    cursor = conn.cursor()
+    cursor.execute('''CREATE TABLE IF NOT EXISTS jobLinks (id INTEGER PRIMARY KEY, link VARCHAR, title VARCHAR, jobWebsiteId INTEGER, created_at TIMESTAMP)''')
+    cursor.execute(f"SELECT * FROM jobLinks where jobWebsiteId = '{website_id}' ")
+    previouslySentLinkResults = cursor.fetchall()
+    conn.commit()
+    conn.close()
+    links = []
+    for row in previouslySentLinkResults:
+        links.append({'id': row[0], 'link': row[1], 'title': row[2], 'created_at': datetime.datetime.strptime(row[4], "%Y-%m-%d %H:%M:%S.%f").strftime("%m/%d/%Y %I:%M %p")})
+    print(links)
+    return jsonify({'links': links})
 
 @app.route('/website/<int:website_id>', methods=['GET'])
 def edit_website(website_id):
@@ -148,7 +170,14 @@ def update_website(website_id):
             "UPDATE jobWebsiteFilters SET (filterXpath = ?, type = ?, selectValue = ?) WHERE id = ?",
             (filter['filterXpath'], filter['type'], filter['selectValue'], filter['id'])
         )
-
+    cursor.execute('''CREATE TABLE IF NOT EXISTS jobLinks (id INTEGER PRIMARY KEY, link VARCHAR, title VARCHAR, jobWebsiteId INTEGER)''')
+    cursor.execute(f"SELECT * FROM jobLinks where jobWebsiteId = '{website_id}' ")
+    previouslySentLinkResults = cursor.fetchall()
+    previouslySentLinks = [{'link': row[1], 'title': row[2]} for row in previouslySentLinkResults]
+    for job in jobResults:
+        jobDict = {'link': job['link'], 'title': job['title']}
+        if not [entry for entry in previouslySentLinks if all(entry.get(key) == value for key, value in jobDict.items())]:
+            cursor.execute("INSERT OR IGNORE INTO jobLinks(link, title, jobWebsiteId, created_at) VALUES(?, ?, ?, ?)", (job['link'], job['title'], website_id, datetime.datetime.now()))
     conn.commit()
     conn.close()
     return jsonify({'success': 1})
