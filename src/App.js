@@ -4,11 +4,11 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import "./App.css";
-import Backdrop from "@mui/material/Backdrop";
-import CircularProgress from "@mui/material/CircularProgress";
+import { Backdrop, CircularProgress } from "@mui/material";
 import WebsiteRecord from "./WebsiteRecord.js";
 import WebsiteIndex from "./WebsiteIndex.js";
 import WebsiteTest from "./WebsiteTest.js";
+import LinkList from "./LinkList.js";
 
 function App() {
   const [visibleComponent, setVisibleComponent] = useState("WebsiteIndex");
@@ -75,6 +75,16 @@ function App() {
             setVisibleComponent={setVisibleComponent}
             websiteFilterData={websiteFilterData}
             websiteNewFilterData={websiteNewFilterData}
+          />
+        );
+      case "LinkList":
+        return (
+          <LinkList
+            setVisibleComponent={setVisibleComponent}
+            setOpenLoader={setOpenLoader}
+            jobs={jobs}
+            setJobs={setJobs}
+            currentWebsiteRecordId={currentWebsiteRecordId}
           />
         );
       default:

@@ -5,14 +5,9 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import "./App.css";
-import Typography from "@mui/material/Typography";
-import Box from "@mui/material/Box";
-import Paper from "@mui/material/Paper";
-import Fab from "@mui/material/Fab";
-import EditIcon from "@mui/icons-material/Edit";
-import AddIcon from "@mui/icons-material/Add";
-import Grow from "@mui/material/Grow";
-import Divider from "@mui/material/Divider";
+import { Typography, Box, Paper, Fab, Grow, Divider } from "@mui/material";
+
+import { Edit, Add, List, Delete, PlayArrow } from "@mui/icons-material";
 
 export default function WebsiteIndex({
   setVisibleComponent,
@@ -25,6 +20,13 @@ export default function WebsiteIndex({
     setVisibleComponent("WebsiteEdit");
     setCurrentWebsiteRecordId(websiteId);
   };
+
+  const setLinkListView = (websiteId) => {
+    setVisibleComponent("LinkList");
+    setCurrentWebsiteRecordId(websiteId);
+  };
+
+  const runScraper = (websiteId) => {};
 
   useEffect(() => {
     const fetchWebsites = async () => {
@@ -87,7 +89,7 @@ export default function WebsiteIndex({
             sx={{ mb: "14px" }}
             onClick={() => setVisibleComponent("WebsiteCreate")}
           >
-            <AddIcon sx={{ fontSize: "2rem" }} />
+            <Add sx={{ fontSize: "2rem" }} />
           </Fab>
         </Box>
 
@@ -136,14 +138,35 @@ export default function WebsiteIndex({
                   {website.company}
                 </Typography>
               </Box>
-              <Fab
-                color="primary"
-                aria-label="edit"
-                sx={{ float: "right" }}
-                onClick={() => setEditView(website.id)}
-              >
-                <EditIcon />
-              </Fab>
+              <Box>
+                <Fab
+                  color="primary"
+                  aria-label="run"
+                  sx={{ marginRight: "1rem" }}
+                  onClick={() => runScraper(website.id)}
+                >
+                  <PlayArrow />
+                </Fab>
+                <Fab
+                  color="primary"
+                  aria-label="history"
+                  sx={{ marginRight: "1rem" }}
+                  onClick={() => setLinkListView(website.id)}
+                >
+                  <List />
+                </Fab>
+                <Fab
+                  color="primary"
+                  aria-label="edit"
+                  sx={{ marginRight: "1rem" }}
+                  onClick={() => setEditView(website.id)}
+                >
+                  <Edit />
+                </Fab>
+                <Fab color="secondary" aria-label="delete">
+                  <Delete />
+                </Fab>
+              </Box>
             </Box>
           ))
         )}

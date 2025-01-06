@@ -6,18 +6,19 @@ import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import "./App.css";
 import { styled } from "@mui/material/styles";
-import Paper from "@mui/material/Paper";
-import TextField from "@mui/material/TextField";
-import Button from "@mui/material/Button";
-import Box from "@mui/material/Box";
-import Fab from "@mui/material/Fab";
-import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
-import AddIcon from "@mui/icons-material/Add";
-import DeleteIcon from "@mui/icons-material/Delete";
-import Grid from "@mui/material/Grid";
+import {
+  Paper,
+  TextField,
+  Button,
+  Box,
+  Fab,
+  MenuItem,
+  Select,
+  Grid,
+  Typography,
+} from "@mui/material";
+import { Delete, Add } from "@mui/icons-material";
 import Tooltip, { tooltipClasses } from "@mui/material/Tooltip";
-import { Typography } from "@mui/material";
 
 export default function WebsiteForm({
   setURLFocus,
@@ -25,6 +26,7 @@ export default function WebsiteForm({
   setContainerFocus,
   setTitleFocus,
   setLinkFocus,
+  setFilterFocus,
   setVisibleComponent,
   setOpenLoader,
   setJobs,
@@ -437,7 +439,7 @@ export default function WebsiteForm({
               aria-label="add"
               onClick={() => addNewFilter()}
             >
-              <AddIcon sx={{ marginRight: "0.5rem" }} />
+              <Add sx={{ marginRight: "0.5rem" }} />
               Filter
             </Fab>
           </HtmlTooltip>
@@ -467,7 +469,7 @@ export default function WebsiteForm({
                 aria-label="remove"
                 onClick={() => removeFilter(filter.id)}
               >
-                <DeleteIcon />
+                <Delete />
               </Fab>
             </Box>
             <HtmlTooltip
@@ -573,7 +575,7 @@ export default function WebsiteForm({
                 aria-label="remove"
                 onClick={() => removeNewFilter(filter.id)}
               >
-                <DeleteIcon />
+                <Delete />
               </Fab>
             </Box>
             <HtmlTooltip
@@ -608,6 +610,8 @@ export default function WebsiteForm({
                 label="Filter Xpath"
                 variant="outlined"
                 sx={{ display: "block", marginBottom: "2rem" }}
+                onFocus={() => setFilterFocus(true)}
+                onBlur={() => setFilterFocus(false)}
                 onChange={(e) =>
                   handleNewFilterChange(
                     filter.id,
@@ -649,6 +653,8 @@ export default function WebsiteForm({
                 label="Select Value"
                 variant="outlined"
                 sx={{ display: "block" }}
+                onFocus={() => setFilterFocus(true)}
+                onBlur={() => setFilterFocus(false)}
                 onChange={(e) =>
                   handleNewFilterChange(
                     filter.id,

@@ -4,13 +4,14 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import "./App.css";
-import Typography from "@mui/material/Typography";
-import Box from "@mui/material/Box";
-import Paper from "@mui/material/Paper";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import RefreshIcon from "@mui/icons-material/Refresh";
-import HomeIcon from "@mui/icons-material/Home";
+import { Typography, Box, Paper } from "@mui/material";
+import {
+  ArrowBack,
+  ArrowForward,
+  ArrowDropDown,
+  Refresh,
+  Home,
+} from "@mui/icons-material";
 
 export default function MockWebpage({
   emphasizeURL,
@@ -18,6 +19,7 @@ export default function MockWebpage({
   emphasizeContainer,
   emphasizeTitle,
   emphasizeLink,
+  emphasizeFilter,
 }) {
   return (
     <Paper
@@ -37,10 +39,10 @@ export default function MockWebpage({
           borderBottom: "1px solid #ccc",
         }}
       >
-        <ArrowBackIcon sx={{ padding: "0.5rem", color: "#ccc" }} />
-        <ArrowForwardIcon sx={{ padding: "0.5rem", color: "#ccc" }} />
-        <RefreshIcon sx={{ padding: "0.5rem", color: "#ccc" }} />
-        <HomeIcon sx={{ padding: "0.5rem", color: "#ccc" }} />
+        <ArrowBack sx={{ padding: "0.5rem", color: "#ccc" }} />
+        <ArrowForward sx={{ padding: "0.5rem", color: "#ccc" }} />
+        <Refresh sx={{ padding: "0.5rem", color: "#ccc" }} />
+        <Home sx={{ padding: "0.5rem", color: "#ccc" }} />
 
         <Box
           sx={{
@@ -65,15 +67,42 @@ export default function MockWebpage({
           padding: "3rem",
         }}
       >
-        <Typography variant="h4" sx={{ color: "#ccc" }}>
+        <Typography variant="h4" sx={{ color: "#ccc", marginBottom: "1rem" }}>
           Welcome to{" "}
           <span className={emphasizeCompany ? "focusedElement" : ""}>
             COMPANY
           </span>
         </Typography>
-        <Typography variant="h5" sx={{ color: "#ccc" }}>
-          Job Results
-        </Typography>
+        <Box
+          sx={{
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <Typography variant="h5" sx={{ color: "#ccc" }}>
+            Job Results
+          </Typography>
+          <Box
+            sx={{
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              padding: "8px 12px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              width: "150px",
+              marginBottom: "1rem",
+              border: `2px solid ${emphasizeFilter ? "blue" : "#ccc"}`,
+            }}
+          >
+            <Typography variant="body1" color="#ccc">
+              Sort
+            </Typography>
+            <ArrowDropDown color="action" />
+          </Box>
+        </Box>
         {[1, 2, 3].map((value, index) => (
           <Box
             key={value}

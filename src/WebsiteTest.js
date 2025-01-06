@@ -5,11 +5,7 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import "./App.css";
-import Typography from "@mui/material/Typography";
-import Box from "@mui/material/Box";
-import Paper from "@mui/material/Paper";
-import Grow from "@mui/material/Grow";
-import Button from "@mui/material/Button";
+import { Typography, Box, Paper, Grow, Button } from "@mui/material";
 
 export default function WebsiteTest({
   jobs,

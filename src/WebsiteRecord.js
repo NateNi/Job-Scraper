@@ -4,11 +4,9 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import "./App.css";
-import Grid from "@mui/material/Grid";
-import Paper from "@mui/material/Paper";
+import { Grid, Paper, Grow } from "@mui/material";
 import MockWebpage from "./MockWebpage.js";
 import WebsiteForm from "./WebsiteForm.js";
-import Grow from "@mui/material/Grow";
 
 export default function WebsiteRecord({
   setVisibleComponent,
@@ -27,6 +25,7 @@ export default function WebsiteRecord({
   const [isContainerInputFocused, setIsContainerInputFocused] = useState(false);
   const [isTitleInputFocused, setIsTitleInputFocused] = useState(false);
   const [isLinkInputFocused, setIsLinkInputFocused] = useState(false);
+  const [isFilterInputFocused, setIsFilterInputFocused] = useState(false);
 
   return (
     <Grow in={true}>
@@ -47,6 +46,7 @@ export default function WebsiteRecord({
               setContainerFocus={setIsContainerInputFocused}
               setTitleFocus={setIsTitleInputFocused}
               setLinkFocus={setIsLinkInputFocused}
+              setFilterFocus={setIsFilterInputFocused}
               setVisibleComponent={setVisibleComponent}
               setOpenLoader={setOpenLoader}
               setJobs={setJobs}
@@ -66,6 +66,7 @@ export default function WebsiteRecord({
               emphasizeContainer={isContainerInputFocused}
               emphasizeTitle={isTitleInputFocused}
               emphasizeLink={isLinkInputFocused}
+              emphasizeFilter={isFilterInputFocused}
             />
           </Grid>
         </Grid>
