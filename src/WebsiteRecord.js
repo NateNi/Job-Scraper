@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
@@ -20,12 +21,27 @@ export default function WebsiteRecord({
   websiteNewFilterData,
   currentWebsiteRecordId = null,
 }) {
-  const [isURLInputFocused, setIsURLInputFocused] = useState(false);
-  const [isCompanyInputFocused, setIsCompanyInputFocused] = useState(false);
-  const [isContainerInputFocused, setIsContainerInputFocused] = useState(false);
-  const [isTitleInputFocused, setIsTitleInputFocused] = useState(false);
-  const [isLinkInputFocused, setIsLinkInputFocused] = useState(false);
-  const [isFilterInputFocused, setIsFilterInputFocused] = useState(false);
+  const [focusedElement, setFocusedElement] = useState(null);
+  useEffect(() => {
+    const fetchWebsite = async () => {
+      const response = await axios.get("/website/" + currentWebsiteRecordId);
+      setWebsiteFormData(response.data.website);
+      setWebsiteFilterData(response.data.filters);
+    };
+    if (currentWebsiteRecordId) {
+      fetchWebsite();
+    } else {
+      setWebsiteFormData({
+        url: "",
+        company: "",
+        containerXpath: "",
+        titleXpath: "",
+        titleAttribute: "",
+        linkXpath: "",
+      });
+      setWebsiteFilterData([]);
+    }
+  }, []);
 
   return (
     <Grow in={true}>
@@ -41,12 +57,13 @@ export default function WebsiteRecord({
         <Grid container spacing={6}>
           <Grid key={1} item xs={12} md={6}>
             <WebsiteForm
-              setURLFocus={setIsURLInputFocused}
-              setCompanyFocus={setIsCompanyInputFocused}
-              setContainerFocus={setIsContainerInputFocused}
-              setTitleFocus={setIsTitleInputFocused}
-              setLinkFocus={setIsLinkInputFocused}
-              setFilterFocus={setIsFilterInputFocused}
+              // setURLFocus={setIsURLInputFocused}
+              // setCompanyFocus={setIsCompanyInputFocused}
+              // setContainerFocus={setIsContainerInputFocused}
+              // setTitleFocus={setIsTitleInputFocused}
+              // setLinkFocus={setIsLinkInputFocused}
+              // setFilterFocus={setIsFilterInputFocused}
+              setFocusedElement={setFocusedElement}
               setVisibleComponent={setVisibleComponent}
               setOpenLoader={setOpenLoader}
               setJobs={setJobs}
@@ -61,12 +78,13 @@ export default function WebsiteRecord({
           </Grid>
           <Grid key={2} item xs={12} md={6}>
             <MockWebpage
-              emphasizeURL={isURLInputFocused}
-              emphasizeCompany={isCompanyInputFocused}
-              emphasizeContainer={isContainerInputFocused}
-              emphasizeTitle={isTitleInputFocused}
-              emphasizeLink={isLinkInputFocused}
-              emphasizeFilter={isFilterInputFocused}
+              focusedElement={focusedElement}
+              // emphasizeURL={isURLInputFocused}
+              // emphasizeCompany={isCompanyInputFocused}
+              // emphasizeContainer={isContainerInputFocused}
+              // emphasizeTitle={isTitleInputFocused}
+              // emphasizeLink={isLinkInputFocused}
+              // emphasizeFilter={isFilterInputFocused}
             />
           </Grid>
         </Grid>

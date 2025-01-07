@@ -14,12 +14,13 @@ import {
 } from "@mui/icons-material";
 
 export default function MockWebpage({
-  emphasizeURL,
-  emphasizeCompany,
-  emphasizeContainer,
-  emphasizeTitle,
-  emphasizeLink,
-  emphasizeFilter,
+  focusedElement,
+  // emphasizeURL,
+  // emphasizeCompany,
+  // emphasizeContainer,
+  // emphasizeTitle,
+  // emphasizeLink,
+  // emphasizeFilter,
 }) {
   return (
     <Paper
@@ -46,7 +47,7 @@ export default function MockWebpage({
 
         <Box
           sx={{
-            border: `2px solid ${emphasizeURL ? "blue" : "#ccc"}`,
+            border: `2px solid ${focusedElement == "url" ? "blue" : "#ccc"}`,
             transition: "border-color 0.5s ease",
             flexGrow: 1,
             mx: 2,
@@ -69,7 +70,7 @@ export default function MockWebpage({
       >
         <Typography variant="h4" sx={{ color: "#ccc", marginBottom: "1rem" }}>
           Welcome to{" "}
-          <span className={emphasizeCompany ? "focusedElement" : ""}>
+          <span className={focusedElement == "company" ? "focusedElement" : ""}>
             COMPANY
           </span>
         </Typography>
@@ -94,7 +95,9 @@ export default function MockWebpage({
               justifyContent: "space-between",
               width: "150px",
               marginBottom: "1rem",
-              border: `2px solid ${emphasizeFilter ? "blue" : "#ccc"}`,
+              border: `2px solid ${
+                focusedElement == "filter" ? "blue" : "#ccc"
+              }`,
             }}
           >
             <Typography variant="body1" color="#ccc">
@@ -112,7 +115,9 @@ export default function MockWebpage({
               alignItems: "center",
               padding: "10px",
               border: `${
-                emphasizeContainer ? "2px solid blue" : "1px solid #ccc"
+                focusedElement == "container"
+                  ? "2px solid blue"
+                  : "1px solid #ccc"
               }`,
               transition: "all 0.3s ease",
               borderRadius: "5px",
@@ -121,14 +126,16 @@ export default function MockWebpage({
           >
             <h4
               className={
-                (emphasizeTitle ? "focusedElement" : "") + " mockWebElement"
+                (focusedElement == "title" ? "focusedElement" : "") +
+                " mockWebElement"
               }
             >
               Job Title
             </h4>
             <p
               className={
-                (emphasizeLink ? "focusedElement" : "") + " mockWebElement"
+                (focusedElement == "link" ? "focusedElement" : "") +
+                " mockWebElement"
               }
             >
               <u>Click Here</u>

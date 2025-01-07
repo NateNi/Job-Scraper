@@ -21,12 +21,7 @@ import { Delete, Add } from "@mui/icons-material";
 import Tooltip, { tooltipClasses } from "@mui/material/Tooltip";
 
 export default function WebsiteForm({
-  setURLFocus,
-  setCompanyFocus,
-  setContainerFocus,
-  setTitleFocus,
-  setLinkFocus,
-  setFilterFocus,
+  setFocusedElement,
   setVisibleComponent,
   setOpenLoader,
   setJobs,
@@ -168,281 +163,98 @@ export default function WebsiteForm({
     );
   };
 
-  const HtmlTooltip = styled(({ className, ...props }) => (
-    <Tooltip {...props} classes={{ popper: className }} />
-  ))(({ theme }) => ({
-    [`& .MuiTooltip-arrow`]: {
-      color: "blue",
-    },
-    [`& .${tooltipClasses.tooltip}`]: {
-      backgroundColor: "blue",
-      color: "white",
-      maxWidth: 300,
-      fontSize: "1rem",
-      border: "1px solid blue",
-    },
-  }));
-
   return (
     <Paper elevation={24} sx={{ padding: "4rem" }}>
       <h2>Website Details</h2>
       <form onSubmit={testWebsiteSubmit}>
-        <HtmlTooltip
-          title={
-            <React.Fragment>
-              <Box sx={{ padding: "0.5rem 1rem" }}>
-                <p>The url for the website you wish to scrape.</p>
-                <p>
-                  <em>Hints:</em>
-                </p>
-                <ul>
-                  <li>
-                    Use the url generated after searching for any keywords,
-                    applying filters, and sorting the results. Take note if the
-                    url reflects these selections in its parameters
-                  </li>
-                </ul>
-              </Box>
-            </React.Fragment>
-          }
-          placement="right"
-          arrow
-        >
-          <TextField
-            id="urlField"
-            fullWidth
-            name="url"
-            label="Website Url"
-            variant="outlined"
-            sx={{ display: "block", marginBottom: "2rem" }}
-            onFocus={() => setURLFocus(true)}
-            onBlur={() => setURLFocus(false)}
-            onChange={handleChange}
-            value={websiteFormData.url}
-          />
-        </HtmlTooltip>
-        <HtmlTooltip
-          title={
-            <React.Fragment>
-              <Box sx={{ padding: "0.5rem 1rem" }}>
-                <p>The name you wish to associate with this url.</p>
-              </Box>
-            </React.Fragment>
-          }
-          placement="right"
-          arrow
-        >
-          <TextField
-            id="companyField"
-            fullWidth
-            name="company"
-            label="Company Name"
-            variant="outlined"
-            sx={{ display: "block", marginBottom: "2rem" }}
-            onFocus={() => setCompanyFocus(true)}
-            onBlur={() => setCompanyFocus(false)}
-            onChange={handleChange}
-            value={websiteFormData.company}
-          />
-        </HtmlTooltip>
-        <HtmlTooltip
-          title={
-            <React.Fragment>
-              <Box sx={{ padding: "0.5rem 1rem" }}>
-                <p>
-                  The Xpath to the common parent element that each job listing
-                  has on the page.
-                </p>
-                <p>
-                  <em>Hints:</em>
-                </p>
-                <ul>
-                  <li className="liSpacing">
-                    If the job title and link are within the same element on the
-                    page, this can serve as your container
-                  </li>
-                  <li>
-                    <a
-                      className="tooltipLink"
-                      target="_blank"
-                      href="https://www.w3schools.com/xml/xpath_syntax.asp"
-                    >
-                      Xpath Guide
-                    </a>
-                  </li>
-                </ul>
-              </Box>
-            </React.Fragment>
-          }
-          placement="right"
-          arrow
-        >
-          <TextField
-            id="containerXpathField"
-            fullWidth
-            name="containerXpath"
-            label="Container Xpath"
-            variant="outlined"
-            sx={{ display: "block", marginBottom: "2rem" }}
-            onFocus={() => setContainerFocus(true)}
-            onBlur={() => setContainerFocus(false)}
-            onChange={handleChange}
-            value={websiteFormData.containerXpath}
-          />
-        </HtmlTooltip>
-        <HtmlTooltip
-          title={
-            <React.Fragment>
-              <Box sx={{ padding: "0.5rem 1rem" }}>
-                <p>
-                  The Xpath to the element with the job title{" "}
-                  <em>relative to the container</em>.
-                </p>
-                <p>
-                  <em>Hints:</em>
-                </p>
-                <ul>
-                  <li className="liSpacing">
-                    If the job title and link are within the same element on the
-                    page, this Xpath should be "."
-                  </li>
-                  <li>
-                    <a
-                      className="tooltipLink"
-                      target="_blank"
-                      href="https://www.w3schools.com/xml/xpath_syntax.asp"
-                    >
-                      Xpath Guide
-                    </a>
-                  </li>
-                </ul>
-              </Box>
-            </React.Fragment>
-          }
-          placement="right"
-          arrow
-        >
-          <TextField
-            id="titleXpathField"
-            fullWidth
-            name="titleXpath"
-            label="Title Xpath"
-            variant="outlined"
-            sx={{ display: "block", marginBottom: "2rem" }}
-            onFocus={() => setTitleFocus(true)}
-            onBlur={() => setTitleFocus(false)}
-            onChange={handleChange}
-            value={websiteFormData.titleXpath}
-          />
-        </HtmlTooltip>
-        <HtmlTooltip
-          title={
-            <React.Fragment>
-              <Box sx={{ padding: "0.5rem 1rem" }}>
-                <p>
-                  The attribute of the element defined by the title Xpath that
-                  contains the job title.
-                </p>
-                <p>
-                  <em>Hints:</em>
-                </p>
-                <ul>
-                  <li className="liSpacing">This field is optional</li>
-                  <li>
-                    If no entry is provided, the text of the title Xpath element
-                    will be used for the job title.
-                  </li>
-                </ul>
-              </Box>
-            </React.Fragment>
-          }
-          placement="right"
-          arrow
-        >
-          <TextField
-            id="titleAttributeField"
-            fullWidth
-            name="titleAttribute"
-            label="Title Attribute (optional)"
-            variant="outlined"
-            sx={{ display: "block", marginBottom: "2rem" }}
-            onFocus={() => setTitleFocus(true)}
-            onBlur={() => setTitleFocus(false)}
-            onChange={handleChange}
-            value={websiteFormData.titleAttribute}
-          />
-        </HtmlTooltip>
-        <HtmlTooltip
-          title={
-            <React.Fragment>
-              <Box sx={{ padding: "0.5rem 1rem" }}>
-                <p>
-                  The Xpath to the element with the job link{" "}
-                  <em>relative to the container</em>.
-                </p>
-                <p>
-                  <em>Hints:</em>
-                </p>
-                <ul>
-                  <li className="liSpacing">
-                    If the job title and link are within the same element on the
-                    page, this Xpath should be "."
-                  </li>
-                  <li>
-                    <a
-                      className="tooltipLink"
-                      target="_blank"
-                      href="https://www.w3schools.com/xml/xpath_syntax.asp"
-                    >
-                      Xpath Guide
-                    </a>
-                  </li>
-                </ul>
-              </Box>
-            </React.Fragment>
-          }
-          placement="right"
-          arrow
-        >
-          <TextField
-            id="linkXpathField"
-            fullWidth
-            name="linkXpath"
-            label="Link Xpath"
-            variant="outlined"
-            sx={{ display: "block", marginBottom: "2rem" }}
-            onFocus={() => setLinkFocus(true)}
-            onBlur={() => setLinkFocus(false)}
-            onChange={handleChange}
-            value={websiteFormData.linkXpath}
-          />
-        </HtmlTooltip>
+        <TextField
+          id="urlField"
+          fullWidth
+          name="url"
+          label="Website Url"
+          variant="outlined"
+          sx={{ display: "block", marginBottom: "2rem" }}
+          onFocus={() => setFocusedElement("url")}
+          onBlur={() => setFocusedElement(null)}
+          onChange={handleChange}
+          value={websiteFormData.url}
+        />
+
+        <TextField
+          id="companyField"
+          fullWidth
+          name="company"
+          label="Company Name"
+          variant="outlined"
+          sx={{ display: "block", marginBottom: "2rem" }}
+          onFocus={() => setFocusedElement("company")}
+          onBlur={() => setFocusedElement(null)}
+          onChange={handleChange}
+          value={websiteFormData.company}
+        />
+
+        <TextField
+          id="containerXpathField"
+          fullWidth
+          name="containerXpath"
+          label="Container Xpath"
+          variant="outlined"
+          sx={{ display: "block", marginBottom: "2rem" }}
+          onFocus={() => setFocusedElement("container")}
+          onBlur={() => setFocusedElement(null)}
+          onChange={handleChange}
+          value={websiteFormData.containerXpath}
+        />
+
+        <TextField
+          id="titleXpathField"
+          fullWidth
+          name="titleXpath"
+          label="Title Xpath"
+          variant="outlined"
+          sx={{ display: "block", marginBottom: "2rem" }}
+          onFocus={() => setFocusedElement("title")}
+          onBlur={() => setFocusedElement(null)}
+          onChange={handleChange}
+          value={websiteFormData.titleXpath}
+        />
+
+        <TextField
+          id="titleAttributeField"
+          fullWidth
+          name="titleAttribute"
+          label="Title Attribute (optional)"
+          variant="outlined"
+          sx={{ display: "block", marginBottom: "2rem" }}
+          onFocus={() => setFocusedElement("title")}
+          onBlur={() => setFocusedElement(null)}
+          onChange={handleChange}
+          value={websiteFormData.titleAttribute}
+        />
+
+        <TextField
+          id="linkXpathField"
+          fullWidth
+          name="linkXpath"
+          label="Link Xpath"
+          variant="outlined"
+          sx={{ display: "block", marginBottom: "2rem" }}
+          onFocus={() => setFocusedElement("link")}
+          onBlur={handleChange}
+          onChange={handleChange}
+          value={websiteFormData.linkXpath}
+        />
 
         <Box sx={{ marginBottom: "2rem" }}>
-          <HtmlTooltip
-            title={
-              <React.Fragment>
-                <Box sx={{ padding: "0.5rem 1rem" }}>
-                  <p>
-                    Adds a filter that should be applied by interacting with the
-                    page (ex. sorting by "Most Recent").
-                  </p>
-                </Box>
-              </React.Fragment>
-            }
-            placement="right"
-            arrow
+          <Fab
+            color="primary"
+            variant="extended"
+            aria-label="add"
+            onClick={() => addNewFilter()}
           >
-            <Fab
-              color="primary"
-              variant="extended"
-              aria-label="add"
-              onClick={() => addNewFilter()}
-            >
-              <Add sx={{ marginRight: "0.5rem" }} />
-              Filter
-            </Fab>
-          </HtmlTooltip>
+            <Add sx={{ marginRight: "0.5rem" }} />
+            Filter
+          </Fab>
         </Box>
 
         {websiteFilterData.map((filter) => (
@@ -472,43 +284,19 @@ export default function WebsiteForm({
                 <Delete />
               </Fab>
             </Box>
-            <HtmlTooltip
-              title={
-                <React.Fragment>
-                  <Box sx={{ padding: "0.5rem 1rem" }}>
-                    <p>The Xpath to the filter element.</p>
-                    <p>
-                      <em>Hints:</em>
-                    </p>
-                    <ul>
-                      <li>
-                        <a
-                          className="tooltipLink"
-                          target="_blank"
-                          href="https://www.w3schools.com/xml/xpath_syntax.asp"
-                        >
-                          Xpath Guide
-                        </a>
-                      </li>
-                    </ul>
-                  </Box>
-                </React.Fragment>
+
+            <TextField
+              fullWidth
+              name="filterXpath"
+              label="Filter Xpath"
+              variant="outlined"
+              sx={{ display: "block", marginBottom: "2rem" }}
+              onChange={(e) =>
+                handleFilterChange(filter.id, "filterXpath", e.target.value)
               }
-              placement="right"
-              arrow
-            >
-              <TextField
-                fullWidth
-                name="filterXpath"
-                label="Filter Xpath"
-                variant="outlined"
-                sx={{ display: "block", marginBottom: "2rem" }}
-                onChange={(e) =>
-                  handleFilterChange(filter.id, "filterXpath", e.target.value)
-                }
-                value={filter.filterXpath}
-              />
-            </HtmlTooltip>
+              value={filter.filterXpath}
+            />
+
             <Select
               labelId="filter-type-label"
               name="type"
@@ -523,31 +311,18 @@ export default function WebsiteForm({
                 Select
               </MenuItem>
             </Select>
-            <HtmlTooltip
-              title={
-                <React.Fragment>
-                  <Box sx={{ padding: "0.5rem 1rem" }}>
-                    <p>
-                      The value of the option to use in the filter select box.
-                    </p>
-                  </Box>
-                </React.Fragment>
+
+            <TextField
+              fullWidth
+              name="selectValue"
+              label="Select Value"
+              variant="outlined"
+              sx={{ display: "block" }}
+              onChange={(e) =>
+                handleFilterChange(filter.id, "selectValue", e.target.value)
               }
-              placement="right"
-              arrow
-            >
-              <TextField
-                fullWidth
-                name="selectValue"
-                label="Select Value"
-                variant="outlined"
-                sx={{ display: "block" }}
-                onChange={(e) =>
-                  handleFilterChange(filter.id, "selectValue", e.target.value)
-                }
-                value={filter.selectValue}
-              />
-            </HtmlTooltip>
+              value={filter.selectValue}
+            />
           </Box>
         ))}
 
@@ -578,49 +353,21 @@ export default function WebsiteForm({
                 <Delete />
               </Fab>
             </Box>
-            <HtmlTooltip
-              title={
-                <React.Fragment>
-                  <Box sx={{ padding: "0.5rem 1rem" }}>
-                    <p>The Xpath to the filter element.</p>
-                    <p>
-                      <em>Hints:</em>
-                    </p>
-                    <ul>
-                      <li>
-                        <a
-                          className="tooltipLink"
-                          target="_blank"
-                          href="https://www.w3schools.com/xml/xpath_syntax.asp"
-                        >
-                          Xpath Guide
-                        </a>
-                      </li>
-                    </ul>
-                  </Box>
-                </React.Fragment>
+
+            <TextField
+              id="outlined-basic"
+              fullWidth
+              name="filterXpath"
+              label="Filter Xpath"
+              variant="outlined"
+              sx={{ display: "block", marginBottom: "2rem" }}
+              onFocus={() => setFocusedElement("filter")}
+              onBlur={() => setFocusedElement(null)}
+              onChange={(e) =>
+                handleNewFilterChange(filter.id, "filterXpath", e.target.value)
               }
-              placement="right"
-              arrow
-            >
-              <TextField
-                id="outlined-basic"
-                fullWidth
-                name="filterXpath"
-                label="Filter Xpath"
-                variant="outlined"
-                sx={{ display: "block", marginBottom: "2rem" }}
-                onFocus={() => setFilterFocus(true)}
-                onBlur={() => setFilterFocus(false)}
-                onChange={(e) =>
-                  handleNewFilterChange(
-                    filter.id,
-                    "filterXpath",
-                    e.target.value
-                  )
-                }
-              />
-            </HtmlTooltip>
+            />
+
             <Select
               labelId="filter-type-label"
               id="type"
@@ -633,37 +380,20 @@ export default function WebsiteForm({
             >
               <MenuItem value={"select"}>Select</MenuItem>
             </Select>
-            <HtmlTooltip
-              title={
-                <React.Fragment>
-                  <Box sx={{ padding: "0.5rem 1rem" }}>
-                    <p>
-                      The value of the option to use in the filter select box.
-                    </p>
-                  </Box>
-                </React.Fragment>
+
+            <TextField
+              id="outlined-basic"
+              fullWidth
+              name="selectValue"
+              label="Select Value"
+              variant="outlined"
+              sx={{ display: "block" }}
+              onFocus={() => setFocusedElement("filter")}
+              onBlur={() => setFocusedElement(null)}
+              onChange={(e) =>
+                handleNewFilterChange(filter.id, "selectValue", e.target.value)
               }
-              placement="right"
-              arrow
-            >
-              <TextField
-                id="outlined-basic"
-                fullWidth
-                name="selectValue"
-                label="Select Value"
-                variant="outlined"
-                sx={{ display: "block" }}
-                onFocus={() => setFilterFocus(true)}
-                onBlur={() => setFilterFocus(false)}
-                onChange={(e) =>
-                  handleNewFilterChange(
-                    filter.id,
-                    "selectValue",
-                    e.target.value
-                  )
-                }
-              />
-            </HtmlTooltip>
+            />
           </Box>
         ))}
         <Box sx={{ width: "100%", textAlign: "right" }}>
