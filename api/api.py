@@ -19,6 +19,10 @@ CORS(app)
 webpageSourceData = None
 jobResults = None
 
+CREATE_JOB_WEBSITES = '''CREATE TABLE IF NOT EXISTS jobWebsites (id INTEGER PRIMARY KEY, userId INTEGER, url VARCHAR, favicon BLOB, company VARCHAR, channel VARCHAR, containerXpath VARCHAR, titleXpath VARCHAR, linkXpath VARCHAR, titleAttribute VARCHAR)'''
+CREATE_JOB_WEBSITE_FILTERS = ''' CREATE TABLE IF NOT EXISTS jobWebsiteFilters (id INTEGER PRIMARY KEY, jobWebsiteId INT, filterXpath VARCHAR, selectValue VARCHAR, type VARCHAR, FOREIGN KEY ("jobWebsiteId") REFERENCES "jobWebsites"("id") ) '''
+CREATE_JOB_LINKS = '''CREATE TABLE IF NOT EXISTS jobLinks (id INTEGER PRIMARY KEY, link VARCHAR, title VARCHAR, jobWebsiteId INTEGER, viewed INTEGER, created_at TIMESTAMP, FOREIGN KEY ("jobWebsiteId") REFERENCES "jobWebsites"("id"))'''
+
 def getFavicon(html):
     soup = BeautifulSoup(html, 'html.parser')
     favicon_tag = soup.find('link', rel=lambda rel: rel and 'icon' in rel.lower())
@@ -88,15 +92,12 @@ def create_website():
     userId = 1
     channel = '#jobstest'
     favicon = getFavicon(webpageSourceData)
-    cursor.execute('''CREATE TABLE IF NOT EXISTS jobWebsites (id INTEGER PRIMARY KEY, userId INTEGER, url VARCHAR, favicon BLOB, company VARCHAR, channel VARCHAR, containerXpath VARCHAR, titleXpath VARCHAR, linkXpath VARCHAR, titleAttribute VARCHAR)''')
     cursor.execute('''INSERT INTO jobWebsites (url, userId, favicon, company, channel, containerXpath, titleXpath, linkXpath, titleAttribute) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ''', (data['url'], userId, favicon, data['company'], channel, data['containerXpath'], data['titleXpath'], data['linkXpath'], data['titleAttribute']))
-    cursor.execute(''' CREATE TABLE IF NOT EXISTS jobWebsiteFilters (id INTEGER PRIMARY KEY, jobWebsiteId INT, filterXpath VARCHAR, selectValue VARCHAR, type VARCHAR) ''')
     jobWebsiteId = cursor.lastrowid
     for filter in data['filters']:
         cursor.execute('INSERT INTO jobWebsiteFilters (jobWebsiteId, filterXpath, selectValue, type) VALUES (?, ?, ?, ?)', (jobWebsiteId, filter['filterXpath'], filter['selectValue'], filter['type']))
-    cursor.execute('''CREATE TABLE IF NOT EXISTS jobLinks (id INTEGER PRIMARY KEY, link VARCHAR, title VARCHAR, jobWebsiteId INTEGER, created_at TIMESTAMP)''')
     for job in jobResults:
-        cursor.execute(f"INSERT OR IGNORE INTO jobLinks(link, title, jobWebsiteId, created_at) VALUES(?, ?, ?, ?)", (job['link'], job['title'], jobWebsiteId, datetime.datetime.now()))
+        cursor.execute(f"INSERT OR IGNORE INTO jobLinks(link, title, jobWebsiteId, viewed, created_at) VALUES(?, ?, ?, ?, ?)", (job['link'], job['title'], jobWebsiteId, 0, datetime.datetime.now()))
     conn.commit()
     conn.close()
     return jsonify({'success': 1})
@@ -105,6 +106,9 @@ def create_website():
 def get_websites():
     conn = sqlite3.connect('jobs.db')
     cursor = conn.cursor()
+    cursor.execute(CREATE_JOB_WEBSITES)
+    cursor.execute(CREATE_JOB_WEBSITE_FILTERS)
+    cursor.execute(CREATE_JOB_LINKS)
     cursor.execute('''SELECT * FROM jobWebsites''')
     jobWebsitesResults = cursor.fetchall()
     conn.commit()
@@ -119,14 +123,14 @@ def get_websites():
 def get_links_list(website_id):
     conn = sqlite3.connect('jobs.db')
     cursor = conn.cursor()
-    cursor.execute('''CREATE TABLE IF NOT EXISTS jobLinks (id INTEGER PRIMARY KEY, link VARCHAR, title VARCHAR, jobWebsiteId INTEGER, created_at TIMESTAMP)''')
     cursor.execute(f"SELECT * FROM jobLinks where jobWebsiteId = '{website_id}' ")
     previouslySentLinkResults = cursor.fetchall()
+    cursor.execute('''UPDATE jobLinks SET viewed = 1 WHERE jobWebsiteId = ?''', (website_id,))
     conn.commit()
     conn.close()
     links = []
     for row in previouslySentLinkResults:
-        links.append({'id': row[0], 'link': row[1], 'title': row[2], 'created_at': datetime.datetime.strptime(row[4], "%Y-%m-%d %H:%M:%S.%f").strftime("%m/%d/%Y %I:%M %p")})
+        links.append({'id': row[0], 'link': row[1], 'title': row[2], 'viewed': row[4], 'created_at': datetime.datetime.strptime(row[5], "%Y-%m-%d %H:%M:%S.%f").strftime("%m/%d/%Y %I:%M %p")})
     print(links)
     return jsonify({'links': links})
 
@@ -152,7 +156,6 @@ def update_website(website_id):
     userId = 1
     channel = '#jobstest'
     favicon = getFavicon(webpageSourceData)
-    cursor.execute('''CREATE TABLE IF NOT EXISTS jobWebsites (id INTEGER PRIMARY KEY, userId INTEGER, url VARCHAR, favicon BLOB, company VARCHAR, channel VARCHAR, containerXpath VARCHAR, titleXpath VARCHAR, linkXpath VARCHAR, titleAttribute VARCHAR)''')
     cursor.execute('''UPDATE jobWebsites SET url = ?, userId = ?, favicon = ?, company = ?, channel = ?, containerXpath = ?, titleXpath = ?, linkXpath = ?, titleAttribute = ? WHERE id = ? ''', (data['url'], userId, favicon, data['company'], channel, data['containerXpath'], data['titleXpath'], data['linkXpath'], data['titleAttribute'], website_id))
     for filter in data['newFilters']:
         cursor.execute('INSERT INTO jobWebsiteFilters (jobWebsiteId, filterXpath, selectValue, type) VALUES (?, ?, ?, ?)', (website_id, filter['filterXpath'], filter['selectValue'], filter['type']))
@@ -170,14 +173,13 @@ def update_website(website_id):
             "UPDATE jobWebsiteFilters SET (filterXpath = ?, type = ?, selectValue = ?) WHERE id = ?",
             (filter['filterXpath'], filter['type'], filter['selectValue'], filter['id'])
         )
-    cursor.execute('''CREATE TABLE IF NOT EXISTS jobLinks (id INTEGER PRIMARY KEY, link VARCHAR, title VARCHAR, jobWebsiteId INTEGER)''')
     cursor.execute(f"SELECT * FROM jobLinks where jobWebsiteId = '{website_id}' ")
     previouslySentLinkResults = cursor.fetchall()
     previouslySentLinks = [{'link': row[1], 'title': row[2]} for row in previouslySentLinkResults]
     for job in jobResults:
         jobDict = {'link': job['link'], 'title': job['title']}
         if not [entry for entry in previouslySentLinks if all(entry.get(key) == value for key, value in jobDict.items())]:
-            cursor.execute("INSERT OR IGNORE INTO jobLinks(link, title, jobWebsiteId, created_at) VALUES(?, ?, ?, ?)", (job['link'], job['title'], website_id, datetime.datetime.now()))
+            cursor.execute("INSERT OR IGNORE INTO jobLinks(link, title, jobWebsiteId, viewed, created_at) VALUES(?, ?, ?, ?, ?)", (job['link'], job['title'], website_id, 0, datetime.datetime.now()))
     conn.commit()
     conn.close()
     return jsonify({'success': 1})

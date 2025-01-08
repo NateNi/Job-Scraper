@@ -13,6 +13,7 @@ export default function LinkList({
   setOpenLoader,
   currentWebsiteRecordId,
   setJobs,
+  setCurrentWebsiteRecordId,
   jobs,
 }) {
   useEffect(() => {
@@ -38,6 +39,33 @@ export default function LinkList({
   const [searchText, setSearchText] = useState("");
 
   const columns = [
+    {
+      field: "viewed",
+      headerName: "",
+      flex: 1,
+
+      renderCell: (params) => (
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "100%",
+          }}
+        >
+          {params.value === 1 && (
+            <Box
+              sx={{
+                width: "18px",
+                height: "18px",
+                backgroundColor: "red",
+                borderRadius: "50%",
+              }}
+            />
+          )}
+        </Box>
+      ),
+    },
     { field: "created_at", headerName: "Date", flex: 2 },
     {
       field: "linkHTML",
@@ -134,6 +162,7 @@ export default function LinkList({
               setVisibleComponent("WebsiteIndex");
               setJobs([]);
               setSearchText("");
+              setCurrentWebsiteRecordId("");
             }}
           >
             Cancel

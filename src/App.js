@@ -48,6 +48,7 @@ function App() {
             setWebsiteFormData={setWebsiteFormData}
             setWebsiteFilterData={setWebsiteFilterData}
             setWebsiteNewFilterData={setWebsiteNewFilterData}
+            setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
           />
         );
       case "WebsiteEdit":
@@ -63,6 +64,7 @@ function App() {
             setWebsiteFormData={setWebsiteFormData}
             setWebsiteFilterData={setWebsiteFilterData}
             setWebsiteNewFilterData={setWebsiteNewFilterData}
+            setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
           />
         );
       case "WebsiteTest":
@@ -75,6 +77,10 @@ function App() {
             setVisibleComponent={setVisibleComponent}
             websiteFilterData={websiteFilterData}
             websiteNewFilterData={websiteNewFilterData}
+            setWebsiteFilterData={setWebsiteFilterData}
+            setWebsiteNewFilterData={setWebsiteNewFilterData}
+            setWebsiteFormData={setWebsiteFormData}
+            setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
           />
         );
       case "LinkList":
@@ -85,6 +91,7 @@ function App() {
             jobs={jobs}
             setJobs={setJobs}
             currentWebsiteRecordId={currentWebsiteRecordId}
+            setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
           />
         );
       default:

@@ -32,6 +32,7 @@ export default function WebsiteForm({
   websiteFormData,
   websiteFilterData,
   websiteNewFilterData,
+  setCurrentWebsiteRecordId,
 }) {
   const testWebsiteSubmit = async (e) => {
     e.preventDefault();
@@ -407,7 +408,20 @@ export default function WebsiteForm({
           <Button
             variant="contained"
             color="secondary"
-            onClick={() => setVisibleComponent("WebsiteIndex")}
+            onClick={() => {
+              setVisibleComponent("WebsiteIndex");
+              setWebsiteNewFilterData([]);
+              setWebsiteFilterData([]);
+              setWebsiteFormData({
+                url: "",
+                company: "",
+                containerXpath: "",
+                titleXpath: "",
+                titleAttribute: "",
+                linkXpath: "",
+              });
+              setCurrentWebsiteRecordId("");
+            }}
           >
             Cancel
           </Button>

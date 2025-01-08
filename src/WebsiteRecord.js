@@ -20,6 +20,7 @@ export default function WebsiteRecord({
   websiteFilterData,
   websiteNewFilterData,
   currentWebsiteRecordId = null,
+  setCurrentWebsiteRecordId,
 }) {
   const [focusedElement, setFocusedElement] = useState(null);
   useEffect(() => {
@@ -74,6 +75,7 @@ export default function WebsiteRecord({
               websiteFormData={websiteFormData}
               websiteFilterData={websiteFilterData}
               websiteNewFilterData={websiteNewFilterData}
+              setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
             />
           </Grid>
           <Grid key={2} item xs={12} md={6}>

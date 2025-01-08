@@ -15,6 +15,10 @@ export default function WebsiteTest({
   setVisibleComponent,
   websiteFilterData,
   websiteNewFilterData,
+  setWebsiteNewFilterData,
+  setWebsiteFilterData,
+  setWebsiteFormData,
+  setCurrentWebsiteRecordId,
 }) {
   const createWebsiteSubmit = async () => {
     setOpenLoader(true);
@@ -80,7 +84,25 @@ export default function WebsiteTest({
         >
           Save
         </Button>
-        <Button variant="contained">Cancel</Button>
+        <Button
+          variant="contained"
+          onClick={() => {
+            setVisibleComponent("WebsiteIndex");
+            setWebsiteNewFilterData([]);
+            setWebsiteFilterData([]);
+            setWebsiteFormData({
+              url: "",
+              company: "",
+              containerXpath: "",
+              titleXpath: "",
+              titleAttribute: "",
+              linkXpath: "",
+            });
+            setCurrentWebsiteRecordId("");
+          }}
+        >
+          Cancel
+        </Button>
       </Paper>
     </Grow>
   );
