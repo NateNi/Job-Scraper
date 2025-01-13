@@ -5,14 +5,29 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import "./App.css";
-import { Typography, Box, Paper, Fab, Grow, Divider } from "@mui/material";
-
-import { Edit, Add, List, Delete, PlayArrow } from "@mui/icons-material";
+import {
+  Typography,
+  Box,
+  Paper,
+  Fab,
+  Grow,
+  Divider,
+  Badge,
+} from "@mui/material";
+import {
+  Edit,
+  Add,
+  List,
+  Delete,
+  PlayArrow,
+  Settings,
+} from "@mui/icons-material";
 
 export default function WebsiteIndex({
   setVisibleComponent,
   setCurrentWebsiteRecordId,
   setOpenLoader,
+  setChannels,
 }) {
   const [websites, setWebsites] = useState([]);
 
@@ -26,13 +41,24 @@ export default function WebsiteIndex({
     setCurrentWebsiteRecordId(websiteId);
   };
 
-  const runScraper = (websiteId) => {};
+  const runScraper = async (websiteId) => {
+    setOpenLoader(true);
+    let response = null;
+    response = await axios.post(
+      "http://localhost:5000/website/run/" + websiteId
+    );
+    if (response.status === 200) {
+      setOpenLoader(false);
+      setVisibleComponent("WebsiteIndex");
+    }
+  };
 
   useEffect(() => {
     const fetchWebsites = async () => {
       setOpenLoader(true);
-      const response = await axios.get("/index"); // Replace with your backend endpoint
+      const response = await axios.get("/index");
       setWebsites(response.data.websites);
+      setChannels(response.data.channels);
       setOpenLoader(false);
     };
 
@@ -49,19 +75,38 @@ export default function WebsiteIndex({
           marginRight: "auto",
         }}
       >
-        <img
-          src={`${process.env.PUBLIC_URL}/ScraperLogo.png`}
-          className="websiteLogo"
-        />
-        <Typography
-          variant="h2"
+        <Box
           sx={{
-            display: "inline-block",
-            textAlign: "left",
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: "1rem",
           }}
         >
-          Job Scraper
-        </Typography>
+          <Box>
+            <img
+              src={`${process.env.PUBLIC_URL}/ScraperLogo.png`}
+              className="websiteLogo"
+            />
+            <Typography
+              variant="h2"
+              sx={{
+                display: "inline-block",
+                textAlign: "left",
+              }}
+            >
+              Job Scraper
+            </Typography>
+          </Box>
+          <Fab
+            color="primary"
+            aria-label="settings"
+            onClick={() => setVisibleComponent("Settings")}
+          >
+            <Settings />
+          </Fab>
+        </Box>
         <Divider
           orientation="horizontal"
           flexItem
@@ -147,14 +192,16 @@ export default function WebsiteIndex({
                 >
                   <PlayArrow />
                 </Fab>
-                <Fab
-                  color="primary"
-                  aria-label="history"
-                  sx={{ marginRight: "1rem" }}
-                  onClick={() => setLinkListView(website.id)}
-                >
-                  <List />
-                </Fab>
+                <Badge badgeContent={website.numLinksFound} color="primary">
+                  <Fab
+                    color="primary"
+                    aria-label="history"
+                    sx={{ marginRight: "1rem" }}
+                    onClick={() => setLinkListView(website.id)}
+                  >
+                    <List />
+                  </Fab>
+                </Badge>
                 <Fab
                   color="primary"
                   aria-label="edit"

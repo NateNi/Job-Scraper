@@ -25,6 +25,8 @@ CREATE_JOB_WEBSITE_FILTERS = '''CREATE TABLE IF NOT EXISTS jobWebsiteFilters (id
 CREATE_JOB_LINKS = '''CREATE TABLE IF NOT EXISTS jobLinks (id INTEGER PRIMARY KEY, link VARCHAR, title VARCHAR, jobWebsiteId INTEGER, viewed INTEGER, created_at TIMESTAMP, FOREIGN KEY ("jobWebsiteId") REFERENCES "jobWebsites"("id"))'''
 CREATE_CHANNELS = '''CREATE TABLE IF NOT EXISTS channels (id INTEGER PRIMARY KEY, name VARCHAR)'''
 CREATE_SETTINGS = '''CREATE TABLE IF NOT EXISTS settings (id INTEGER PRIMARY KEY, name VARCHAR, value VARCHAR)'''
+CHECK_SETTINGS = '''SELECT * FROM settings'''
+SEED_SETTINGS = '''INSERT OR IGNORE INTO settings ( name, value ) VALUES ( 'slackToken', '' ) '''
 
 def getFavicon(html):
     soup = BeautifulSoup(html, 'html.parser')
@@ -40,7 +42,7 @@ def getFavicon(html):
             return None
     return None
 
-@app.route('/website/test', methods=['GET'])
+@app.route('/website/test', methods=['POST'])
 def test_website():
     data = request.get_json()
     filters = data['websiteFilterData']
@@ -77,7 +79,7 @@ def get_settings():
     conn = sqlite3.connect('jobs.db')
     cursor = conn.cursor()
     cursor.execute('''SELECT * FROM settings ''')
-    settingsResults = cursor.fetchone()
+    settingsResults = cursor.fetchall()
     cursor.execute('''SELECT * FROM channels''')
     channelResults = cursor.fetchall()
     conn.commit()
@@ -91,14 +93,9 @@ def update_settings():
     data = request.get_json()
     conn = sqlite3.connect('jobs.db')
     cursor = conn.cursor()
-    settings = data['settings']
     channels = data['channels']
-    newChannels = data['newChannels']
-    for setting in settings:
-        cursor.execute('''UPDATE settings SET value = ? WHERE name = ?''', (setting['value'], setting['name']))
-    cursor.execute('')
-    for channel in newChannels:
-        cursor.execute('INSERT INTO channels (name) VALUES (?)', (channel))
+    for setting in data['settings']:
+        cursor.execute('''UPDATE settings SET value = ? WHERE name = ?''', (setting.get('value'), setting.get('name')))
     channelIds = {channel["id"] for channel in channels}
     cursor.execute("SELECT id FROM channels")
     existingChannelIds = {row[0] for row in cursor.fetchall()}
@@ -110,10 +107,11 @@ def update_settings():
         )
     for channel in channels:
         cursor.execute(
-            "UPDATE channels SET (name = ?) WHERE id = ?",
+            "UPDATE channels SET name = ? WHERE id = ?",
             (channel['name'], channel['id'])
         )
-    
+    for channel in data['newChannels']:
+        cursor.execute('INSERT INTO channels (name) VALUES (?)', (channel.get('name'),))
     conn.commit()
     conn.close()
     return jsonify({'success': 1})
@@ -127,7 +125,11 @@ def get_websites():
     cursor.execute(CREATE_JOB_LINKS)
     cursor.execute(CREATE_CHANNELS)
     cursor.execute(CREATE_SETTINGS)
-    cursor.execute('''SELECT * FROM jobWebsites''')
+    cursor.execute(CHECK_SETTINGS)
+    settings = cursor.fetchall()
+    if not settings:
+        cursor.execute(SEED_SETTINGS)
+    cursor.execute('''SELECT jobWebsites.id, userId, url, favicon, company, channelId, containerXpath, titleXpath, linkXpath, titleAttribute, COUNT(jobLinks.id) AS numLinksFound FROM jobWebsites LEFT JOIN jobLinks ON jobLinks.jobWebsiteId = jobLinks.id GROUP BY jobWebsites.id, userId, url, favicon, company, channelId, containerXpath, titleXpath, linkXpath, titleAttribute ''')
     jobWebsitesResults = cursor.fetchall()
     cursor.execute('''SELECT * FROM channels''')
     channelResults = cursor.fetchall()
@@ -137,7 +139,7 @@ def get_websites():
     for row in jobWebsitesResults:
         image_base64 = base64.b64encode(row[3]).decode('utf-8') if row[3] is not None else None
         websites.append({'id': row[0], 'userId': row[1], 'url': row[2], 'favicon': image_base64, 'company': row[4], 'channel': row[5], 'containerXpath': row[6], 'titleXpath': row[7], 'linkXpath': row[8], 'titleAttribute': row[9]})
-    channels = [{'id': row[0], 'name': row[1]}]
+    channels = [{'id': channel[0], 'name': channel[1]} for channel in channelResults]
     return jsonify({'websites': websites, 'channels': channels})
 
 @app.route('/run/<int:website_id>', methods=['GET'])
@@ -177,7 +179,6 @@ def get_links_list(website_id):
     links = []
     for row in previouslySentLinkResults:
         links.append({'id': row[0], 'link': row[1], 'title': row[2], 'viewed': row[4], 'created_at': datetime.datetime.strptime(row[5], "%Y-%m-%d %H:%M:%S.%f").strftime("%m/%d/%Y %I:%M %p")})
-    print(links)
     return jsonify({'links': links})
 
 @app.route('/website/<int:website_id>', methods=['GET'])

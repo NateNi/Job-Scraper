@@ -47,7 +47,6 @@ export default function WebsiteTest({
     }
     setOpenLoader(false);
   };
-  console.log(jobs);
   return (
     <Grow in={true}>
       <Paper

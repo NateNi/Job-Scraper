@@ -33,54 +33,42 @@ export default function WebsiteForm({
   websiteFilterData,
   websiteNewFilterData,
   setCurrentWebsiteRecordId,
+  channels,
 }) {
   const testWebsiteSubmit = async (e) => {
     e.preventDefault();
     setOpenLoader(true);
     try {
       let response = null;
-      const filterQueryString = websiteFilterData
-        .map(
-          (filter, index) =>
-            `filter${index + 1}_filterXpath=${encodeURIComponent(
-              filter.filterXpath
-            )}&filter${index + 1}_type=${encodeURIComponent(
-              filter.type
-            )}&filter${index + 1}_selectValue=${encodeURIComponent(
-              filter.selectValue
-            )}`
-        )
-        .join("&");
-      const newFilterQueryString = websiteNewFilterData
-        .map(
-          (filter, index) =>
-            `newFilter${index + 1}_filterXpath=${encodeURIComponent(
-              filter.filterXpath
-            )}&newFilter${index + 1}_type=${encodeURIComponent(
-              filter.type
-            )}&newFilter${index + 1}_selectValue=${encodeURIComponent(
-              filter.selectValue
-            )}`
-        )
-        .join("&");
-      response = await axios.get(
-        "http://localhost:5000/website/test?url=" +
-          websiteFormData.url +
-          "&company=" +
-          websiteFormData.company +
-          "&containerXpath=" +
-          websiteFormData.containerXpath +
-          "&titleXpath=" +
-          websiteFormData.titleXpath +
-          "&titleAttribute=" +
-          websiteFormData.titleAttribute +
-          "&linkXpath=" +
-          websiteFormData.linkXpath +
-          "&" +
-          filterQueryString +
-          "&" +
-          newFilterQueryString
-      );
+      // const filterQueryString = websiteFilterData
+      //   .map(
+      //     (filter, index) =>
+      //       `filter${index + 1}_filterXpath=${encodeURIComponent(
+      //         filter.filterXpath
+      //       )}&filter${index + 1}_type=${encodeURIComponent(
+      //         filter.type
+      //       )}&filter${index + 1}_selectValue=${encodeURIComponent(
+      //         filter.selectValue
+      //       )}`
+      //   )
+      //   .join("&");
+      // const newFilterQueryString = websiteNewFilterData
+      //   .map(
+      //     (filter, index) =>
+      //       `newFilter${index + 1}_filterXpath=${encodeURIComponent(
+      //         filter.filterXpath
+      //       )}&newFilter${index + 1}_type=${encodeURIComponent(
+      //         filter.type
+      //       )}&newFilter${index + 1}_selectValue=${encodeURIComponent(
+      //         filter.selectValue
+      //       )}`
+      //   )
+      //   .join("&");
+      response = await axios.post("http://localhost:5000/website/test", {
+        websiteFormData: websiteFormData,
+        websiteFilterData: websiteFilterData,
+        websiteNewFilterData: websiteNewFilterData,
+      });
       if (response.status === 200) {
         setJobs(response.data.jobs);
         setVisibleComponent("WebsiteTest");
@@ -168,6 +156,24 @@ export default function WebsiteForm({
     <Paper elevation={24} sx={{ padding: "4rem" }}>
       <h2>Website Details</h2>
       <form onSubmit={testWebsiteSubmit}>
+        <Select
+          labelId="filter-type-label"
+          name="channelId"
+          label="Channel"
+          sx={{ display: "block", marginBottom: "2rem" }}
+          onChange={handleChange}
+          value={websiteFormData.channelId}
+        >
+          {channels.map((channel) => (
+            <MenuItem
+              value="select"
+              selected={channel.id === websiteFormData.channelId}
+            >
+              {channel.name}
+            </MenuItem>
+          ))}
+        </Select>
+
         <TextField
           id="urlField"
           fullWidth

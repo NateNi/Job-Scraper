@@ -9,6 +9,7 @@ import WebsiteRecord from "./WebsiteRecord.js";
 import WebsiteIndex from "./WebsiteIndex.js";
 import WebsiteTest from "./WebsiteTest.js";
 import LinkList from "./LinkList.js";
+import Settings from "./Settings.js";
 
 function App() {
   const [visibleComponent, setVisibleComponent] = useState("WebsiteIndex");
@@ -25,6 +26,7 @@ function App() {
   const [websiteNewFilterData, setWebsiteNewFilterData] = useState([]);
   const [openLoader, setOpenLoader] = useState(false);
   const [jobs, setJobs] = useState([]);
+  const [channels, setChannels] = useState([]);
 
   const renderComponent = () => {
     switch (visibleComponent) {
@@ -33,6 +35,7 @@ function App() {
           <WebsiteIndex
             setVisibleComponent={setVisibleComponent}
             setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
+            setChannels={setChannels}
             setOpenLoader={setOpenLoader}
           />
         );
@@ -49,6 +52,7 @@ function App() {
             setWebsiteFilterData={setWebsiteFilterData}
             setWebsiteNewFilterData={setWebsiteNewFilterData}
             setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
+            channels={channels}
           />
         );
       case "WebsiteEdit":
@@ -65,6 +69,7 @@ function App() {
             setWebsiteFilterData={setWebsiteFilterData}
             setWebsiteNewFilterData={setWebsiteNewFilterData}
             setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
+            channels={channels}
           />
         );
       case "WebsiteTest":
@@ -86,6 +91,17 @@ function App() {
       case "LinkList":
         return (
           <LinkList
+            setVisibleComponent={setVisibleComponent}
+            setOpenLoader={setOpenLoader}
+            jobs={jobs}
+            setJobs={setJobs}
+            currentWebsiteRecordId={currentWebsiteRecordId}
+            setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
+          />
+        );
+      case "Settings":
+        return (
+          <Settings
             setVisibleComponent={setVisibleComponent}
             setOpenLoader={setOpenLoader}
             jobs={jobs}
