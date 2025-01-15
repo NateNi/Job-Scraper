@@ -44,26 +44,27 @@ export default function WebsiteIndex({
   const runScraper = async (websiteId) => {
     setOpenLoader(true);
     let response = null;
-    response = await axios.post(
-      "http://localhost:5000/website/run/" + websiteId
+    response = await axios.get(
+      "http://localhost:5000/website/" + websiteId + "/run"
     );
     if (response.status === 200) {
       setOpenLoader(false);
-      setVisibleComponent("WebsiteIndex");
+      fetchWebsites();
     }
   };
 
-  useEffect(() => {
-    const fetchWebsites = async () => {
-      setOpenLoader(true);
-      const response = await axios.get("/index");
-      setWebsites(response.data.websites);
-      setChannels(response.data.channels);
-      setOpenLoader(false);
-    };
+  const fetchWebsites = async () => {
+    setOpenLoader(true);
+    const response = await axios.get("/index");
+    setWebsites(response.data.websites);
+    setChannels(response.data.channels);
+    setOpenLoader(false);
+  };
 
+  useEffect(() => {
     fetchWebsites();
   }, []);
+
   return (
     <Grow in={true}>
       <Paper

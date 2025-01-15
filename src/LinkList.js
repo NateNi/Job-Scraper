@@ -32,10 +32,17 @@ export default function LinkList({
         })
       );
       setOpenLoader(false);
+      setViewedLinks();
     };
 
     fetchLinkList();
   }, []);
+
+  const setViewedLinks = async () => {
+    setOpenLoader(true);
+    const response = await axios.put("/links/" + currentWebsiteRecordId);
+    setOpenLoader(false);
+  };
 
   const [searchText, setSearchText] = useState("");
 

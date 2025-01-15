@@ -1,4 +1,3 @@
-import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -7,12 +6,9 @@ from bs4 import BeautifulSoup
 import sqlite3
 import requests
 import base64
-import time
 import datetime
 from scrape import *
-from selenium.common.exceptions import NoSuchElementException
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import Select
+from selenium.webdriver.chrome.options import Options
 
 app = Flask(__name__)
 CORS(app)
@@ -47,7 +43,9 @@ def test_website():
     data = request.get_json()
     filters = data['websiteFilterData']
     newFilters = data['websiteNewFilterData']
-    driver = webdriver.Chrome()
+    options = Options()
+    options.add_argument('--headless=new')
+    driver = webdriver.Chrome(options=options)
     jobs = getJobs(driver, data['websiteFormData']['url'], data['websiteFormData']['company'], data['websiteFormData']['containerXpath'], data['websiteFormData']['titleXpath'], data['websiteFormData']['linkXpath'], data['websiteFormData']['titleAttribute'], filters, newFilters)
     global webpageSourceData 
     webpageSourceData = driver.page_source
@@ -67,10 +65,12 @@ def create_website():
     jobWebsiteId = cursor.lastrowid
     for filter in data['filters']:
         cursor.execute('INSERT INTO jobWebsiteFilters (jobWebsiteId, filterXpath, selectValue, type) VALUES (?, ?, ?, ?)', (jobWebsiteId, filter['filterXpath'], filter['selectValue'], filter['type']))
+    
     for job in jobResults:
         cursor.execute(f"INSERT OR IGNORE INTO jobLinks(link, title, jobWebsiteId, viewed, created_at) VALUES(?, ?, ?, ?, ?)", (job['link'], job['title'], jobWebsiteId, 0, datetime.datetime.now()))
     conn.commit()
     conn.close()
+    send_message([{'link': job['link'], 'title': job['title']} for job in jobResults], data['company'], data['channelId'], jobWebsiteId)
     return jsonify({'success': 1})
 
 @app.route('/settings', methods=['GET'])
@@ -130,7 +130,6 @@ def get_websites():
         cursor.execute(SEED_SETTINGS)
     cursor.execute('''SELECT jobWebsites.id, userId, url, favicon, company, channelId, containerXpath, titleXpath, linkXpath, titleAttribute, COUNT(jL.id) AS numLinksFound FROM jobWebsites LEFT JOIN (SELECT * FROM jobLinks where viewed = 0) jL  ON jL.jobWebsiteId = jobWebsites.id GROUP BY jobWebsites.id, userId, url, favicon, company, channelId, containerXpath, titleXpath, linkXpath, titleAttribute ''')
     jobWebsitesResults = cursor.fetchall()
-    print(jobWebsitesResults)
     cursor.execute('''SELECT * FROM channels''')
     channelResults = cursor.fetchall()
     conn.commit()
@@ -142,7 +141,7 @@ def get_websites():
     channels = [{'id': channel[0], 'name': channel[1]} for channel in channelResults]
     return jsonify({'websites': websites, 'channels': channels})
 
-@app.route('/run/<int:website_id>', methods=['GET'])
+@app.route('/website/<int:website_id>/run', methods=['GET'])
 def run_scraper(website_id):
     conn = sqlite3.connect('jobs.db')
     cursor = conn.cursor()
@@ -150,21 +149,24 @@ def run_scraper(website_id):
     websiteResult = cursor.fetchone()
     cursor.execute('''SELECT * FROM jobWebsiteFilters WHERE jobWebsiteId = ? ''', (website_id,))
     filterResults = cursor.fetchall()
-    conn.commit()
-    conn.close()
     filters = [{'id': filterResult[0], 'filterXpath': filterResult[2], 'selectValue': filterResult[3], 'type': filterResult[4]} for filterResult in filterResults]
-    driver = webdriver.Chrome()
+    options = Options()
+    options.add_argument('--headless=new')
+    driver = webdriver.Chrome(options=options)
     jobResults = getJobs(driver, websiteResult[2], websiteResult[4], websiteResult[6], websiteResult[7], websiteResult[8],  websiteResult[9], filters)
     driver.quit()
     cursor.execute(f"SELECT * FROM jobLinks where jobWebsiteId = '{website_id}' ")
     previouslySentLinkResults = cursor.fetchall()
     previouslySentLinks = [{'link': row[1], 'title': row[2]} for row in previouslySentLinkResults]
+    newJobs = []
     for job in jobResults:
         jobDict = {'link': job['link'], 'title': job['title']}
         if not [entry for entry in previouslySentLinks if all(entry.get(key) == value for key, value in jobDict.items())]:
             cursor.execute("INSERT OR IGNORE INTO jobLinks(link, title, jobWebsiteId, viewed, created_at) VALUES(?, ?, ?, ?, ?)", (job['link'], job['title'], website_id, 0, datetime.datetime.now()))
+            newJobs.append(jobDict)
     conn.commit()
     conn.close()
+    send_message(newJobs, websiteResult[4], websiteResult[5], website_id)
     return jsonify({'success': 1})
 
 @app.route('/links/<int:website_id>', methods=['GET'])
@@ -175,15 +177,19 @@ def get_links_list(website_id):
     previouslySentLinkResults = cursor.fetchall()
     conn.commit()
     conn.close()
-    conn2 = sqlite3.connect('jobs.db')
-    cursor2 = conn2.cursor()
-    cursor2.execute('''UPDATE jobLinks SET viewed = 1 WHERE jobWebsiteId = ?''', (website_id,))
-    conn2.commit()
-    conn2.close()
     links = []
     for row in previouslySentLinkResults:
         links.append({'id': row[0], 'link': row[1], 'title': row[2], 'viewed': row[4], 'created_at': datetime.datetime.strptime(row[5], "%Y-%m-%d %H:%M:%S.%f").strftime("%m/%d/%Y %I:%M %p")})
     return jsonify({'links': links})
+
+@app.route('/links/<int:website_id>', methods=['PUT'])
+def set_viewed_links(website_id):
+    conn = sqlite3.connect('jobs.db')
+    cursor = conn.cursor()
+    cursor.execute('''UPDATE jobLinks SET viewed = 1 WHERE jobWebsiteId = ?''', (website_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': 1})
 
 @app.route('/website/<int:website_id>', methods=['GET'])
 def edit_website(website_id):
