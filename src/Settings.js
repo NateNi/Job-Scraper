@@ -110,6 +110,7 @@ export default function Settings({ setVisibleComponent, setOpenLoader }) {
               onChange={(e) =>
                 handleSettingsChange(setting.id, "value", e.target.value)
               }
+              type="password"
               value={setting.value}
             />
           ))}

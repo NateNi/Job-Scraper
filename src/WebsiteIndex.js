@@ -192,7 +192,11 @@ export default function WebsiteIndex({
                 >
                   <PlayArrow />
                 </Fab>
-                <Badge badgeContent={website.numLinksFound} color="primary">
+                <Badge
+                  overlap="circular"
+                  badgeContent={website.numLinksFound}
+                  color="primary"
+                >
                   <Fab
                     color="primary"
                     aria-label="history"

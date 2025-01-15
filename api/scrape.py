@@ -74,16 +74,17 @@ def scrape_all():
         driver.quit()
     return True
 
-def send_message(jobs, company, channel, websiteId):
-    slack_client = WebClient(token=os.getenv('SLACK_TOKEN'))
+def send_message(jobs, company, channelId, websiteId):
+    conn = sqlite3.connect('jobs.db')
+    cursor = conn.cursor()
+    cursor.execute(''' SELECT name FROM channels WHERE id = ? ''', (channelId,))
+    channel = cursor.fetchone()
+    cursor.execute(''' SELECT value FROM settings WHERE name = 'slackToken' ''')
+    slackToken = cursor.fetchone()
+    conn.commit()
+    conn.close()
+    slack_client = WebClient(token=slackToken[0])
     links = [f"<{job['link']}|{job['title']}>" for job in jobs]
-    response = slack_client.chat_postMessage(channel=channel, text= "*" + company + " jobs found: * \n\n" + "\n\n".join(links))
-    if response["ok"]:
-        conn = sqlite3.connect('jobs.db')
-        cursor = conn.cursor()
-        for job in jobs:
-            cursor.execute(f"INSERT OR IGNORE INTO jobLinks(link, title, jobWebsiteId) VALUES('{job['link']}', '{job['title']}', '{websiteId}')")
-        conn.commit()
-        conn.close()
-    else:
+    response = slack_client.chat_postMessage(channel=channel[0], text= "*" + company + " jobs found: * \n\n" + "\n\n".join(links))
+    if not response["ok"]:
         print(f"Failed to send Slack message: {response['error']}")

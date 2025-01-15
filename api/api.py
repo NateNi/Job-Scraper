@@ -62,9 +62,8 @@ def create_website():
     conn = sqlite3.connect('jobs.db')
     cursor = conn.cursor()
     userId = 1
-    channel = '#jobstest'
     favicon = getFavicon(webpageSourceData)
-    cursor.execute('''INSERT INTO jobWebsites (url, userId, favicon, company, channel, containerXpath, titleXpath, linkXpath, titleAttribute) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ''', (data['url'], userId, favicon, data['company'], channel, data['containerXpath'], data['titleXpath'], data['linkXpath'], data['titleAttribute']))
+    cursor.execute('''INSERT INTO jobWebsites (url, userId, favicon, company, channelId, containerXpath, titleXpath, linkXpath, titleAttribute) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ''', (data['url'], userId, favicon, data['company'], data['channelId'], data['containerXpath'], data['titleXpath'], data['linkXpath'], data['titleAttribute']))
     jobWebsiteId = cursor.lastrowid
     for filter in data['filters']:
         cursor.execute('INSERT INTO jobWebsiteFilters (jobWebsiteId, filterXpath, selectValue, type) VALUES (?, ?, ?, ?)', (jobWebsiteId, filter['filterXpath'], filter['selectValue'], filter['type']))
@@ -129,8 +128,9 @@ def get_websites():
     settings = cursor.fetchall()
     if not settings:
         cursor.execute(SEED_SETTINGS)
-    cursor.execute('''SELECT jobWebsites.id, userId, url, favicon, company, channelId, containerXpath, titleXpath, linkXpath, titleAttribute, COUNT(jobLinks.id) AS numLinksFound FROM jobWebsites LEFT JOIN jobLinks ON jobLinks.jobWebsiteId = jobLinks.id GROUP BY jobWebsites.id, userId, url, favicon, company, channelId, containerXpath, titleXpath, linkXpath, titleAttribute ''')
+    cursor.execute('''SELECT jobWebsites.id, userId, url, favicon, company, channelId, containerXpath, titleXpath, linkXpath, titleAttribute, COUNT(jL.id) AS numLinksFound FROM jobWebsites LEFT JOIN (SELECT * FROM jobLinks where viewed = 0) jL  ON jL.jobWebsiteId = jobWebsites.id GROUP BY jobWebsites.id, userId, url, favicon, company, channelId, containerXpath, titleXpath, linkXpath, titleAttribute ''')
     jobWebsitesResults = cursor.fetchall()
+    print(jobWebsitesResults)
     cursor.execute('''SELECT * FROM channels''')
     channelResults = cursor.fetchall()
     conn.commit()
@@ -138,7 +138,7 @@ def get_websites():
     websites = []
     for row in jobWebsitesResults:
         image_base64 = base64.b64encode(row[3]).decode('utf-8') if row[3] is not None else None
-        websites.append({'id': row[0], 'userId': row[1], 'url': row[2], 'favicon': image_base64, 'company': row[4], 'channel': row[5], 'containerXpath': row[6], 'titleXpath': row[7], 'linkXpath': row[8], 'titleAttribute': row[9]})
+        websites.append({'id': row[0], 'userId': row[1], 'url': row[2], 'favicon': image_base64, 'company': row[4], 'channelId': row[5], 'containerXpath': row[6], 'titleXpath': row[7], 'linkXpath': row[8], 'titleAttribute': row[9], 'numLinksFound': row[10]})
     channels = [{'id': channel[0], 'name': channel[1]} for channel in channelResults]
     return jsonify({'websites': websites, 'channels': channels})
 
@@ -173,9 +173,13 @@ def get_links_list(website_id):
     cursor = conn.cursor()
     cursor.execute(f"SELECT * FROM jobLinks where jobWebsiteId = '{website_id}' ")
     previouslySentLinkResults = cursor.fetchall()
-    cursor.execute('''UPDATE jobLinks SET viewed = 1 WHERE jobWebsiteId = ?''', (website_id,))
     conn.commit()
     conn.close()
+    conn2 = sqlite3.connect('jobs.db')
+    cursor2 = conn2.cursor()
+    cursor2.execute('''UPDATE jobLinks SET viewed = 1 WHERE jobWebsiteId = ?''', (website_id,))
+    conn2.commit()
+    conn2.close()
     links = []
     for row in previouslySentLinkResults:
         links.append({'id': row[0], 'link': row[1], 'title': row[2], 'viewed': row[4], 'created_at': datetime.datetime.strptime(row[5], "%Y-%m-%d %H:%M:%S.%f").strftime("%m/%d/%Y %I:%M %p")})
@@ -191,7 +195,7 @@ def edit_website(website_id):
     filterResults = cursor.fetchall()
     conn.commit()
     conn.close()
-    website = {'id': websiteResult[0], 'userId': websiteResult[1], 'url': websiteResult[2], 'company' : websiteResult[4], 'channel': websiteResult[5], 'containerXpath': websiteResult[6], 'titleXpath': websiteResult[7], 'linkXpath': websiteResult[8], 'titleAttribute' : websiteResult[9]}
+    website = {'id': websiteResult[0], 'userId': websiteResult[1], 'url': websiteResult[2], 'company' : websiteResult[4], 'channelId': websiteResult[5], 'containerXpath': websiteResult[6], 'titleXpath': websiteResult[7], 'linkXpath': websiteResult[8], 'titleAttribute' : websiteResult[9]}
     filters = [{'id': filterResult[0], 'filterXpath': filterResult[2], 'selectValue': filterResult[3], 'type': filterResult[4]} for filterResult in filterResults]
     return jsonify({'website': website, 'filters': filters})
 
@@ -201,9 +205,8 @@ def update_website(website_id):
     conn = sqlite3.connect('jobs.db')
     cursor = conn.cursor()
     userId = 1
-    channel = '#jobstest'
     favicon = getFavicon(webpageSourceData)
-    cursor.execute('''UPDATE jobWebsites SET url = ?, userId = ?, favicon = ?, company = ?, channel = ?, containerXpath = ?, titleXpath = ?, linkXpath = ?, titleAttribute = ? WHERE id = ? ''', (data['url'], userId, favicon, data['company'], channel, data['containerXpath'], data['titleXpath'], data['linkXpath'], data['titleAttribute'], website_id))
+    cursor.execute('''UPDATE jobWebsites SET url = ?, userId = ?, favicon = ?, company = ?, channelId = ?, containerXpath = ?, titleXpath = ?, linkXpath = ?, titleAttribute = ? WHERE id = ? ''', (data['url'], userId, favicon, data['company'], data['channelId'], data['containerXpath'], data['titleXpath'], data['linkXpath'], data['titleAttribute'], website_id))
     for filter in data['newFilters']:
         cursor.execute('INSERT INTO jobWebsiteFilters (jobWebsiteId, filterXpath, selectValue, type) VALUES (?, ?, ?, ?)', (website_id, filter['filterXpath'], filter['selectValue'], filter['type']))
     filterIds = {filter["id"] for filter in data['filters']}
@@ -223,12 +226,15 @@ def update_website(website_id):
     cursor.execute(f"SELECT * FROM jobLinks where jobWebsiteId = '{website_id}' ")
     previouslySentLinkResults = cursor.fetchall()
     previouslySentLinks = [{'link': row[1], 'title': row[2]} for row in previouslySentLinkResults]
+    newJobs = []
     for job in jobResults:
         jobDict = {'link': job['link'], 'title': job['title']}
         if not [entry for entry in previouslySentLinks if all(entry.get(key) == value for key, value in jobDict.items())]:
             cursor.execute("INSERT OR IGNORE INTO jobLinks(link, title, jobWebsiteId, viewed, created_at) VALUES(?, ?, ?, ?, ?)", (job['link'], job['title'], website_id, 0, datetime.datetime.now()))
+            newJobs.append(jobDict)
     conn.commit()
     conn.close()
+    send_message(newJobs, data['company'], data['channelId'], website_id)
     return jsonify({'success': 1})
 
 if __name__ == '__main__':

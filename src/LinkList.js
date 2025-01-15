@@ -26,6 +26,7 @@ export default function LinkList({
           return {
             id: job["id"],
             linkHTML: "<a href='" + job["link"] + "'>" + job["title"] + "</a>",
+            viewed: job["viewed"],
             created_at: job["created_at"],
           };
         })
@@ -53,7 +54,7 @@ export default function LinkList({
             height: "100%",
           }}
         >
-          {params.value === 1 && (
+          {params.value === 0 && (
             <Box
               sx={{
                 width: "18px",

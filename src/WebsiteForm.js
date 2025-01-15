@@ -40,30 +40,6 @@ export default function WebsiteForm({
     setOpenLoader(true);
     try {
       let response = null;
-      // const filterQueryString = websiteFilterData
-      //   .map(
-      //     (filter, index) =>
-      //       `filter${index + 1}_filterXpath=${encodeURIComponent(
-      //         filter.filterXpath
-      //       )}&filter${index + 1}_type=${encodeURIComponent(
-      //         filter.type
-      //       )}&filter${index + 1}_selectValue=${encodeURIComponent(
-      //         filter.selectValue
-      //       )}`
-      //   )
-      //   .join("&");
-      // const newFilterQueryString = websiteNewFilterData
-      //   .map(
-      //     (filter, index) =>
-      //       `newFilter${index + 1}_filterXpath=${encodeURIComponent(
-      //         filter.filterXpath
-      //       )}&newFilter${index + 1}_type=${encodeURIComponent(
-      //         filter.type
-      //       )}&newFilter${index + 1}_selectValue=${encodeURIComponent(
-      //         filter.selectValue
-      //       )}`
-      //   )
-      //   .join("&");
       response = await axios.post("http://localhost:5000/website/test", {
         websiteFormData: websiteFormData,
         websiteFilterData: websiteFilterData,
@@ -95,6 +71,7 @@ export default function WebsiteForm({
         titleXpath: "",
         titleAttribute: "",
         linkXpath: "",
+        channelId: "",
       });
       setWebsiteFilterData([]);
     }
@@ -166,7 +143,8 @@ export default function WebsiteForm({
         >
           {channels.map((channel) => (
             <MenuItem
-              value="select"
+              key={channel.id}
+              value={channel.id}
               selected={channel.id === websiteFormData.channelId}
             >
               {channel.name}
