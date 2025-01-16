@@ -53,6 +53,16 @@ export default function WebsiteIndex({
     }
   };
 
+  const deleteWebsite = async (websiteId) => {
+    setOpenLoader(true);
+    let response = null;
+    response = await axios.delete("http://localhost:5000/website/" + websiteId);
+    if (response.status === 200) {
+      setOpenLoader(false);
+      fetchWebsites();
+    }
+  };
+
   const fetchWebsites = async () => {
     setOpenLoader(true);
     const response = await axios.get("/index");
@@ -215,7 +225,11 @@ export default function WebsiteIndex({
                 >
                   <Edit />
                 </Fab>
-                <Fab color="secondary" aria-label="delete">
+                <Fab
+                  color="secondary"
+                  aria-label="delete"
+                  onClick={() => deleteWebsite(website.id)}
+                >
                   <Delete />
                 </Fab>
               </Box>

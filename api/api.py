@@ -17,7 +17,7 @@ webpageSourceData = None
 jobResults = None
 
 CREATE_JOB_WEBSITES = '''CREATE TABLE IF NOT EXISTS jobWebsites (id INTEGER PRIMARY KEY, userId INTEGER, url VARCHAR, favicon BLOB, company VARCHAR, channelId INT, containerXpath VARCHAR, titleXpath VARCHAR, linkXpath VARCHAR, titleAttribute VARCHAR, FOREIGN KEY ("channelId") REFERENCES "channels"("id"))'''
-CREATE_JOB_WEBSITE_FILTERS = '''CREATE TABLE IF NOT EXISTS jobWebsiteFilters (id INTEGER PRIMARY KEY, jobWebsiteId INT, filterXpath VARCHAR, selectValue VARCHAR, type VARCHAR, FOREIGN KEY ("jobWebsiteId") REFERENCES "jobWebsites"("id") ) '''
+CREATE_JOB_WEBSITE_FILTERS = '''CREATE TABLE IF NOT EXISTS jobWebsiteFilters (id INTEGER PRIMARY KEY, jobWebsiteId INT, filterXpath VARCHAR, selectValue VARCHAR, type VARCHAR, FOREIGN KEY ("jobWebsiteId") REFERENCES "jobWebsites"("id")) '''
 CREATE_JOB_LINKS = '''CREATE TABLE IF NOT EXISTS jobLinks (id INTEGER PRIMARY KEY, link VARCHAR, title VARCHAR, jobWebsiteId INTEGER, viewed INTEGER, created_at TIMESTAMP, FOREIGN KEY ("jobWebsiteId") REFERENCES "jobWebsites"("id"))'''
 CREATE_CHANNELS = '''CREATE TABLE IF NOT EXISTS channels (id INTEGER PRIMARY KEY, name VARCHAR)'''
 CREATE_SETTINGS = '''CREATE TABLE IF NOT EXISTS settings (id INTEGER PRIMARY KEY, name VARCHAR, value VARCHAR)'''
@@ -241,6 +241,17 @@ def update_website(website_id):
     conn.commit()
     conn.close()
     send_message(newJobs, data['company'], data['channelId'], website_id)
+    return jsonify({'success': 1})
+
+@app.route('/website/<int:website_id>', methods=['DELETE'])
+def delete_website(website_id):
+    conn = sqlite3.connect('jobs.db')
+    cursor = conn.cursor()
+    cursor.execute('''DELETE FROM jobWebsites WHERE id = ? ''', (website_id,))
+    cursor.execute('''DELETE FROM jobLinks WHERE jobWebsiteId = ? ''', (website_id,))
+    cursor.execute('''DELETE FROM jobWebsiteFilters WHERE jobWebsiteId = ? ''', (website_id,))
+    conn.commit()
+    conn.close()
     return jsonify({'success': 1})
 
 if __name__ == '__main__':
