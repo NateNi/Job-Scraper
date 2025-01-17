@@ -1,70 +1,74 @@
-# Getting Started with Create React App
+# Job Scraper App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Description
 
-## Available Scripts
+This project is a web scraping application built with React for the frontend and Flask for the backend. It interacts with a SQLite database to manage job listings and provides an API for creating and retrieving postings on job websites.
 
-In the project directory, you can run:
+## Technologies Used
 
-### `npm start`
+- React
+- Flask
+- Flask-CORS
+- SQLite
+- Selenium
+- BeautifulSoup
+- Axios
+- Material UI
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Installation Instructions
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd react-flask-app
+   ```
+2. Install the frontend dependencies:
+   ```bash
+   npm install
+   ```
+3. Set up the backend environment:
+   - Create a virtual environment and activate it.
+   - Install Flask and other dependencies.
 
-### `npm test`
+## Usage
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+To run the application, use the following commands:
 
-### `npm run build`
+- Start the Flask API:
+  ```bash
+  cd api
+  venv/bin/flask run
+  ```
+- Start the React application:
+  ```bash
+  npm start
+  ```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## API Endpoints
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- **POST /website/test**: Tests a website and retrieves job listings.
+- **POST /website**: Creates a new job website entry.
+- **GET /settings**: Retrieves settings.
+- **POST /settings**: Updates settings.
+- **GET /index**: Retrieves all job websites and their associated data.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Database Structure
 
-### `npm run eject`
+The application uses a SQLite database (`jobs.db`) with the following tables:
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+- `jobWebsites`: Stores job website entries.
+- `jobWebsiteFilters`: Stores filters for job websites.
+- `jobLinks`: Stores job links associated with job websites.
+- `settings`: Stores application settings, including Slack integration details.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Slack Integration
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+The application integrates with Slack to send notifications about new job links. The Slack token and channels are stored in the `settings` table. When a new job link is created, it is sent to the Slack channel associated with the corresponding website record.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Contributing
 
-## Learn More
+Contributions are welcome! Please submit a pull request or open an issue for discussion.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## License
 
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+This project is licensed under the MIT License.
