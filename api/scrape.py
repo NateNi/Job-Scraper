@@ -14,8 +14,6 @@ CREATE_JOB_LINKS = '''CREATE TABLE IF NOT EXISTS jobLinks (id INTEGER PRIMARY KE
 
 def applyFilters(filters, driver):
     for filter in filters:
-        # if (key.startswith('filter') or key.startswith('newFilter')) and '_filterXpath' in key:
-        # filterName = key.split('_')[0]
         filterXpath = filter['filterXpath']
         type = filter['type']
         selectValue = filter['selectValue']
