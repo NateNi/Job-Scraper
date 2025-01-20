@@ -28,6 +28,7 @@ export default function WebsiteIndex({
   setCurrentWebsiteRecordId,
   setOpenLoader,
   setChannels,
+  setSuccessMessage,
 }) {
   const [websites, setWebsites] = useState([]);
 
@@ -70,6 +71,13 @@ export default function WebsiteIndex({
     setChannels(response.data.channels);
     setOpenLoader(false);
   };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSuccessMessage();
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     fetchWebsites();

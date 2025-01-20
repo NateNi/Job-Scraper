@@ -9,7 +9,11 @@ import { Button, TextField, Grow, Paper, Box, Fab } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { Delete, Add } from "@mui/icons-material";
 
-export default function Settings({ setVisibleComponent, setOpenLoader }) {
+export default function Settings({
+  setVisibleComponent,
+  setOpenLoader,
+  setSuccessMessage,
+}) {
   useEffect(() => {
     const fetchSettings = async () => {
       const response = await axios.get("/settings");
@@ -35,6 +39,7 @@ export default function Settings({ setVisibleComponent, setOpenLoader }) {
       });
       if (response.status === 200) {
         setVisibleComponent("WebsiteIndex");
+        setSuccessMessage("Settings updated successfully");
       }
     } catch (error) {
       console.error("Error:", error);

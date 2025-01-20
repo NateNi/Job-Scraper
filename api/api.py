@@ -1,37 +1,28 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from dotenv import load_dotenv
-from selenium import webdriver
 from bs4 import BeautifulSoup
 import logging
 import sqlite3
 import requests
 import base64
 import datetime
-from scrape import *
+import time
+from db import *
+from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.common.exceptions import NoSuchElementException, InvalidSelectorException, TimeoutException
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import Select
+from slack_sdk import WebClient
+from slack_sdk.errors import SlackApiError
 
 app = Flask(__name__)
+app.run(debug=True)
+
 CORS(app)
 
 webpageSourceData = None
 jobResults = None
-
-# CREATE_JOB_WEBSITES = '''CREATE TABLE IF NOT EXISTS jobWebsites (id INTEGER PRIMARY KEY, userId INTEGER, url VARCHAR, favicon BLOB, company VARCHAR, channelId INT, containerXpath VARCHAR, titleXpath VARCHAR, linkXpath VARCHAR, titleAttribute VARCHAR, FOREIGN KEY ("channelId") REFERENCES "channels"("id"))'''
-# CREATE_JOB_WEBSITE_FILTERS = '''CREATE TABLE IF NOT EXISTS jobWebsiteFilters (id INTEGER PRIMARY KEY, jobWebsiteId INT, filterXpath VARCHAR, selectValue VARCHAR, type VARCHAR, FOREIGN KEY ("jobWebsiteId") REFERENCES "jobWebsites"("id")) '''
-# CREATE_JOB_LINKS = '''CREATE TABLE IF NOT EXISTS jobLinks (id INTEGER PRIMARY KEY, link VARCHAR, title VARCHAR, jobWebsiteId INTEGER, viewed INTEGER, created_at TIMESTAMP, FOREIGN KEY ("jobWebsiteId") REFERENCES "jobWebsites"("id"))'''
-# CREATE_CHANNELS = '''CREATE TABLE IF NOT EXISTS channels (id INTEGER PRIMARY KEY, name VARCHAR)'''
-# CREATE_SETTINGS = '''CREATE TABLE IF NOT EXISTS settings (id INTEGER PRIMARY KEY, name VARCHAR, value VARCHAR)'''
-# CHECK_SETTINGS = '''SELECT * FROM settings'''
-# SEED_SETTINGS = '''INSERT OR IGNORE INTO settings ( name, value ) VALUES ( 'slackToken', '' ) '''
-
-INITIALIZE_DB = '''CREATE TABLE IF NOT EXISTS jobWebsites (id INTEGER PRIMARY KEY, userId INTEGER, url VARCHAR, favicon BLOB, company VARCHAR, channelId INT, containerXpath VARCHAR, titleXpath VARCHAR, linkXpath VARCHAR, titleAttribute VARCHAR, FOREIGN KEY ("channelId") REFERENCES "channels"("id"))
-                CREATE TABLE IF NOT EXISTS jobWebsiteFilters (id INTEGER PRIMARY KEY, jobWebsiteId INT, filterXpath VARCHAR, selectValue VARCHAR, type VARCHAR, FOREIGN KEY ("jobWebsiteId") REFERENCES "jobWebsites"("id")) 
-                CREATE TABLE IF NOT EXISTS jobLinks (id INTEGER PRIMARY KEY, link VARCHAR, title VARCHAR, jobWebsiteId INTEGER, viewed INTEGER, created_at TIMESTAMP, FOREIGN KEY ("jobWebsiteId") REFERENCES "jobWebsites"("id")) 
-                CREATE TABLE IF NOT EXISTS channels (id INTEGER PRIMARY KEY, name VARCHAR) 
-                CREATE TABLE IF NOT EXISTS settings (id INTEGER PRIMARY KEY, name VARCHAR, value VARCHAR)
-                INSERT INTO settings (name, value)
-                VALUES ('slackToken', '') ON CONFLICT(name) DO NOTHING; '''
 
 logging.basicConfig(
     level=logging.INFO,
@@ -69,7 +60,7 @@ def test_website():
         data = request.get_json()
         required_fields = ['url', 'company', 'containerXpath', 'titleXpath', 'linkXpath']
         for field in required_fields:
-            if field not in data:
+            if field not in data['websiteFormData']:
                 app.logger.error(f"Missing required field for test website: {field}")
                 return jsonify({'error': f"Missing required field: {field}"}), 400
 
@@ -107,50 +98,46 @@ def create_website():
             if field not in data:
                 app.logger.error(f"Missing required field for create website: {field}")
                 return jsonify({'error': f"Missing required field: {field}"}), 400
-        try:
-            conn = sqlite3.connect('jobs.db')
-            cursor = conn.cursor()
-        except sqlite3.Error as e:
-            app.logger.error(f"Database connection error: {e}")
-            return jsonify({'error': 'Database connection failed'}), 500
-        userId = 1
+            
+        connection = create_db_connection(app)
+        if not connection['success']:
+            return jsonify({'error': connection['error']}), connection['status']
+        
         try:
             favicon = getFavicon(webpageSourceData, data['url'])
         except Exception as e:
             app.logger.error(f"Error retrieving favicon: {e}")
-            conn.close()
+            connection['conn'].close()
             return jsonify({'error': 'Failed to retrieve favicon'}), 500
-        try:
-            cursor.execute('''INSERT INTO jobWebsites (url, userId, favicon, company, channelId, containerXpath, titleXpath, linkXpath, titleAttribute) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ''', (data['url'], userId, favicon, data['company'], data['channelId'], data['containerXpath'], data['titleXpath'], data['linkXpath'], data['titleAttribute']))
-            jobWebsiteId = cursor.lastrowid
-        except sqlite3.Error as e:
-            app.logger.error(f"Error inserting into jobWebsites table: {e}")
-            conn.close()
-            return jsonify({'error': 'Failed to create job website entry'}), 500
+
+        jobWebsiteCreateResult = addJobWebsite(app, connection['cursor'], connection['conn'], data, favicon)
+        if not jobWebsiteCreateResult['success']:
+            return jsonify({'error': jobWebsiteCreateResult['error']}), jobWebsiteCreateResult['status']
+        
         try:
             for filter in data['filters']:
                 if not all(k in filter for k in ['filterXpath', 'selectValue', 'type']):
                     app.logger.error(f"Missing required filter fields in: {filter}")
                     return jsonify({'error': 'Invalid filter format'}), 400
-                cursor.execute('INSERT INTO jobWebsiteFilters (jobWebsiteId, filterXpath, selectValue, type) VALUES (?, ?, ?, ?)', (jobWebsiteId, filter['filterXpath'], filter['selectValue'], filter['type']))
+                connection['cursor'].execute('INSERT INTO jobWebsiteFilters (jobWebsiteId, filterXpath, selectValue, type) VALUES (?, ?, ?, ?)', (jobWebsiteCreateResult['jobWebsiteId'], filter['filterXpath'], filter['selectValue'], filter['type']))
         except sqlite3.Error as e:
             app.logger.error(f"Error inserting into jobWebsiteFilters table: {e}")
-            conn.close()
+            connection['conn'].close()
             return jsonify({'error': 'Failed to add filters'}), 500
         try:
             for job in jobResults:
                 if not all(k in job for k in ['link', 'title']):
                     app.logger.error(f"Missing required job fields in: {job}")
                     return jsonify({'error': 'Invalid job format'}), 400
-                cursor.execute(f"INSERT OR IGNORE INTO jobLinks(link, title, jobWebsiteId, viewed, created_at) VALUES(?, ?, ?, ?, ?)", (job['link'], job['title'], jobWebsiteId, 0, datetime.datetime.now()))
+                connection['cursor'].execute(f"INSERT OR IGNORE INTO jobLinks(link, title, jobWebsiteId, viewed, created_at) VALUES(?, ?, ?, ?, ?)", (job['link'], job['title'], jobWebsiteCreateResult['jobWebsiteId'], 0, datetime.datetime.now()))
         except sqlite3.Error as e:
             app.logger.error(f"Error inserting into jobLinks table: {e}")
-            conn.close()
+            connection['conn'].close()
             return jsonify({'error': 'Failed to save job links'}), 500
-        conn.commit()
-        conn.close()
+        connection['conn'].commit()
+        connection['conn'].close()
         try:
-            send_message([{'link': job['link'], 'title': job['title']} for job in jobResults], data['company'], data['channelId'], jobWebsiteId)
+            send_message([{'link': job['link'], 'title': job['title']} for job in jobResults], data['company'], data['channelId'], jobWebsiteCreateResult['jobWebsiteId'])
         except Exception as e:
             app.logger.error(f"Error sending notification: {e}")
             return jsonify({'error': 'Failed to send notification'}), 500
@@ -161,30 +148,23 @@ def create_website():
 
 @app.route('/settings', methods=['GET'])
 def get_settings():
-    try:
-        conn = sqlite3.connect('jobs.db')
-        cursor = conn.cursor()
-    except sqlite3.Error as e:
-        app.logger.error(f"Database connection error: {e}")
-        return jsonify({'error': 'Failed to connect to the database'}), 500
+    connection = create_db_connection(app)
+    if not connection['success']:
+        return jsonify({'error': connection['error']}), connection['status']
 
     try:
-        try:
-            cursor.execute('''SELECT * FROM settings ''')
-            settingsResults = cursor.fetchall()
-        except sqlite3.Error as e:
-            app.logger.error(f"Error querying settings: {e}")
-            return jsonify({'error': 'Failed to fetch settings'}), 500
+        settingsResults = fetch_settings(app, connection['cursor'], connection['conn'])
+        if not settingsResults['success']:
+            return jsonify({'error': settingsResults['error']}), settingsResults['status']
         
-        try:
-            cursor.execute('''SELECT * FROM channels''')
-            channelResults = cursor.fetchall()
-        except sqlite3.Error as e:
-            app.logger.error(f"Error querying channels: {e}")
-            return jsonify({'error': 'Failed to fetch channels'}), 500
-        conn.close()
-        settings = [{'id': setting[0], 'name': setting[1], 'value': setting[2]} for setting in settingsResults]
-        channels = [{'id': channel[0], 'name': channel[1]} for channel in channelResults]
+        channelResults = fetch_channels(app, connection['cursor'], connection['conn'])
+        if not channelResults['success']:
+            return jsonify({'error': channelResults['error']}), channelResults['status']
+
+        connection['conn'].close()
+        settings = [{'id': setting[0], 'name': setting[1], 'value': setting[2]} for setting in settingsResults['settings']]
+        channels = [{'id': channel[0], 'name': channel[1]} for channel in channelResults['channels']]
+
         return jsonify({'settings': settings, 'channels': channels})
     except Exception as e:
         app.logger.error(f"Unexpected error while processing request: {e}")
@@ -198,12 +178,9 @@ def update_settings():
     #     app.logger.error("Missing required fields: 'settings', 'channels', or 'newChannels'")
     #     return jsonify({'error': "Missing required fields: 'settings', 'channels', or 'newChannels'"}), 400
 
-    try:
-        conn = sqlite3.connect('jobs.db')
-        cursor = conn.cursor()
-    except sqlite3.Error as e:
-        app.logger.error(f"Database connection error: {e}")
-        return jsonify({'error': 'Failed to connect to the database'}), 500
+    connection = create_db_connection(app)
+    if not connection['success']:
+            return jsonify({'error': connection['error']}), connection['status']
     channels = data['channels']
     try:
         try:
@@ -211,17 +188,21 @@ def update_settings():
                 if 'name' not in setting or 'value' not in setting:
                     app.logger.error(f"Invalid setting format: {setting}")
                     return jsonify({'error': 'Invalid setting format'}), 400
-                cursor.execute('''UPDATE settings SET value = ? WHERE name = ?''', (setting.get('value'), setting.get('name')))
+                connection['cursor'].execute('''UPDATE settings SET value = ? WHERE name = ?''', (setting.get('value'), setting.get('name')))
         except sqlite3.Error as e:
             app.logger.error(f"Error updating settings: {e}")
             return jsonify({'error': 'Failed to update settings'}), 500
         try:
             channelIds = {channel["id"] for channel in channels}
-            cursor.execute("SELECT id FROM channels")
-            existingChannelIds = {row[0] for row in cursor.fetchall()}
+
+            channelResults = fetch_channels(app, connection['cursor'], connection['conn'])
+            if not channelResults['success']:
+                return jsonify({'error': channelResults['error']}), channelResults['status']
+            existingChannelIds = {row[0] for row in channelResults['channels']}
+
             idsToDelete = existingChannelIds - channelIds
             if idsToDelete:
-                cursor.execute(
+                connection['cursor'].execute(
                     f"DELETE FROM channels WHERE id IN ({','.join(['?'] * len(idsToDelete))})",
                     tuple(idsToDelete)
                 )
@@ -229,7 +210,7 @@ def update_settings():
                 if 'id' not in channel or 'name' not in channel:
                     app.logger.error(f"Invalid channel format: {channel}")
                     return jsonify({'error': 'Invalid channel format'}), 400
-                cursor.execute(
+                connection['cursor'].execute(
                     "UPDATE channels SET name = ? WHERE id = ?",
                     (channel['name'], channel['id'])
                 )
@@ -241,12 +222,12 @@ def update_settings():
                 if 'name' not in channel:
                     app.logger.error(f"Invalid new channel format: {channel}")
                     return jsonify({'error': 'Invalid new channel format'}), 400
-                cursor.execute('INSERT INTO channels (name) VALUES (?)', (channel.get('name'),))
+                connection['cursor'].execute('INSERT INTO channels (name) VALUES (?)', (channel.get('name'),))
         except sqlite3.Error as e:
             app.logger.error(f"Error inserting new channels: {e}")
             return jsonify({'error': 'Failed to add new channels'}), 500
-        conn.commit()
-        conn.close()
+        connection['conn'].commit()
+        connection['conn'].close()
         return jsonify({'success': 1})
     except Exception as e:
         app.logger.error(f"Unexpected error during update_settings: {e}")
@@ -255,45 +236,34 @@ def update_settings():
 @app.route('/index', methods=['GET'])
 def get_websites():
     try:
-        try:
-            conn = sqlite3.connect('jobs.db')
-            cursor = conn.cursor()
-        except sqlite3.Error as e:
-            app.logger.error(f"Database connection error: {e}")
-            return jsonify({'error': 'Failed to connect to the database'}), 500
+        connection = create_db_connection(app)
+        if not connection['success']:
+            return jsonify({'error': connection['error']}), connection['status']
 
-        try:
-            cursor.execute(INITIALIZE_DB)
-            app.logger.info("Database initialization checked")
-        except sqlite3.Error as e:
-            app.logger.error(f"Error executing INITIALIZE_DB: {e}")
-            return jsonify({'error': 'Failed to initialize the database'}), 500
+        initializationResult = initialize_db(app, connection['cursor'], connection['conn'])
+        if not initializationResult['success']:
+            return jsonify({'error': initializationResult['error']}), initializationResult['status']
 
-        try:
-            cursor.execute('''SELECT jobWebsites.id, userId, url, favicon, company, channelId, containerXpath, titleXpath, linkXpath, titleAttribute, COUNT(jL.id) AS numLinksFound FROM jobWebsites LEFT JOIN (SELECT * FROM jobLinks where viewed = 0) jL  ON jL.jobWebsiteId = jobWebsites.id GROUP BY jobWebsites.id, userId, url, favicon, company, channelId, containerXpath, titleXpath, linkXpath, titleAttribute ''')
-            jobWebsitesResults = cursor.fetchall()
-        except sqlite3.Error as e:
-            app.logger.error(f"Error fetching job websites: {e}")
-            return jsonify({'error': 'Failed to fetch job websites'}), 500
+        jobWebsiteResults = fetch_job_websites_with_new_link_counts(app, connection['cursor'], connection['conn'])
+        if not jobWebsiteResults['success']:
+            return jsonify({'error': jobWebsiteResults['error']}), jobWebsiteResults['status']
     
-        try:
-            cursor.execute('''SELECT * FROM channels''')
-            channelResults = cursor.fetchall()
-        except sqlite3.Error as e:
-            app.logger.error(f"Error fetching channels: {e}")
-            return jsonify({'error': 'Failed to fetch channels'}), 500
-        conn.commit()
-        conn.close()
+        channelResults = fetch_channels(app, connection['cursor'], connection['conn'])
+        if not channelResults['success']:
+            return jsonify({'error': channelResults['error']}), channelResults['status']
+        
+        connection['conn'].commit()
+        connection['conn'].close()
     except sqlite3.Error as e:
         app.logger.error(f"Database connection error: {e}")
         return jsonify({'error': 'Database connection failed'}), 500
 
     try:
         websites = []
-        for row in jobWebsitesResults:
-            image_base64 = base64.b64encode(row[3]).decode('utf-8') if row[3] is not None else None
-            websites.append({'id': row[0], 'userId': row[1], 'url': row[2], 'favicon': image_base64, 'company': row[4], 'channelId': row[5], 'containerXpath': row[6], 'titleXpath': row[7], 'linkXpath': row[8], 'titleAttribute': row[9], 'numLinksFound': row[10]})
-        channels = [{'id': channel[0], 'name': channel[1]} for channel in channelResults]
+        for row in jobWebsiteResults['jobWebsites']:
+            image_base64 = base64.b64encode(row[2]).decode('utf-8') if row[2] is not None else None
+            websites.append({'id': row[0], 'url': row[1], 'favicon': image_base64, 'company': row[3], 'channelId': row[4], 'containerXpath': row[5], 'titleXpath': row[6], 'linkXpath': row[7], 'titleAttribute': row[8], 'numLinksFound': row[9]})
+        channels = [{'id': channel[0], 'name': channel[1]} for channel in channelResults['channels']]
     except Exception as e:
         app.logger.error(f"Error processing results: {e}")
         return jsonify({'error': 'Failed to process results'}), 500
@@ -302,31 +272,22 @@ def get_websites():
 @app.route('/website/<int:website_id>/run', methods=['GET'])
 def run_scraper(website_id):
     try:
-        try:
-            conn = sqlite3.connect('jobs.db')
-            cursor = conn.cursor()
-        except sqlite3.Error as e:
-            app.logger.error(f"Database connection error: {e}")
-            return jsonify({'error': 'Failed to connect to the database'}), 500
+        connection = create_db_connection(app)
+        if not connection['success']:
+            return jsonify({'error': connection['error']}), connection['status']
         
-        try:
-            cursor.execute('''SELECT * FROM jobWebsites WHERE id = ? ''', (website_id,))
-            websiteResult = cursor.fetchone()
-        except sqlite3.Error as e:
-            app.logger.error(f"Error fetching jobWebsite: {e}")
-            return jsonify({'error': 'Failed to fetch jobWebsite'}), 500
+        jobWebsiteResult = fetch_job_website(app, connection['cursor'], connection['conn'], website_id)
+        if not jobWebsiteResult['success']:
+            return jsonify({'error': jobWebsiteResult['error']}), jobWebsiteResult['status']
         
-        if not websiteResult:
+        if not jobWebsiteResult['jobWebsite']:
             app.logger.warning(f"No website found with ID: {website_id}")
             return jsonify({'error': 'Website not found'}), 404
         
-        try:
-            cursor.execute('''SELECT * FROM jobWebsiteFilters WHERE jobWebsiteId = ? ''', (website_id,))
-            filterResults = cursor.fetchall()
-            filters = [{'id': filterResult[0], 'filterXpath': filterResult[2], 'selectValue': filterResult[3], 'type': filterResult[4]} for filterResult in filterResults]
-        except sqlite3.Error as e:
-            app.logger.error(f"Error fetching jobWebsiteFilters: {e}")
-            return jsonify({'error': 'Failed to fetch jobWebsiteFilters'}), 500
+        filterResults = fetch_filters_for_job_website(app, connection['cursor'], connection['conn'], website_id)
+        if not filterResults['success']:
+            return jsonify({'error': filterResults['error']}), filterResults['status']
+        filters = [{'id': filterResult[0], 'filterXpath': filterResult[2], 'selectValue': filterResult[3], 'type': filterResult[4]} for filterResult in filterResults['filters']]
         
         options = Options()
         options.add_argument('--headless=new')
@@ -337,7 +298,7 @@ def run_scraper(website_id):
             return jsonify({'error': 'Failed to initialize WebDriver'}), 500
         
         try:
-            jobResults = getJobs(driver, websiteResult[2], websiteResult[4], websiteResult[6], websiteResult[7], websiteResult[8],  websiteResult[9], filters)
+            jobResults = getJobs(driver, jobWebsiteResult['jobWebsite'][1], jobWebsiteResult['jobWebsite'][3], jobWebsiteResult['jobWebsite'][5], jobWebsiteResult['jobWebsite'][6], jobWebsiteResult['jobWebsite'][7],  jobWebsiteResult['jobWebsite'][8], filters)
         except Exception as e:
             app.logger.error(f"Error while executing getJobs: {e}")
             driver.quit()
@@ -345,8 +306,8 @@ def run_scraper(website_id):
         driver.quit()
 
         try:
-            cursor.execute(f"SELECT * FROM jobLinks where jobWebsiteId = '{website_id}' ")
-            previouslySentLinkResults = cursor.fetchall()
+            connection['cursor'].execute(f"SELECT * FROM jobLinks where jobWebsiteId = '{website_id}' ")
+            previouslySentLinkResults = connection['cursor'].fetchall()
             previouslySentLinks = [{'link': row[1], 'title': row[2]} for row in previouslySentLinkResults]
         except sqlite3.Error as e:
                 app.logger.error(f"Error fetching previously sent links: {e}")
@@ -357,17 +318,17 @@ def run_scraper(website_id):
             for job in jobResults:
                 jobDict = {'link': job['link'], 'title': job['title']}
                 if not [entry for entry in previouslySentLinks if all(entry.get(key) == value for key, value in jobDict.items())]:
-                    cursor.execute("INSERT OR IGNORE INTO jobLinks(link, title, jobWebsiteId, viewed, created_at) VALUES(?, ?, ?, ?, ?)", (job['link'], job['title'], website_id, 0, datetime.datetime.now()))
+                    connection['cursor'].execute("INSERT OR IGNORE INTO jobLinks(link, title, jobWebsiteId, viewed, created_at) VALUES(?, ?, ?, ?, ?)", (job['link'], job['title'], website_id, 0, datetime.datetime.now()))
                     newJobs.append(jobDict)
         except Exception as e:
             app.logger.error(f"Error adding new job links: {e}")
             return jsonify({'error': 'Failed to add new job links'}), 500
         
-        conn.commit()
-        conn.close()
+        connection['conn'].commit()
+        connection['conn'].close()
 
         try:
-            send_message(newJobs, websiteResult[4], websiteResult[5], website_id)
+            send_message(newJobs, jobWebsiteResult['jobWebsite'][4], jobWebsiteResult['jobWebsite'][5], website_id)
         except Exception as e:
             app.logger.error(f"Error sending notification: {e}")
             return jsonify({'error': 'Failed to send notification'}), 500
@@ -380,16 +341,13 @@ def run_scraper(website_id):
 @app.route('/links/<int:website_id>', methods=['GET'])
 def get_links_list(website_id):
     try:
-        try:
-            conn = sqlite3.connect('jobs.db')
-            cursor = conn.cursor()
-        except sqlite3.Error as e:
-            app.logger.error(f"Database connection error: {e}")
-            return jsonify({'error': 'Failed to connect to the database'}), 500
+        connection = create_db_connection(app)
+        if not connection['success']:
+            return jsonify({'error': connection['error']}), connection['status']
         
         try:
-            cursor.execute(f"SELECT * FROM jobLinks where jobWebsiteId = '{website_id}' ")
-            previouslySentLinkResults = cursor.fetchall()
+            connection['cursor'].execute(f"SELECT * FROM jobLinks where jobWebsiteId = '{website_id}' ")
+            previouslySentLinkResults = connection['cursor'].fetchall()
             links = []
             for row in previouslySentLinkResults:
                 links.append({'id': row[0], 'link': row[1], 'title': row[2], 'viewed': row[4], 'created_at': datetime.datetime.strptime(row[5], "%Y-%m-%d %H:%M:%S.%f").strftime("%m/%d/%Y %I:%M %p")})
@@ -397,8 +355,8 @@ def get_links_list(website_id):
                 app.logger.error(f"Error fetching previously sent links: {e}")
                 return jsonify({'error': 'Failed to fetch previously sent links'}), 500
         
-        conn.commit()
-        conn.close()
+        connection['conn'].commit()
+        connection['conn'].close()
         return jsonify({'links': links})
     
     except Exception as e:
@@ -408,19 +366,17 @@ def get_links_list(website_id):
 @app.route('/links/<int:website_id>', methods=['PUT'])
 def set_viewed_links(website_id):
     try:
+        connection = create_db_connection(app)
+        if not connection['success']:
+            return jsonify({'error': connection['error']}), connection['status']
+
         try:
-            conn = sqlite3.connect('jobs.db')
-            cursor = conn.cursor()
-        except sqlite3.Error as e:
-            app.logger.error(f"Database connection error: {e}")
-            return jsonify({'error': 'Failed to connect to the database'}), 500
-        try:
-            cursor.execute('''UPDATE jobLinks SET viewed = 1 WHERE jobWebsiteId = ?''', (website_id,))
+            connection['cursor'].execute('''UPDATE jobLinks SET viewed = 1 WHERE jobWebsiteId = ?''', (website_id,))
         except sqlite3.Error as e:
             app.logger.error(f"Error setting links as viewed: {e}")
             return jsonify({'error': 'Failed to set links as viewed'}), 500
-        conn.commit()
-        conn.close()
+        connection['conn'].commit()
+        connection['conn'].close()
         return jsonify({'success': 1})
     except Exception as e:
         app.logger.error(f"Unexpected error during set_viewed_links: {e}")
@@ -429,28 +385,23 @@ def set_viewed_links(website_id):
 @app.route('/website/<int:website_id>', methods=['GET'])
 def edit_website(website_id):
     try:
-        try:
-            conn = sqlite3.connect('jobs.db')
-            cursor = conn.cursor()
-        except sqlite3.Error as e:
-            app.logger.error(f"Database connection error: {e}")
-            return jsonify({'error': 'Failed to connect to the database'}), 500
-        try:
-            cursor.execute('''SELECT * FROM jobWebsites WHERE id = ? ''', (website_id,))
-            websiteResult = cursor.fetchone()
-            website = {'id': websiteResult[0], 'userId': websiteResult[1], 'url': websiteResult[2], 'company' : websiteResult[4], 'channelId': websiteResult[5], 'containerXpath': websiteResult[6], 'titleXpath': websiteResult[7], 'linkXpath': websiteResult[8], 'titleAttribute' : websiteResult[9]}
-        except sqlite3.Error as e:
-            app.logger.error(f"Error setting querying the jobWebsite: {e}")
-            return jsonify({'error': 'Failed to query the jobWebsite'}), 500
-        try:
-            cursor.execute('''SELECT * FROM jobWebsiteFilters WHERE jobWebsiteId = ? ''', (website_id,))
-            filterResults = cursor.fetchall()
-            filters = [{'id': filterResult[0], 'filterXpath': filterResult[2], 'selectValue': filterResult[3], 'type': filterResult[4]} for filterResult in filterResults]
-        except sqlite3.Error as e:
-            app.logger.error(f"Error setting querying the jobWebsite filters: {e}")
-            return jsonify({'error': 'Failed to query the jobWebsite filters'}), 500
-        conn.commit()
-        conn.close()
+        connection = create_db_connection(app)
+        if not connection['success']:
+            return jsonify({'error': connection['error']}), connection['status']
+
+        jobWebsiteResult = fetch_job_website(app, connection['cursor'], connection['conn'], website_id)
+        if not jobWebsiteResult['success']:
+            return jsonify({'error': jobWebsiteResult['error']}), jobWebsiteResult['status']
+        
+        website = {'id': jobWebsiteResult['jobWebsite'][0], 'url': jobWebsiteResult['jobWebsite'][1], 'company' : jobWebsiteResult['jobWebsite'][3], 'channelId': jobWebsiteResult['jobWebsite'][4], 'containerXpath': jobWebsiteResult['jobWebsite'][5], 'titleXpath': jobWebsiteResult['jobWebsite'][6], 'linkXpath': jobWebsiteResult['jobWebsite'][7], 'titleAttribute' : jobWebsiteResult['jobWebsite'][8]}
+
+        filterResults = fetch_filters_for_job_website(app, connection['cursor'], connection['conn'], website_id)
+        if not filterResults['success']:
+            return jsonify({'error': filterResults['error']}), filterResults['status']
+        filters = [{'id': filterResult[0], 'filterXpath': filterResult[2], 'selectValue': filterResult[3], 'type': filterResult[4]} for filterResult in filterResults['filters']]
+
+        connection['conn'].commit()
+        connection['conn'].close()
         return jsonify({'website': website, 'filters': filters})
     except Exception as e:
         app.logger.error(f"Unexpected error during edit_website: {e}")
@@ -466,41 +417,38 @@ def update_website(website_id):
             if field not in data:
                 app.logger.error(f"Missing required field for create website: {field}")
                 return jsonify({'error': f"Missing required field: {field}"}), 400
-        try:
-            conn = sqlite3.connect('jobs.db')
-            cursor = conn.cursor()
-        except sqlite3.Error as e:
-            app.logger.error(f"Database connection error: {e}")
-            return jsonify({'error': 'Failed to connect to the database'}), 500     
+            
+        connection = create_db_connection(app)
+        if not connection['success']:
+            return jsonify({'error': connection['error']}), connection['status']     
 
-        userId = 1
         try:
             favicon = getFavicon(webpageSourceData, data['url'])
         except Exception as e:
             app.logger.error(f"Error retrieving favicon: {e}")
-            conn.close()
+            connection['conn'].close()
             return jsonify({'error': 'Failed to retrieve favicon'}), 500
         try:
-            cursor.execute('''UPDATE jobWebsites SET url = ?, userId = ?, favicon = ?, company = ?, channelId = ?, containerXpath = ?, titleXpath = ?, linkXpath = ?, titleAttribute = ? WHERE id = ? ''', (data['url'], userId, favicon, data['company'], data['channelId'], data['containerXpath'], data['titleXpath'], data['linkXpath'], data['titleAttribute'], website_id))
+            connection['cursor'].execute('''UPDATE jobWebsites SET url = ?, favicon = ?, company = ?, channelId = ?, containerXpath = ?, titleXpath = ?, linkXpath = ?, titleAttribute = ? WHERE id = ? ''', (data['url'], favicon, data['company'], data['channelId'], data['containerXpath'], data['titleXpath'], data['linkXpath'], data['titleAttribute'], website_id))
         except sqlite3.Error as e:
             app.logger.error(f"Error updating jobWebsites table: {e}")
-            conn.close()
+            connection['conn'].close()
             return jsonify({'error': 'Failed to update job website entry'}), 500
         try:
             for filter in data['newFilters']:
                 if not all(k in filter for k in ['filterXpath', 'selectValue', 'type']):
                     app.logger.error(f"Missing required filter fields in: {filter}")
                     return jsonify({'error': 'Invalid filter format'}), 400
-                cursor.execute('INSERT INTO jobWebsiteFilters (jobWebsiteId, filterXpath, selectValue, type) VALUES (?, ?, ?, ?)', (website_id, filter['filterXpath'], filter['selectValue'], filter['type']))
+                connection['cursor'].execute('INSERT INTO jobWebsiteFilters (jobWebsiteId, filterXpath, selectValue, type) VALUES (?, ?, ?, ?)', (website_id, filter['filterXpath'], filter['selectValue'], filter['type']))
         except sqlite3.Error as e:
             app.logger.error(f"Error inserting into jobWebsiteFilters table: {e}")
-            conn.close()
+            connection['conn'].close()
             return jsonify({'error': 'Failed to add filters'}), 500
     
         filterIds = {filter["id"] for filter in data['filters']}
         try:
-            cursor.execute("SELECT id FROM jobWebsiteFilters WHERE jobWebsiteId = ?", (website_id,))
-            existingFilterIds = {row[0] for row in cursor.fetchall()}
+            connection['cursor'].execute("SELECT id FROM jobWebsiteFilters WHERE jobWebsiteId = ?", (website_id,))
+            existingFilterIds = {row[0] for row in connection['cursor'].fetchall()}
         except sqlite3.Error as e:
             app.logger.error(f"Error fetching jobWebsiteFilters: {e}")
             return jsonify({'error': 'Failed to fetch filters'}), 500
@@ -508,12 +456,12 @@ def update_website(website_id):
         try:
             idsToDelete = existingFilterIds - filterIds
             if idsToDelete:
-                cursor.execute(
+                connection['cursor'].execute(
                     f"DELETE FROM jobWebsiteFilters WHERE id IN ({','.join(['?'] * len(idsToDelete))}) AND jobWebsiteId = ?",
                     tuple(idsToDelete) + (website_id,)
                 )
             for filter in data['filters']:
-                cursor.execute(
+                connection['cursor'].execute(
                     "UPDATE jobWebsiteFilters SET (filterXpath = ?, type = ?, selectValue = ?) WHERE id = ?",
                     (filter['filterXpath'], filter['type'], filter['selectValue'], filter['id'])
                 )
@@ -522,8 +470,8 @@ def update_website(website_id):
             return jsonify({'error': 'Failed to update filters'}), 500
         
         try:
-            cursor.execute(f"SELECT * FROM jobLinks where jobWebsiteId = '{website_id}' ")
-            previouslySentLinkResults = cursor.fetchall()
+            connection['cursor'].execute(f"SELECT * FROM jobLinks where jobWebsiteId = '{website_id}' ")
+            previouslySentLinkResults = connection['cursor'].fetchall()
             previouslySentLinks = [{'link': row[1], 'title': row[2]} for row in previouslySentLinkResults]
         except sqlite3.Error as e:
                 app.logger.error(f"Error fetching previously sent links: {e}")
@@ -534,14 +482,14 @@ def update_website(website_id):
             for job in jobResults:
                 jobDict = {'link': job['link'], 'title': job['title']}
                 if not [entry for entry in previouslySentLinks if all(entry.get(key) == value for key, value in jobDict.items())]:
-                    cursor.execute("INSERT OR IGNORE INTO jobLinks(link, title, jobWebsiteId, viewed, created_at) VALUES(?, ?, ?, ?, ?)", (job['link'], job['title'], website_id, 0, datetime.datetime.now()))
+                    connection['cursor'].execute("INSERT OR IGNORE INTO jobLinks(link, title, jobWebsiteId, viewed, created_at) VALUES(?, ?, ?, ?, ?)", (job['link'], job['title'], website_id, 0, datetime.datetime.now()))
                     newJobs.append(jobDict)
         except Exception as e:
             app.logger.error(f"Error adding new job links: {e}")
             return jsonify({'error': 'Failed to add new job links'}), 500
     
-        conn.commit()
-        conn.close()
+        connection['conn'].commit()
+        connection['conn'].close()
 
         try:
             send_message(newJobs, data['company'], data['channelId'], website_id)
@@ -557,26 +505,185 @@ def update_website(website_id):
 @app.route('/website/<int:website_id>', methods=['DELETE'])
 def delete_website(website_id):
     try:
+        connection = create_db_connection(app)
+        if not connection['success']:
+            return jsonify({'error': connection['error']}), connection['status']
+
         try:
-            conn = sqlite3.connect('jobs.db')
-            cursor = conn.cursor()
-        except sqlite3.Error as e:
-            app.logger.error(f"Database connection error: {e}")
-            return jsonify({'error': 'Failed to connect to the database'}), 500
-        try:
-            cursor.execute('''DELETE FROM jobWebsites WHERE id = ? 
+            connection['cursor'].execute('''DELETE FROM jobWebsites WHERE id = ? 
                             DELETE FROM jobLinks WHERE jobWebsiteId = ? 
                             DELETE FROM jobWebsiteFilters WHERE jobWebsiteId = ?''', (website_id, website_id, website_id))
         except sqlite3.Error as e:
             app.logger.error(f"Error deleting the jobWebsite record: {e}")
-            conn.close()
+            connection['conn'].close()
             return jsonify({'error': 'Failed to delete jobWebsite'}), 500
-        conn.commit()
-        conn.close()
+        connection['conn'].commit()
+        connection['conn'].close()
         return jsonify({'success': 1})
     except Exception as e:
         app.logger.error(f"Unexpected error during delete_website: {e}")
         return jsonify({'error': 'An unexpected error occurred'}), 500
+    
+def send_message(jobs, company, channelId, websiteId):
+    if not channelId or not isinstance(channelId, int):
+        return None
+    
+    try: 
+        connection = create_db_connection(app)
+        if not connection['success']:
+            return jsonify({'error': connection['error']}), connection['status']
+        
+        slackTokenResults = fetch_slack_token(app, connection['cursor'], connection['conn'])
+        if not slackTokenResults['success']:
+            return jsonify({'error': slackTokenResults['error']}), slackTokenResults['status']
+        
+        if not slackTokenResults['slackToken']:
+            return None
+
+        try:
+            connection['cursor'].execute(''' SELECT name FROM channels WHERE id = ? ''', (channelId,))
+            channel = connection['cursor'].fetchone()
+            if not channel:
+                connection['cursor'].execute(''' UPDATE jobWebsites SET channelId = null WHERE id = ? ''', (websiteId,))
+        except sqlite3.Error as e:
+            app.logger.error(f"Error querying the slack channel: {e}")
+            return jsonify({'error': 'Failed to query the slack channel'}), 500
+
+        connection['conn'].commit()
+        connection['conn'].close()
+
+        try:
+            slack_client = WebClient(token=slackTokenResults['slackToken'][0])
+            links = [f"<{job['link']}|{job['title']}>" for job in jobs]
+            response = slack_client.chat_postMessage(channel=channel[0], unfurl_links=False, text= "*" + company + " jobs found: * \n\n" + "\n\n".join(links))
+            if not response["ok"]:
+                app.logger.error(f"Failed to send Slack message: {response['error']}")
+                return None
+        except SlackApiError as e:
+            app.logger.error(f"Slack API Error: {e.response['error']}")
+        except Exception as e:
+            app.logger.error(f"Unexpected error while sending Slack message: {e}")
+    except Exception as e:
+        app.logger.error(f"Unexpected error during send_message: {e}")
+        return jsonify({'error': 'An unexpected error occurred'}), 500
+    
+def scrape_all():
+    try:
+        connection = create_db_connection(app)
+        if not connection['success']:
+            return jsonify({'error': connection['error']}), connection['status']
+
+        try:
+            connection['cursor'].executescript(INITIALIZE_DB)
+        except sqlite3.Error as e:
+            app.logger.error(f"Error executing INITIALIZE_DB: {e}")
+            return jsonify({'error': 'Failed to initialize the database'}), 500
+        
+        jobWebsiteResults = fetch_job_websites(app, connection['cursor'], connection['conn'])
+        if not jobWebsiteResults['success']:
+            return jsonify({'error': jobWebsiteResults['error']}), jobWebsiteResults['status']
+        websites = [{'id': row[0], 'url': row[1], 'company': row[2], 'channel': row[3], 'containerXpath': row[4], 'titleXpath': row[5], 'linkXpath': row[6], 'titleAttribute': row[7], 'filters': processed_filters(fetch_filters_for_job_website(app, connection['cursor'], connection['conn'], row[0]))} for row in jobWebsiteResults['jobWebsites']]
+       
+        connection['conn'].close()
+
+        for website in websites:
+            options = Options()
+            options.add_argument('--headless=new')
+            try:
+                driver = webdriver.Chrome(options=options)
+            except Exception as e:
+                app.logger.error(f"Failed to initialize WebDriver: {e}")
+                return jsonify({'error': 'Failed to initialize WebDriver'}), 500
+            try:
+                getJobs(driver, website['id'], website['url'], website['company'], website['channel'], website['containerXpath'], website['titleXpath'], website['linkXpath'], website['titleAttribute'])
+            except Exception as e:
+                app.logger.error(f"Error while executing getJobs: {e}")
+                driver.quit()
+                return jsonify({'error': 'Failed to fetch jobs'}), 500
+            driver.quit()
+        return True
+    except Exception as e:
+        app.logger.error(f"Unexpected error during scrape_all: {e}")
+        return jsonify({'error': 'An unexpected error occurred'}), 500
+    
+def processed_filters(filterResults):
+    return [{'id': filterResult[0], 'filterXpath': filterResult[2], 'selectValue': filterResult[3], 'type': filterResult[4]} for filterResult in filterResults]
+
+def applyFilters(filters, driver):
+    try:
+        for filter in filters:
+            filterXpath = filter['filterXpath']
+            selectValue = filter['selectValue']
+            try:
+                match filter['type']:
+                    case 'select':
+                        select = Select(driver.find_element(By.XPATH, filterXpath))
+                        select.select_by_value(selectValue)
+                        time.sleep(5)
+                    case _:
+                        app.logger.warning(f"Unsupported filter type: {filter['type']}. Skipping this filter.")
+                        continue
+            except NoSuchElementException:
+                app.logger.error(f"Element not found for XPath: {filterXpath}. Skipping this filter.")
+            except InvalidSelectorException:
+                app.logger.error(f"Invalid XPath: {filterXpath}. Skipping this filter.")
+            except Exception as e:
+                app.logger.error(f"Unexpected error while applying filter {filter}: {e}")
+        return True
+    except Exception as e:
+        app.logger.error(f"Unexpected error in applyFilters: {e}")
+        return False
+    
+def getJobs(driver, url, company, containerXpath, titleXpath, linkXpath, titleAttribute, filters, newFilters = None):
+    jobs = []
+
+    if not driver:
+        app.logger.error("WebDriver instance is None.")
+        return []
+    
+    try:
+        driver.get(url)
+        # Wait for the JavaScript content to load
+        time.sleep(4)
+
+        if not applyFilters(filters, driver):
+            app.logger.warning("Failed to apply filters.")
+
+        if newFilters:
+            if not applyFilters(newFilters, driver):
+                app.logger.warning("Failed to apply filters.")
+
+        jobContainers = driver.find_elements(By.XPATH, containerXpath)
+        for option in jobContainers:
+            try:
+                title = None
+                if (titleXpath):
+                    try:
+                        titleElement = option.find_element(By.XPATH, titleXpath)
+                        title = titleElement.get_attribute(titleAttribute) if titleAttribute else titleElement.text
+                    except NoSuchElementException:
+                        app.logger.warning(f"Title element not found using XPath: {titleXpath}. Using fallback title.")
+                if not title:
+                    title = f'New {company} Job'
+
+                link = None
+                if (linkXpath):
+                    try:
+                        link = option.find_element(By.XPATH, linkXpath).get_attribute('href')
+                    except NoSuchElementException:
+                            app.logger.warning(f"Link element not found using XPath: {linkXpath}. Using fallback link.")
+                if not link:
+                        link = url
+                
+                jobs.append({'title': title, 'link': link})
+            except Exception as e:
+                    app.logger.error(f"Unexpected error while processing a job container: {e}")
+
+    except TimeoutException:
+        app.logger.error(f"Timeout occurred while loading URL: {url}")
+    except Exception as e:
+        app.logger.error(f"Unexpected error in getJobs: {e}")
+    return jobs
 
 if __name__ == '__main__':
     app.run(debug=True)

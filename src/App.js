@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import "./App.css";
-import { Backdrop, CircularProgress } from "@mui/material";
+import { Backdrop, CircularProgress, Alert, Fade } from "@mui/material";
 import WebsiteRecord from "./WebsiteRecord.js";
 import WebsiteIndex from "./WebsiteIndex.js";
 import WebsiteTest from "./WebsiteTest.js";
@@ -28,6 +28,7 @@ function App() {
   const [openLoader, setOpenLoader] = useState(false);
   const [jobs, setJobs] = useState([]);
   const [channels, setChannels] = useState([]);
+  const [successMessage, setSuccessMessage] = useState();
 
   const renderComponent = () => {
     switch (visibleComponent) {
@@ -38,6 +39,7 @@ function App() {
             setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
             setChannels={setChannels}
             setOpenLoader={setOpenLoader}
+            setSuccessMessage={setSuccessMessage}
           />
         );
       case "WebsiteCreate":
@@ -87,6 +89,7 @@ function App() {
             setWebsiteNewFilterData={setWebsiteNewFilterData}
             setWebsiteFormData={setWebsiteFormData}
             setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
+            setSuccessMessage={setSuccessMessage}
           />
         );
       case "LinkList":
@@ -109,6 +112,7 @@ function App() {
             setJobs={setJobs}
             currentWebsiteRecordId={currentWebsiteRecordId}
             setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
+            setSuccessMessage={setSuccessMessage}
           />
         );
       default:
@@ -118,7 +122,14 @@ function App() {
 
   return (
     <div className="App">
-      <div className="component-container">{renderComponent()}</div>
+      <div className="component-container">
+        {renderComponent()} {/* {successMessage && ( */}
+        <Fade in={successMessage}>
+          <Alert variant="outlined" severity="success">
+            {successMessage}
+          </Alert>
+        </Fade>
+      </div>
       <Backdrop
         sx={(theme) => ({ color: "#fff", zIndex: theme.zIndex.drawer + 1 })}
         open={openLoader}

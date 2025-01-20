@@ -19,11 +19,13 @@ export default function WebsiteTest({
   setWebsiteFilterData,
   setWebsiteFormData,
   setCurrentWebsiteRecordId,
+  setSuccessMessage,
 }) {
   const createWebsiteSubmit = async () => {
     setOpenLoader(true);
     try {
       let response = null;
+      let message = null;
       if (currentWebsiteRecordId) {
         response = await axios.put(
           "http://localhost:5000/website/" + currentWebsiteRecordId,
@@ -33,14 +35,17 @@ export default function WebsiteTest({
             newFilters: websiteNewFilterData,
           }
         );
+        message = "Website updated successfully.";
       } else {
         response = await axios.post("http://localhost:5000/website", {
           ...websiteFormData,
           filters: [...websiteFilterData, ...websiteNewFilterData],
         });
+        message = "Website created successfully.";
       }
       if (response.status == 200) {
         setVisibleComponent("WebsiteIndex");
+        setSuccessMessage(message);
       }
     } catch (error) {
       console.error("Error:", error);
