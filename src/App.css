@@ -6,9 +6,9 @@
 }
 
 .App {
-    background-color: lightblue;
-    min-height: 100vh;
-    padding: 5rem;
+    background-color: #1e1e1e;
+    min-height: calc(100vh - 6rem);
+    padding: 1rem 5rem 5rem 5rem;
 }
 
 .mockWebElement {
@@ -34,4 +34,19 @@
 
 .liSpacing {
     margin-bottom: 0.5rem;
+}
+
+.componentPage {
+    border-radius: 4rem !important;
+    background-color: #2d2d30 !important;
+}
+
+.whiteDivider {
+    border-color: #ccc !important;
+}
+
+.MuiBadge-badge {
+    right: 24px!important;
+    background-color: #ff3333 !important;
+    z-index: 9999 !important;
 }

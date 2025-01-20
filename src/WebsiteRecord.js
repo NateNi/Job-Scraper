@@ -5,7 +5,7 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import "./App.css";
-import { Grid, Paper, Grow } from "@mui/material";
+import { Grid, Paper, Grow, Typography, Divider } from "@mui/material";
 import MockWebpage from "./MockWebpage.js";
 import WebsiteForm from "./WebsiteForm.js";
 
@@ -49,6 +49,7 @@ export default function WebsiteRecord({
     <Grow in={true}>
       <Paper
         elevation={24}
+        className="componentPage"
         sx={{
           padding: "4rem",
           maxWidth: "70%",
@@ -56,15 +57,24 @@ export default function WebsiteRecord({
           marginRight: "auto",
         }}
       >
+        <Typography
+          variant="h3"
+          sx={{
+            display: "inline-block",
+            color: "white",
+            fontWeight: "normal",
+          }}
+        >
+          {currentWebsiteRecordId ? "Update" : "Create"} Website Scraper
+        </Typography>
+        <Divider
+          orientation="horizontal"
+          flexItem
+          sx={{ marginTop: "1rem", marginBottom: "2rem", color: "white" }}
+        />
         <Grid container spacing={6}>
           <Grid key={1} item xs={12} md={6}>
             <WebsiteForm
-              // setURLFocus={setIsURLInputFocused}
-              // setCompanyFocus={setIsCompanyInputFocused}
-              // setContainerFocus={setIsContainerInputFocused}
-              // setTitleFocus={setIsTitleInputFocused}
-              // setLinkFocus={setIsLinkInputFocused}
-              // setFilterFocus={setIsFilterInputFocused}
               setFocusedElement={setFocusedElement}
               setVisibleComponent={setVisibleComponent}
               setOpenLoader={setOpenLoader}

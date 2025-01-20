@@ -5,7 +5,16 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import "./App.css";
-import { Button, TextField, Grow, Paper, Box, Fab } from "@mui/material";
+import {
+  Button,
+  TextField,
+  Grow,
+  Paper,
+  Box,
+  Fab,
+  Typography,
+  Divider,
+} from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { Delete, Add } from "@mui/icons-material";
 
@@ -94,6 +103,7 @@ export default function Settings({
     <Grow in={true}>
       <Paper
         elevation={24}
+        className="componentPage"
         sx={{
           padding: "4rem",
           maxWidth: "70%",
@@ -101,126 +111,153 @@ export default function Settings({
           marginRight: "auto",
         }}
       >
-        <h2>Settings</h2>
-        <form onSubmit={settingsSubmit}>
-          {settings.map((setting) => (
-            <TextField
-              key={setting.id}
-              id="slackToken"
-              fullWidth
-              name={setting.name}
-              label={setting.name}
-              variant="outlined"
-              sx={{ display: "block", marginBottom: "2rem" }}
-              onChange={(e) =>
-                handleSettingsChange(setting.id, "value", e.target.value)
-              }
-              type="password"
-              value={setting.value}
-            />
-          ))}
+        <Typography
+          variant="h3"
+          sx={{
+            display: "inline-block",
+            color: "white",
+            fontWeight: "normal",
+          }}
+        >
+          Settings
+        </Typography>
+        <Divider
+          orientation="horizontal"
+          flexItem
+          className="whiteDivider"
+          sx={{
+            marginTop: "1rem",
+            marginBottom: "2rem",
+          }}
+        />
+        <Paper
+          elevation={24}
+          sx={{
+            padding: "4rem",
+            borderRadius: "2rem",
+            backgroundColor: "#3e3e42",
+          }}
+        >
+          <form onSubmit={settingsSubmit}>
+            {settings.map((setting) => (
+              <TextField
+                key={setting.id}
+                id="slackToken"
+                fullWidth
+                name={setting.name}
+                label={setting.name}
+                variant="outlined"
+                sx={{ display: "block", marginBottom: "2rem" }}
+                onChange={(e) =>
+                  handleSettingsChange(setting.id, "value", e.target.value)
+                }
+                type="password"
+                value={setting.value}
+              />
+            ))}
 
-          <Box sx={{ marginBottom: "2rem" }}>
-            <Fab
-              color="primary"
-              variant="extended"
-              aria-label="add"
-              onClick={() => addNewChannel()}
-            >
-              <Add sx={{ marginRight: "0.5rem" }} />
-              Slack Channel
-            </Fab>
-          </Box>
-
-          {channels.map((channel) => (
-            <Box key={channel.id}>
-              <Box
-                sx={{
-                  width: "100%",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: "2rem",
-                }}
+            <Box sx={{ marginBottom: "2rem" }}>
+              <Fab
+                color="primary"
+                variant="extended"
+                aria-label="add"
+                onClick={() => addNewChannel()}
               >
-                <TextField
-                  id="outlined-basic"
-                  fullWidth
-                  name="channel"
-                  label="Channel"
-                  variant="outlined"
-                  sx={{ display: "block", marginBottom: "2rem" }}
-                  onChange={(e) =>
-                    handleChannelChange(channel.id, "name", e.target.value)
-                  }
-                  value={channel.name}
-                />
-                <Fab
-                  color="primary"
-                  aria-label="remove"
-                  onClick={() => removeChannel(channel.id)}
-                >
-                  <Delete />
-                </Fab>
-              </Box>
+                <Add sx={{ marginRight: "0.5rem" }} />
+                Slack Channel
+              </Fab>
             </Box>
-          ))}
 
-          {newChannels.map((channel) => (
-            <Box key={channel.id}>
-              <Box
-                sx={{
-                  width: "100%",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: "2rem",
-                }}
-              >
-                <TextField
-                  id="outlined-basic"
-                  fullWidth
-                  name="channel"
-                  label="Channel"
-                  variant="outlined"
+            {channels.map((channel) => (
+              <Box key={channel.id}>
+                <Box
                   sx={{
-                    display: "block",
-                    marginBottom: "0.5rem",
-                    marginRight: "1rem",
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginBottom: "2rem",
                   }}
-                  onChange={(e) =>
-                    handleNewChannelChange(channel.id, "name", e.target.value)
-                  }
-                  value={channel.name}
-                />
-                <Fab
-                  color="primary"
-                  aria-label="remove"
-                  onClick={() => removeNewChannel(channel.id)}
                 >
-                  <Delete />
-                </Fab>
+                  <TextField
+                    id="outlined-basic"
+                    fullWidth
+                    name="channel"
+                    label="Channel"
+                    variant="outlined"
+                    sx={{ display: "block", marginBottom: "2rem" }}
+                    onChange={(e) =>
+                      handleChannelChange(channel.id, "name", e.target.value)
+                    }
+                    value={channel.name}
+                  />
+                  <Fab
+                    color="primary"
+                    aria-label="remove"
+                    onClick={() => removeChannel(channel.id)}
+                  >
+                    <Delete />
+                  </Fab>
+                </Box>
               </Box>
-            </Box>
-          ))}
+            ))}
 
-          <Box sx={{ width: "100%", textAlign: "right" }}>
-            <Button
-              variant="contained"
-              type="submit"
-              sx={{ marginRight: "1rem" }}
-            >
-              Submit
-            </Button>
-            <Button
-              variant="contained"
-              color="secondary"
-              onClick={() => {
-                setVisibleComponent("WebsiteIndex");
-              }}
-            >
-              Cancel
-            </Button>
-          </Box>
-        </form>
+            {newChannels.map((channel) => (
+              <Box key={channel.id}>
+                <Box
+                  sx={{
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginBottom: "2rem",
+                  }}
+                >
+                  <TextField
+                    id="outlined-basic"
+                    fullWidth
+                    name="channel"
+                    label="Channel"
+                    variant="outlined"
+                    sx={{
+                      display: "block",
+                      marginBottom: "0.5rem",
+                      marginRight: "1rem",
+                    }}
+                    onChange={(e) =>
+                      handleNewChannelChange(channel.id, "name", e.target.value)
+                    }
+                    value={channel.name}
+                  />
+                  <Fab
+                    color="primary"
+                    aria-label="remove"
+                    onClick={() => removeNewChannel(channel.id)}
+                  >
+                    <Delete />
+                  </Fab>
+                </Box>
+              </Box>
+            ))}
+
+            <Box sx={{ width: "100%", textAlign: "right" }}>
+              <Button
+                variant="contained"
+                type="submit"
+                sx={{ marginRight: "1rem" }}
+              >
+                Submit
+              </Button>
+              <Button
+                variant="contained"
+                color="secondary"
+                onClick={() => {
+                  setVisibleComponent("WebsiteIndex");
+                }}
+              >
+                Cancel
+              </Button>
+            </Box>
+          </form>
+        </Paper>
       </Paper>
     </Grow>
   );

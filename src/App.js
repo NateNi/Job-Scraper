@@ -4,7 +4,7 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import "./App.css";
-import { Backdrop, CircularProgress, Alert, Fade } from "@mui/material";
+import { Backdrop, CircularProgress, Alert, Fade, Box } from "@mui/material";
 import WebsiteRecord from "./WebsiteRecord.js";
 import WebsiteIndex from "./WebsiteIndex.js";
 import WebsiteTest from "./WebsiteTest.js";
@@ -123,12 +123,32 @@ function App() {
   return (
     <div className="App">
       <div className="component-container">
-        {renderComponent()} {/* {successMessage && ( */}
-        <Fade in={successMessage}>
-          <Alert variant="outlined" severity="success">
-            {successMessage}
-          </Alert>
-        </Fade>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "start",
+            alignSelf: "flex-end",
+            top: "2rem",
+            height: "6rem",
+          }}
+        >
+          <Fade in={successMessage}>
+            <Alert
+              variant="outlined"
+              severity="success"
+              sx={{
+                bottom: "2rem",
+                backgroundColor: "white",
+                marginLeft: "auto",
+                marginRight: "auto",
+              }}
+            >
+              {successMessage}
+            </Alert>
+          </Fade>
+        </Box>
+        {renderComponent()}
       </div>
       <Backdrop
         sx={(theme) => ({ color: "#fff", zIndex: theme.zIndex.drawer + 1 })}

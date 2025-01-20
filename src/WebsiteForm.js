@@ -14,11 +14,9 @@ import {
   Fab,
   MenuItem,
   Select,
-  Grid,
-  Typography,
 } from "@mui/material";
 import { Delete, Add } from "@mui/icons-material";
-import Tooltip, { tooltipClasses } from "@mui/material/Tooltip";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
 
 export default function WebsiteForm({
   setFocusedElement,
@@ -130,8 +128,10 @@ export default function WebsiteForm({
   };
 
   return (
-    <Paper elevation={24} sx={{ padding: "4rem" }}>
-      <h2>Website Details</h2>
+    <Paper
+      elevation={24}
+      sx={{ padding: "4rem", borderRadius: "2rem", backgroundColor: "#3e3e42" }}
+    >
       <form onSubmit={testWebsiteSubmit}>
         <Select
           labelId="filter-type-label"
@@ -158,7 +158,7 @@ export default function WebsiteForm({
           name="url"
           label="Website Url"
           variant="outlined"
-          sx={{ display: "block", marginBottom: "2rem" }}
+          sx={{ display: "block", marginBottom: "2rem", borderColor: "white" }}
           onFocus={() => setFocusedElement("url")}
           onBlur={() => setFocusedElement(null)}
           onChange={handleChange}
@@ -171,7 +171,7 @@ export default function WebsiteForm({
           name="company"
           label="Company Name"
           variant="outlined"
-          sx={{ display: "block", marginBottom: "2rem" }}
+          sx={{ display: "block", marginBottom: "2rem", borderColor: "white" }}
           onFocus={() => setFocusedElement("company")}
           onBlur={() => setFocusedElement(null)}
           onChange={handleChange}
@@ -184,7 +184,7 @@ export default function WebsiteForm({
           name="containerXpath"
           label="Container Xpath"
           variant="outlined"
-          sx={{ display: "block", marginBottom: "2rem" }}
+          sx={{ display: "block", marginBottom: "2rem", borderColor: "white" }}
           onFocus={() => setFocusedElement("container")}
           onBlur={() => setFocusedElement(null)}
           onChange={handleChange}
@@ -197,7 +197,7 @@ export default function WebsiteForm({
           name="titleXpath"
           label="Title Xpath"
           variant="outlined"
-          sx={{ display: "block", marginBottom: "2rem" }}
+          sx={{ display: "block", marginBottom: "2rem", borderColor: "white" }}
           onFocus={() => setFocusedElement("title")}
           onBlur={() => setFocusedElement(null)}
           onChange={handleChange}
@@ -210,7 +210,7 @@ export default function WebsiteForm({
           name="titleAttribute"
           label="Title Attribute (optional)"
           variant="outlined"
-          sx={{ display: "block", marginBottom: "2rem" }}
+          sx={{ display: "block", marginBottom: "2rem", borderColor: "white" }}
           onFocus={() => setFocusedElement("title")}
           onBlur={() => setFocusedElement(null)}
           onChange={handleChange}
@@ -223,7 +223,7 @@ export default function WebsiteForm({
           name="linkXpath"
           label="Link Xpath"
           variant="outlined"
-          sx={{ display: "block", marginBottom: "2rem" }}
+          sx={{ display: "block", marginBottom: "2rem", borderColor: "white" }}
           onFocus={() => setFocusedElement("link")}
           onBlur={handleChange}
           onChange={handleChange}

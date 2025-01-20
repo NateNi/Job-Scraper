@@ -56,6 +56,7 @@ export default function WebsiteTest({
     <Grow in={true}>
       <Paper
         elevation={24}
+        className="componentPage"
         sx={{
           padding: "4rem",
           maxWidth: "70%",

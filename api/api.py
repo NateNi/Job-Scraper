@@ -510,9 +510,10 @@ def delete_website(website_id):
             return jsonify({'error': connection['error']}), connection['status']
 
         try:
-            connection['cursor'].execute('''DELETE FROM jobWebsites WHERE id = ? 
-                            DELETE FROM jobLinks WHERE jobWebsiteId = ? 
-                            DELETE FROM jobWebsiteFilters WHERE jobWebsiteId = ?''', (website_id, website_id, website_id))
+            connection['cursor'].execute('''DELETE FROM jobWebsites WHERE id = ? ''', (website_id,))
+            connection['cursor'].execute('''DELETE FROM jobLinks WHERE jobWebsiteId = ? ''', (website_id,))
+            connection['cursor'].execute('''DELETE FROM jobWebsiteFilters WHERE jobWebsiteId = ? ''', (website_id,))
+                            
         except sqlite3.Error as e:
             app.logger.error(f"Error deleting the jobWebsite record: {e}")
             connection['conn'].close()

@@ -61,6 +61,8 @@ export default function WebsiteIndex({
     if (response.status === 200) {
       setOpenLoader(false);
       fetchWebsites();
+      setSuccessMessage("Website scraper deleted successfully");
+      resetSuccessMessage();
     }
   };
 
@@ -73,11 +75,16 @@ export default function WebsiteIndex({
   };
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setSuccessMessage();
-    }, 4000);
-    return () => clearTimeout(timer);
+    resetSuccessMessage();
   }, []);
+
+  function resetSuccessMessage() {
+    return (setSuccessMessage) => {
+      setTimeout(() => {
+        setSuccessMessage();
+      }, 3000);
+    };
+  }
 
   useEffect(() => {
     fetchWebsites();
@@ -87,6 +94,7 @@ export default function WebsiteIndex({
     <Grow in={true}>
       <Paper
         elevation={24}
+        className="componentPage"
         sx={{
           padding: "4rem",
           maxWidth: "70%",
@@ -104,18 +112,21 @@ export default function WebsiteIndex({
           }}
         >
           <Box>
-            <img
+            {/* <img
               src={`${process.env.PUBLIC_URL}/ScraperLogo.png`}
               className="websiteLogo"
-            />
+            /> */}
             <Typography
               variant="h2"
+              component="h1"
               sx={{
                 display: "inline-block",
                 textAlign: "left",
+                color: "white",
+                fontWeight: "600",
               }}
             >
-              Job Scraper
+              JOB SCRAPER
             </Typography>
           </Box>
           <Fab
@@ -129,7 +140,11 @@ export default function WebsiteIndex({
         <Divider
           orientation="horizontal"
           flexItem
-          sx={{ marginTop: "1rem", marginBottom: "2rem" }}
+          className="whiteDivider"
+          sx={{
+            marginTop: "1rem",
+            marginBottom: "2rem",
+          }}
         />
         <Box
           sx={{
@@ -144,6 +159,8 @@ export default function WebsiteIndex({
             variant="h3"
             sx={{
               display: "inline-block",
+              color: "white",
+              fontWeight: "normal",
             }}
           >
             Websites
@@ -164,6 +181,7 @@ export default function WebsiteIndex({
               display: "block",
               width: "100%",
               textAlign: "center",
+              color: "white",
             }}
           >
             No Websites Added
@@ -176,11 +194,13 @@ export default function WebsiteIndex({
                 padding: "24px 34px",
                 borderRadius: "8px",
                 border: "1px solid #ccc",
-                marginBottom: "24px",
+                marginTop: "24px",
                 textAlign: "start",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
+                borderRadius: "2rem",
+                color: "white",
               }}
             >
               <Box
@@ -206,7 +226,11 @@ export default function WebsiteIndex({
                 <Fab
                   color="primary"
                   aria-label="run"
-                  sx={{ marginRight: "1rem" }}
+                  sx={{
+                    backgroundColor: "#22bb33",
+                    color: "white",
+                    marginRight: "1.5rem",
+                  }}
                   onClick={() => runScraper(website.id)}
                 >
                   <PlayArrow />
@@ -219,7 +243,7 @@ export default function WebsiteIndex({
                   <Fab
                     color="primary"
                     aria-label="history"
-                    sx={{ marginRight: "1rem" }}
+                    sx={{ marginRight: "1.5rem" }}
                     onClick={() => setLinkListView(website.id)}
                   >
                     <List />
@@ -228,13 +252,13 @@ export default function WebsiteIndex({
                 <Fab
                   color="primary"
                   aria-label="edit"
-                  sx={{ marginRight: "1rem" }}
+                  sx={{ marginRight: "1.5rem" }}
                   onClick={() => setEditView(website.id)}
                 >
                   <Edit />
                 </Fab>
                 <Fab
-                  color="secondary"
+                  sx={{ backgroundColor: "#ff3333", color: "white" }}
                   aria-label="delete"
                   onClick={() => deleteWebsite(website.id)}
                 >
