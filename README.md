@@ -1,3 +1,5 @@
+![Screen Shot 2025-01-21 at 5 40 37 PM](https://github.com/user-attachments/assets/b40d3b55-53fe-4946-83dd-23542f93e096)
+
 # Job Scraper App
 
 ## Description
