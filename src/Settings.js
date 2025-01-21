@@ -7,16 +7,14 @@ import "@fontsource/roboto/700.css";
 import "./App.css";
 import DarkTextField from "./DarkTextField";
 import {
-  Button,
-  TextField,
   Grow,
   Paper,
   Box,
   Fab,
   Typography,
   Divider,
+  Tooltip,
 } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
 import { Delete, Add, ArrowBack, Save } from "@mui/icons-material";
 
 export default function Settings({
@@ -107,20 +105,22 @@ export default function Settings({
         className="componentPage"
         sx={{
           padding: "4rem",
-          maxWidth: "70%",
+          maxWidth: "600px",
           marginLeft: "auto",
           marginRight: "auto",
         }}
       >
         <Box sx={{ width: "100%", marginBottom: "2rem" }}>
-          <Fab
-            color="primary"
-            onClick={() => {
-              setVisibleComponent("WebsiteIndex");
-            }}
-          >
-            <ArrowBack />
-          </Fab>
+          <Tooltip title={<span class="tooltipText">Return home</span>}>
+            <Fab
+              color="primary"
+              onClick={() => {
+                setVisibleComponent("WebsiteIndex");
+              }}
+            >
+              <ArrowBack />
+            </Fab>
+          </Tooltip>
         </Box>
         <Typography
           variant="h3"
@@ -149,157 +149,215 @@ export default function Settings({
             backgroundColor: "#3e3e42",
           }}
         >
-          <Typography
-            variant="h5"
-            sx={{
-              display: "inline-block",
-              textAlign: "left",
-              color: "white",
-              marginBottom: "2rem",
-            }}
-          >
-            Slack Integration
-          </Typography>
           <form onSubmit={settingsSubmit}>
             {settings.map((setting) => (
-              <DarkTextField
-                key={setting.id}
-                id="slackToken"
-                name={setting.name}
-                label={setting.name}
-                handleEventChange={handleSettingsChange}
-                targetId={setting.id}
-                targetName="value"
-                value={setting.value}
-                type="password"
-              />
+              <Box
+                sx={{
+                  borderRadius: "24px",
+                  border: "1px solid #ccc",
+                  marginBottom: "30px",
+                  backgroundColor: "#3e3e42",
+                  overflow: "hidden",
+                }}
+              >
+                <Box
+                  sx={{
+                    padding: "24px 30px 24px 30px",
+                    backgroundColor: "#1e1e1e",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <Typography
+                      variant="h4"
+                      sx={{
+                        display: "inline-block",
+                        textAlign: "left",
+                        color: "white",
+                      }}
+                    >
+                      Slack Token
+                    </Typography>
+                  </Box>
+                </Box>
+                <Divider
+                  orientation="horizontal"
+                  flexItem
+                  className="whiteDivider"
+                  sx={{
+                    marginBottom: "2rem",
+                  }}
+                />
+
+                <Box sx={{ padding: "12px 36px" }}>
+                  <DarkTextField
+                    key={setting.id}
+                    id="slackToken"
+                    name={setting.name}
+                    label={setting.name}
+                    handleEventChange={handleSettingsChange}
+                    targetId={setting.id}
+                    targetName="value"
+                    value={setting.value}
+                    type="password"
+                  />
+                </Box>
+              </Box>
             ))}
 
             <Box
               sx={{
-                padding: "24px 24px",
-                borderRadius: "8px",
+                borderRadius: "24px",
                 border: "1px solid #ccc",
-                marginBottom: "24px",
+                marginBottom: "30px",
+                backgroundColor: "#3e3e42",
+                overflow: "hidden",
               }}
             >
               <Box
                 sx={{
-                  width: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  marginBottom: "1rem",
+                  padding: "24px 30px 24px 30px",
+                  backgroundColor: "#1e1e1e",
                 }}
               >
-                <Typography
-                  variant="h5"
+                <Box
                   sx={{
-                    display: "inline-block",
-                    textAlign: "left",
-                    color: "white",
-                    marginBottom: "2rem",
+                    width: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
                   }}
                 >
-                  Channels
-                </Typography>
-                <Fab
-                  color="primary"
-                  aria-label="add"
-                  onClick={() => addNewChannel()}
-                >
-                  <Add />
-                </Fab>
+                  <Typography
+                    variant="h4"
+                    sx={{
+                      display: "inline-block",
+                      textAlign: "left",
+                      color: "white",
+                    }}
+                  >
+                    Slack Channels
+                  </Typography>
+                  <Tooltip
+                    title={<span class="tooltipText">Add new channel</span>}
+                  >
+                    <Fab
+                      color="primary"
+                      aria-label="add"
+                      onClick={() => addNewChannel()}
+                    >
+                      <Add />
+                    </Fab>
+                  </Tooltip>
+                </Box>
               </Box>
 
-              {/* <Box sx={{ marginBottom: "2rem" }}>
-              <Fab
-                color="primary"
-                variant="extended"
-                aria-label="add"
-                onClick={() => addNewChannel()}
-              >
-                <Add sx={{ marginRight: "0.5rem" }} />
-                Slack Channel
-              </Fab>
-            </Box> */}
+              <Divider
+                orientation="horizontal"
+                flexItem
+                className="whiteDivider"
+                sx={{
+                  marginBottom: "2rem",
+                }}
+              />
 
-              {channels.map((channel) => (
-                <Box key={channel.id}>
-                  <Box
-                    sx={{
-                      width: "100%",
-                      display: "flex",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <DarkTextField
-                      label="Channel"
-                      handleEventChange={handleChannelChange}
-                      targetId={channel.id}
-                      targetName="name"
-                      value={channel.name}
-                    />
-
-                    <Fab
+              <Box sx={{ padding: "12px 36px" }}>
+                {channels.map((channel) => (
+                  <Box key={channel.id}>
+                    <Box
                       sx={{
-                        backgroundColor: "#ff3333",
-                        color: "white",
-                        marginLeft: "1.5rem",
+                        width: "100%",
+                        display: "flex",
+                        justifyContent: "space-between",
                       }}
-                      aria-label="remove"
-                      onClick={() => removeChannel(channel.id)}
                     >
-                      <Delete />
-                    </Fab>
+                      <DarkTextField
+                        label="Channel"
+                        handleEventChange={handleChannelChange}
+                        targetId={channel.id}
+                        targetName="name"
+                        value={channel.name}
+                      />
+                      <Box sx={{ ml: "1.5rem" }}>
+                        <Tooltip
+                          title={
+                            <span class="tooltipText">Remove channel</span>
+                          }
+                        >
+                          <Fab
+                            sx={{
+                              backgroundColor: "#ff3333",
+                              color: "white",
+                            }}
+                            aria-label="remove"
+                            onClick={() => removeChannel(channel.id)}
+                          >
+                            <Delete />
+                          </Fab>
+                        </Tooltip>
+                      </Box>
+                    </Box>
                   </Box>
-                </Box>
-              ))}
+                ))}
 
-              {newChannels.map((channel) => (
-                <Box key={channel.id}>
-                  <Box
-                    sx={{
-                      width: "100%",
-                      display: "flex",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <DarkTextField
-                      label="Channel"
-                      handleEventChange={handleNewChannelChange}
-                      targetId={channel.id}
-                      targetName="name"
-                      value={channel.name}
-                    />
-
-                    <Fab
+                {newChannels.map((channel) => (
+                  <Box key={channel.id}>
+                    <Box
                       sx={{
-                        backgroundColor: "#ff3333",
-                        color: "white",
-                        marginLeft: "1.5rem",
+                        width: "100%",
+                        display: "flex",
+                        justifyContent: "space-between",
                       }}
-                      aria-label="remove"
-                      onClick={() => removeNewChannel(channel.id)}
                     >
-                      <Delete />
-                    </Fab>
+                      <DarkTextField
+                        label="Channel"
+                        handleEventChange={handleNewChannelChange}
+                        targetId={channel.id}
+                        targetName="name"
+                        value={channel.name}
+                      />
+                      <Box sx={{ ml: "1.5rem" }}>
+                        <Tooltip
+                          title={
+                            <span class="tooltipText">Remove channel</span>
+                          }
+                        >
+                          <Fab
+                            sx={{
+                              backgroundColor: "#ff3333",
+                              color: "white",
+                            }}
+                            aria-label="remove"
+                            onClick={() => removeNewChannel(channel.id)}
+                          >
+                            <Delete />
+                          </Fab>
+                        </Tooltip>
+                      </Box>
+                    </Box>
                   </Box>
-                </Box>
-              ))}
+                ))}
+              </Box>
             </Box>
 
             <Box sx={{ width: "100%", textAlign: "right" }}>
-              <Fab
-                type="submit"
-                sx={{
-                  backgroundColor: "#22bb33",
-                  color: "white",
-                  marginRight: "1.5rem",
-                }}
-              >
-                <Save />
-              </Fab>
+              <Tooltip title={<span class="tooltipText">Save settings</span>}>
+                <Fab
+                  type="submit"
+                  sx={{
+                    backgroundColor: "#22bb33",
+                    color: "white",
+                  }}
+                >
+                  <Save />
+                </Fab>
+              </Tooltip>
             </Box>
           </form>
         </Paper>

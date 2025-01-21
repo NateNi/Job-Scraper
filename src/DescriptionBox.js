@@ -20,7 +20,7 @@ export default function DescriptionBox({ focusedElement }) {
       sx={{ padding: "4rem", borderRadius: "2rem", backgroundColor: "#3e3e42" }}
     >
       {focusedElement === "url" && (
-        <Box sx={{ padding: "0.5rem 1rem" }}>
+        <Box sx={{ padding: "0.5rem 1rem", color: "white" }}>
           <p>The url for the website you wish to scrape.</p>
           <p>
             <em>Hints:</em>
@@ -36,12 +36,12 @@ export default function DescriptionBox({ focusedElement }) {
       )}
 
       {focusedElement === "company" && (
-        <Box sx={{ padding: "0.5rem 1rem" }}>
+        <Box sx={{ padding: "0.5rem 1rem", color: "white" }}>
           <p>The name you wish to associate with this url.</p>
         </Box>
       )}
       {focusedElement === "container" && (
-        <Box sx={{ padding: "0.5rem 1rem" }}>
+        <Box sx={{ padding: "0.5rem 1rem", color: "white" }}>
           <p>
             The Xpath to the common parent element that each job listing has on
             the page.
@@ -67,7 +67,7 @@ export default function DescriptionBox({ focusedElement }) {
         </Box>
       )}
       {focusedElement === "title" && (
-        <Box sx={{ padding: "0.5rem 1rem" }}>
+        <Box sx={{ padding: "0.5rem 1rem", color: "white" }}>
           <p>
             The Xpath to the element with the job title{" "}
             <em>relative to the container</em>.
@@ -93,7 +93,7 @@ export default function DescriptionBox({ focusedElement }) {
         </Box>
       )}
       {focusedElement === "title" && (
-        <Box sx={{ padding: "0.5rem 1rem" }}>
+        <Box sx={{ padding: "0.5rem 1rem", color: "white" }}>
           <p>
             The attribute of the element defined by the title Xpath that
             contains the job title.
@@ -111,7 +111,7 @@ export default function DescriptionBox({ focusedElement }) {
         </Box>
       )}
       {focusedElement === "link" && (
-        <Box sx={{ padding: "0.5rem 1rem" }}>
+        <Box sx={{ padding: "0.5rem 1rem", color: "white" }}>
           <p>
             The Xpath to the element with the job link{" "}
             <em>relative to the container</em>.

@@ -13,6 +13,7 @@ import {
   Divider,
   Box,
   Fab,
+  Tooltip,
 } from "@mui/material";
 import { ArrowBack } from "@mui/icons-material";
 import MockWebpage from "./MockWebpage.js";
@@ -69,25 +70,29 @@ export default function WebsiteRecord({
         }}
       >
         <Box sx={{ width: "100%", marginBottom: "2rem" }}>
-          <Fab
-            color="primary"
-            onClick={() => {
-              setVisibleComponent("WebsiteIndex");
-              setWebsiteNewFilterData([]);
-              setWebsiteFilterData([]);
-              setWebsiteFormData({
-                url: "",
-                company: "",
-                containerXpath: "",
-                titleXpath: "",
-                titleAttribute: "",
-                linkXpath: "",
-              });
-              setCurrentWebsiteRecordId("");
-            }}
+          <Tooltip
+            title={<span class="tooltipText">Cancel and return home</span>}
           >
-            <ArrowBack />
-          </Fab>
+            <Fab
+              color="primary"
+              onClick={() => {
+                setVisibleComponent("WebsiteIndex");
+                setWebsiteNewFilterData([]);
+                setWebsiteFilterData([]);
+                setWebsiteFormData({
+                  url: "",
+                  company: "",
+                  containerXpath: "",
+                  titleXpath: "",
+                  titleAttribute: "",
+                  linkXpath: "",
+                });
+                setCurrentWebsiteRecordId("");
+              }}
+            >
+              <ArrowBack />
+            </Fab>
+          </Tooltip>
         </Box>
 
         <Typography
@@ -103,7 +108,8 @@ export default function WebsiteRecord({
         <Divider
           orientation="horizontal"
           flexItem
-          sx={{ marginTop: "1rem", marginBottom: "2rem", color: "white" }}
+          className="whiteDivider"
+          sx={{ marginTop: "1rem", marginBottom: "2rem" }}
         />
         <Grid container spacing={6}>
           <Grid key={1} item xs={12} md={6}>

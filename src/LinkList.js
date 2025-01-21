@@ -6,7 +6,7 @@ import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import "./App.css";
 import {
-  Button,
+  Tooltip,
   TextField,
   Grow,
   Paper,
@@ -23,7 +23,6 @@ export default function LinkList({
   setOpenLoader,
   currentWebsiteRecordId,
   setJobs,
-  setCurrentWebsiteRecordId,
   jobs,
 }) {
   useEffect(() => {
@@ -162,14 +161,16 @@ export default function LinkList({
         }}
       >
         <Box sx={{ width: "100%", marginBottom: "2rem" }}>
-          <Fab
-            color="primary"
-            onClick={() => {
-              setVisibleComponent("WebsiteIndex");
-            }}
-          >
-            <ArrowBack />
-          </Fab>
+          <Tooltip title={<span class="tooltipText">Return home</span>}>
+            <Fab
+              color="primary"
+              onClick={() => {
+                setVisibleComponent("WebsiteIndex");
+              }}
+            >
+              <ArrowBack />
+            </Fab>
+          </Tooltip>
         </Box>
         <Typography
           variant="h3"

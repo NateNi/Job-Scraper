@@ -5,7 +5,6 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import "./App.css";
-import { styled } from "@mui/material/styles";
 import DarkTextField from "./DarkTextField";
 import DarkSelect from "./DarkSelect";
 import {
@@ -14,11 +13,10 @@ import {
   Button,
   Box,
   Fab,
-  MenuItem,
-  Select,
+  Tooltip,
+  Divider,
 } from "@mui/material";
-import { Delete, Add } from "@mui/icons-material";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { Delete, Add, FilterAlt, PlayArrow } from "@mui/icons-material";
 
 export default function WebsiteForm({
   setFocusedElement,
@@ -32,7 +30,6 @@ export default function WebsiteForm({
   websiteFormData,
   websiteFilterData,
   websiteNewFilterData,
-  setCurrentWebsiteRecordId,
   channels,
   setErrorMessage,
 }) {
@@ -218,166 +215,212 @@ export default function WebsiteForm({
         />
 
         <Box sx={{ marginBottom: "2rem" }}>
-          <Fab
-            color="primary"
-            variant="extended"
-            aria-label="add"
-            onClick={() => addNewFilter()}
-          >
-            <Add sx={{ marginRight: "0.5rem" }} />
-            Filter
-          </Fab>
+          <Tooltip title={<span class="tooltipText">Add new filter</span>}>
+            <Fab
+              color="primary"
+              variant="extended"
+              aria-label="add"
+              onClick={() => addNewFilter()}
+            >
+              <Add />
+              <FilterAlt />
+            </Fab>
+          </Tooltip>
         </Box>
 
         {websiteFilterData.map((filter) => (
           <Box
-            key={filter.id}
             sx={{
-              padding: "24px 24px",
-              borderRadius: "8px",
+              borderRadius: "24px",
               border: "1px solid #ccc",
-              marginBottom: "24px",
+              marginBottom: "30px",
+              backgroundColor: "#3e3e42",
+              overflow: "hidden",
             }}
           >
             <Box
               sx={{
-                width: "100%",
-                display: "flex",
-                justifyContent: "space-between",
-                marginBottom: "2rem",
+                padding: "24px 30px 24px 30px",
+                backgroundColor: "#1e1e1e",
               }}
             >
-              <Typography
-                variant="h5"
+              <Box
                 sx={{
-                  display: "inline-block",
-                  textAlign: "left",
-                  color: "white",
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
                 }}
               >
-                Filter
-              </Typography>
-              <Fab
-                sx={{ backgroundColor: "#ff3333", color: "white" }}
-                aria-label="remove"
-                onClick={() => removeFilter(filter.id)}
-              >
-                <Delete />
-              </Fab>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    display: "inline-block",
+                    textAlign: "left",
+                    color: "white",
+                  }}
+                >
+                  Filter
+                </Typography>
+                <Tooltip title={<span class="tooltipText">Remove filter</span>}>
+                  <Fab
+                    sx={{ backgroundColor: "#ff3333", color: "white" }}
+                    aria-label="remove"
+                    onClick={() => removeNewFilter(filter.id)}
+                  >
+                    <Delete />
+                  </Fab>
+                </Tooltip>
+              </Box>
             </Box>
-
-            <DarkTextField
-              name="filterXpath"
-              label="Filter Xpath"
-              value={filter.filterXpath}
-              setFocusedElement={setFocusedElement}
-              onFocusElement={"filter"}
-              targetId={filter.id}
-              targetName="filterXpath"
-              handleFilterChange={handleFilterChange}
+            <Divider
+              orientation="horizontal"
+              flexItem
+              className="whiteDivider"
+              sx={{
+                marginBottom: "2rem",
+              }}
             />
 
-            <DarkSelect
-              id="type"
-              label="Filter Type"
-              name="type"
-              handleFilterChange={handleNewFilterChange}
-              filterId={filter.id}
-              value={filter.type}
-              options={filterTypeOptions}
-            />
+            <Box sx={{ padding: "12px 36px" }}>
+              <DarkTextField
+                name="filterXpath"
+                label="Filter Xpath"
+                value={filter.filterXpath}
+                setFocusedElement={setFocusedElement}
+                onFocusElement={"filter"}
+                targetId={filter.id}
+                targetName="filterXpath"
+                handleFilterChange={handleFilterChange}
+              />
 
-            <DarkTextField
-              name="selectValue"
-              label="Select Value"
-              value={filter.selectValue}
-              setFocusedElement={setFocusedElement}
-              onFocusElement={"filter"}
-              targetId={filter.id}
-              targetName="selectValue"
-              handleFilterChange={handleFilterChange}
-            />
+              <DarkSelect
+                id="type"
+                label="Filter Type"
+                name="type"
+                handleFilterChange={handleNewFilterChange}
+                filterId={filter.id}
+                value={filter.type}
+                options={filterTypeOptions}
+              />
+
+              <DarkTextField
+                name="selectValue"
+                label="Select Value"
+                value={filter.selectValue}
+                setFocusedElement={setFocusedElement}
+                onFocusElement={"filter"}
+                targetId={filter.id}
+                targetName="selectValue"
+                handleFilterChange={handleFilterChange}
+              />
+            </Box>
           </Box>
         ))}
 
         {websiteNewFilterData.map((filter) => (
           <Box
-            key={filter.id}
             sx={{
-              padding: "24px 24px",
-              borderRadius: "8px",
+              borderRadius: "24px",
               border: "1px solid #ccc",
-              marginBottom: "24px",
+              marginBottom: "30px",
+              backgroundColor: "#3e3e42",
+              overflow: "hidden",
             }}
           >
             <Box
               sx={{
-                width: "100%",
-                display: "flex",
-                justifyContent: "space-between",
-                marginBottom: "2rem",
+                padding: "24px 30px 24px 30px",
+                backgroundColor: "#1e1e1e",
               }}
             >
-              <Typography
-                variant="h5"
+              <Box
                 sx={{
-                  display: "inline-block",
-                  textAlign: "left",
-                  color: "white",
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
                 }}
               >
-                Filter
-              </Typography>
-              <Fab
-                sx={{ backgroundColor: "#ff3333", color: "white" }}
-                aria-label="remove"
-                onClick={() => removeNewFilter(filter.id)}
-              >
-                <Delete />
-              </Fab>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    display: "inline-block",
+                    textAlign: "left",
+                    color: "white",
+                  }}
+                >
+                  Filter
+                </Typography>
+                <Tooltip title={<span class="tooltipText">Remove filter</span>}>
+                  <Fab
+                    sx={{ backgroundColor: "#ff3333", color: "white" }}
+                    aria-label="remove"
+                    onClick={() => removeNewFilter(filter.id)}
+                  >
+                    <Delete />
+                  </Fab>
+                </Tooltip>
+              </Box>
             </Box>
-
-            <DarkTextField
-              name="filterXpath"
-              label="Filter Xpath"
-              value={filter.filterXpath}
-              setFocusedElement={setFocusedElement}
-              onFocusElement={"filter"}
-              targetId={filter.id}
-              targetName={"filterXpath"}
-              handleFilterChange={handleNewFilterChange}
+            <Divider
+              orientation="horizontal"
+              flexItem
+              className="whiteDivider"
+              sx={{
+                marginBottom: "2rem",
+              }}
             />
 
-            <DarkSelect
-              id="type"
-              label="Filter Type"
-              name="type"
-              handleFilterChange={handleNewFilterChange}
-              filterId={filter.id}
-              value={filter.type}
-              options={filterTypeOptions}
-            />
+            <Box sx={{ padding: "12px 36px" }}>
+              <DarkTextField
+                name="filterXpath"
+                label="Filter Xpath"
+                value={filter.filterXpath}
+                setFocusedElement={setFocusedElement}
+                onFocusElement={"filter"}
+                targetId={filter.id}
+                targetName={"filterXpath"}
+                handleFilterChange={handleNewFilterChange}
+              />
 
-            <DarkTextField
-              name="selectValue"
-              label="Select Value"
-              value={filter.selectValue}
-              setFocusedElement={setFocusedElement}
-              onFocusElement={"filter"}
-              targetId={filter.id}
-              targetName="selectValue"
-              handleFilterChange={handleNewFilterChange}
-            />
+              <DarkSelect
+                id="type"
+                label="Filter Type"
+                name="type"
+                handleFilterChange={handleNewFilterChange}
+                filterId={filter.id}
+                value={filter.type}
+                options={filterTypeOptions}
+              />
+
+              <DarkTextField
+                name="selectValue"
+                label="Select Value"
+                value={filter.selectValue}
+                setFocusedElement={setFocusedElement}
+                onFocusElement={"filter"}
+                targetId={filter.id}
+                targetName="selectValue"
+                handleFilterChange={handleNewFilterChange}
+              />
+            </Box>
           </Box>
         ))}
+
         <Box sx={{ width: "100%", textAlign: "right" }}>
-          <Button
-            variant="contained"
+          <Fab
+            color="primary"
+            aria-label="test"
             type="submit"
-            sx={{ marginRight: "1rem" }}
+            sx={{
+              backgroundColor: "#22bb33",
+              color: "white",
+              marginRight: "1.5rem",
+            }}
           >
-            Submit
-          </Button>
+            <PlayArrow />
+          </Fab>
         </Box>
       </form>
     </Paper>

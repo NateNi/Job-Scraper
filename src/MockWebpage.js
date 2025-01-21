@@ -13,15 +13,7 @@ import {
   Home,
 } from "@mui/icons-material";
 
-export default function MockWebpage({
-  focusedElement,
-  // emphasizeURL,
-  // emphasizeCompany,
-  // emphasizeContainer,
-  // emphasizeTitle,
-  // emphasizeLink,
-  // emphasizeFilter,
-}) {
+export default function MockWebpage({ focusedElement }) {
   return (
     <Paper
       elevation={24}
@@ -29,7 +21,7 @@ export default function MockWebpage({
         margin: "20px auto",
         borderRadius: 2,
         overflow: "hidden",
-        border: "1px solid #ccc",
+        border: "1px solid #1e1e1e",
       }}
     >
       <Box
@@ -37,24 +29,27 @@ export default function MockWebpage({
           display: "flex",
           alignItems: "center",
           padding: "8px 16px",
-          borderBottom: "1px solid #ccc",
+          borderBottom: "1px solid #1e1e1e",
+          backgroundColor: "#3e3e42",
         }}
       >
-        <ArrowBack sx={{ padding: "0.5rem", color: "#ccc" }} />
-        <ArrowForward sx={{ padding: "0.5rem", color: "#ccc" }} />
-        <Refresh sx={{ padding: "0.5rem", color: "#ccc" }} />
-        <Home sx={{ padding: "0.5rem", color: "#ccc" }} />
+        <ArrowBack sx={{ padding: "0.5rem", color: "#1e1e1e" }} />
+        <ArrowForward sx={{ padding: "0.5rem", color: "#1e1e1e" }} />
+        <Refresh sx={{ padding: "0.5rem", color: "#1e1e1e" }} />
+        <Home sx={{ padding: "0.5rem", color: "#1e1e1e" }} />
 
         <Box
           sx={{
-            border: `2px solid ${focusedElement == "url" ? "blue" : "#ccc"}`,
+            border: `2px solid ${
+              focusedElement == "url" ? "white" : "#1e1e1e"
+            }`,
             transition: "border-color 0.5s ease",
             flexGrow: 1,
             mx: 2,
             padding: "0.5rem",
             paddingLeft: "1rem",
             borderRadius: 50,
-            color: "#ccc",
+            color: `${focusedElement == "url" ? "white" : "#1e1e1e"}`,
           }}
         >
           Enter URL
@@ -66,9 +61,13 @@ export default function MockWebpage({
         sx={{
           height: "400px",
           padding: "3rem",
+          backgroundColor: "#3e3e42",
         }}
       >
-        <Typography variant="h4" sx={{ color: "#ccc", marginBottom: "1rem" }}>
+        <Typography
+          variant="h4"
+          sx={{ color: "#1e1e1e", marginBottom: "1rem" }}
+        >
           Welcome to{" "}
           <span className={focusedElement == "company" ? "focusedElement" : ""}>
             COMPANY
@@ -82,12 +81,12 @@ export default function MockWebpage({
             justifyContent: "space-between",
           }}
         >
-          <Typography variant="h5" sx={{ color: "#ccc" }}>
+          <Typography variant="h5" sx={{ color: "#1e1e1e" }}>
             Job Results
           </Typography>
           <Box
             sx={{
-              border: "1px solid #ccc",
+              border: "1px solid #1e1e1e",
               borderRadius: "4px",
               padding: "8px 12px",
               display: "flex",
@@ -96,14 +95,19 @@ export default function MockWebpage({
               width: "150px",
               marginBottom: "1rem",
               border: `2px solid ${
-                focusedElement == "filter" ? "blue" : "#ccc"
+                focusedElement == "filter" ? "white" : "#1e1e1e"
               }`,
             }}
           >
-            <Typography variant="body1" color="#ccc">
+            <Typography
+              variant="body1"
+              color={focusedElement == "filter" ? "white" : "#1e1e1e"}
+            >
               Sort
             </Typography>
-            <ArrowDropDown color="action" />
+            <ArrowDropDown
+              sx={{ color: focusedElement == "filter" ? "white" : "#1e1e1e" }}
+            />
           </Box>
         </Box>
         {[1, 2, 3].map((value, index) => (
@@ -116,8 +120,8 @@ export default function MockWebpage({
               padding: "10px",
               border: `${
                 focusedElement == "container"
-                  ? "2px solid blue"
-                  : "1px solid #ccc"
+                  ? "2px solid white"
+                  : "1px solid #1e1e1e"
               }`,
               transition: "all 0.3s ease",
               borderRadius: "5px",

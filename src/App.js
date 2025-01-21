@@ -147,7 +147,7 @@ function App() {
             justifyContent: "start",
             alignSelf: "flex-end",
             top: "2rem",
-            height: "6rem",
+            height: "5rem",
           }}
         >
           <Snackbar

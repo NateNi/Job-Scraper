@@ -1,19 +1,19 @@
 
 .focusedElement {
-    color: blue !important;
-    transform: scale(1.2);
+    color: white !important;
+    transform: scale(1.2) !important;
     transition: all 0.5s ease;
 }
 
 .App {
     background-color: #1e1e1e;
-    min-height: calc(100vh - 6rem);
-    padding: 1rem 5rem 5rem 5rem;
+    min-height: calc(100vh - 5rem);
+    padding: 0rem 5rem 5rem 5rem;
 }
 
 .mockWebElement {
     margin: 1rem;
-    color: #ccc;
+    color: #1e1e1e;;
 }
 
 .indexWebsiteIcon {
@@ -49,4 +49,8 @@
     right: 24px!important;
     background-color: #ff3333 !important;
     z-index: 9999 !important;
+}
+
+.tooltipText {
+    font-size: 1rem;
 }

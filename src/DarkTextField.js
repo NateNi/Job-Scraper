@@ -67,11 +67,11 @@ export default function DarkTextField({
         name={name}
         label={label}
         variant="outlined"
-        sx={{ display: "block", marginBottom: "2rem", borderColor: "white" }}
+        sx={{ display: "block", marginBottom: "32px", borderColor: "white" }}
         onFocus={() =>
           setFocusedElement ? setFocusedElement(onFocusElement) : true
         }
-        onBlur={() => (setFocusedElement ? setFocusedElement(null) : true)}
+        // onBlur={() => (setFocusedElement ? setFocusedElement(null) : true)}
         onChange={
           handleEventChange
             ? (e) => handleEventChange(targetId, targetName, e.target.value)

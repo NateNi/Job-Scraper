@@ -13,6 +13,7 @@ import {
   Grow,
   Divider,
   Badge,
+  Tooltip,
 } from "@mui/material";
 import {
   Edit,
@@ -116,13 +117,15 @@ export default function WebsiteIndex({
               JOB SCRAPER
             </Typography>
           </Box>
-          <Fab
-            color="primary"
-            aria-label="settings"
-            onClick={() => setVisibleComponent("Settings")}
-          >
-            <Settings />
-          </Fab>
+          <Tooltip title={<span class="tooltipText">Open settings</span>}>
+            <Fab
+              color="primary"
+              aria-label="settings"
+              onClick={() => setVisibleComponent("Settings")}
+            >
+              <Settings />
+            </Fab>
+          </Tooltip>
         </Box>
         <Divider
           orientation="horizontal"
@@ -152,13 +155,17 @@ export default function WebsiteIndex({
           >
             Websites
           </Typography>
-          <Fab
-            color="primary"
-            sx={{ mb: "14px" }}
-            onClick={() => setVisibleComponent("WebsiteCreate")}
+          <Tooltip
+            title={<span class="tooltipText">Add new website scraper</span>}
           >
-            <Add sx={{ fontSize: "2rem" }} />
-          </Fab>
+            <Fab
+              color="primary"
+              sx={{ mb: "14px" }}
+              onClick={() => setVisibleComponent("WebsiteCreate")}
+            >
+              <Add sx={{ fontSize: "2rem" }} />
+            </Fab>
+          </Tooltip>
         </Box>
 
         {websites.length == 0 ? (
@@ -210,47 +217,59 @@ export default function WebsiteIndex({
                 </Typography>
               </Box>
               <Box>
-                <Fab
-                  color="primary"
-                  aria-label="run"
-                  sx={{
-                    backgroundColor: "#22bb33",
-                    color: "white",
-                    marginRight: "1.5rem",
-                  }}
-                  onClick={() => runScraper(website.id)}
-                >
-                  <PlayArrow />
-                </Fab>
-                <Badge
-                  overlap="circular"
-                  badgeContent={website.numLinksFound}
-                  color="primary"
-                >
+                <Tooltip title={<span class="tooltipText">Run scraper</span>}>
                   <Fab
                     color="primary"
-                    aria-label="history"
-                    sx={{ marginRight: "1.5rem" }}
-                    onClick={() => setLinkListView(website.id)}
+                    aria-label="run"
+                    sx={{
+                      backgroundColor: "#22bb33",
+                      color: "white",
+                      marginRight: "1.5rem",
+                    }}
+                    onClick={() => runScraper(website.id)}
                   >
-                    <List />
+                    <PlayArrow />
                   </Fab>
-                </Badge>
-                <Fab
-                  color="primary"
-                  aria-label="edit"
-                  sx={{ marginRight: "1.5rem" }}
-                  onClick={() => setEditView(website.id)}
+                </Tooltip>
+                <Tooltip
+                  title={<span class="tooltipText">View scraped jobs</span>}
                 >
-                  <Edit />
-                </Fab>
-                <Fab
-                  sx={{ backgroundColor: "#ff3333", color: "white" }}
-                  aria-label="delete"
-                  onClick={() => deleteWebsite(website.id)}
+                  <Badge
+                    overlap="circular"
+                    badgeContent={website.numLinksFound}
+                    color="primary"
+                  >
+                    <Fab
+                      color="primary"
+                      aria-label="history"
+                      sx={{ marginRight: "1.5rem" }}
+                      onClick={() => setLinkListView(website.id)}
+                    >
+                      <List />
+                    </Fab>
+                  </Badge>
+                </Tooltip>
+                <Tooltip title={<span class="tooltipText">Edit scraper</span>}>
+                  <Fab
+                    color="primary"
+                    aria-label="edit"
+                    sx={{ marginRight: "1.5rem" }}
+                    onClick={() => setEditView(website.id)}
+                  >
+                    <Edit />
+                  </Fab>
+                </Tooltip>
+                <Tooltip
+                  title={<span class="tooltipText">Delete scraper</span>}
                 >
-                  <Delete />
-                </Fab>
+                  <Fab
+                    sx={{ backgroundColor: "#ff3333", color: "white" }}
+                    aria-label="delete"
+                    onClick={() => deleteWebsite(website.id)}
+                  >
+                    <Delete />
+                  </Fab>
+                </Tooltip>
               </Box>
             </Box>
           ))

@@ -75,7 +75,7 @@ export default function DarkSelect({
 }) {
   return (
     <ThemeProvider theme={darkTheme}>
-      <FormControl fullWidth variant="outlined" margin="normal">
+      <FormControl fullWidth variant="outlined" sx={{ margin: "0" }}>
         <InputLabel id="dark-mode-select-label">{label}</InputLabel>
         <Select
           labelId="filter-type-label"
