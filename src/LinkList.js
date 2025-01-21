@@ -5,7 +5,17 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import "./App.css";
-import { Button, TextField, Grow, Paper, Box, Typography } from "@mui/material";
+import {
+  Button,
+  TextField,
+  Grow,
+  Paper,
+  Box,
+  Typography,
+  Fab,
+  Divider,
+} from "@mui/material";
+import { ArrowBack } from "@mui/icons-material";
 import { DataGrid } from "@mui/x-data-grid";
 
 export default function LinkList({
@@ -21,6 +31,7 @@ export default function LinkList({
       setOpenLoader(true);
       const response = await axios.get("/links/" + currentWebsiteRecordId);
       setJobs(response.data.links);
+      setCompany(response.data.company);
       setRows(
         response.data.links.map(function (job, index) {
           return {
@@ -45,6 +56,7 @@ export default function LinkList({
   };
 
   const [searchText, setSearchText] = useState("");
+  const [company, setCompany] = useState("");
 
   const columns = [
     {
@@ -149,7 +161,35 @@ export default function LinkList({
           marginRight: "auto",
         }}
       >
-        <Typography variant="h2">Jobs Found</Typography>
+        <Box sx={{ width: "100%", marginBottom: "2rem" }}>
+          <Fab
+            color="primary"
+            onClick={() => {
+              setVisibleComponent("WebsiteIndex");
+            }}
+          >
+            <ArrowBack />
+          </Fab>
+        </Box>
+        <Typography
+          variant="h3"
+          sx={{
+            display: "inline-block",
+            color: "white",
+            fontWeight: "normal",
+          }}
+        >
+          {company} Jobs Found
+        </Typography>
+        <Divider
+          orientation="horizontal"
+          flexItem
+          className="whiteDivider"
+          sx={{
+            marginTop: "1rem",
+            marginBottom: "2rem",
+          }}
+        />
         <TextField
           label="Search"
           variant="outlined"
@@ -164,19 +204,6 @@ export default function LinkList({
           initialState={{ pagination: { paginationModel } }}
           sx={{ border: 0, marginBottom: "1rem" }}
         />
-        <Box sx={{ width: "100%", textAlign: "right" }}>
-          <Button
-            variant="contained"
-            onClick={() => {
-              setVisibleComponent("WebsiteIndex");
-              setJobs([]);
-              setSearchText("");
-              setCurrentWebsiteRecordId("");
-            }}
-          >
-            Cancel
-          </Button>
-        </Box>
       </Paper>
     </Grow>
   );

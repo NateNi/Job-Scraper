@@ -6,9 +6,11 @@ import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import "./App.css";
 import { styled } from "@mui/material/styles";
+import DarkTextField from "./DarkTextField";
+import DarkSelect from "./DarkSelect";
 import {
   Paper,
-  TextField,
+  Typography,
   Button,
   Box,
   Fab,
@@ -32,6 +34,7 @@ export default function WebsiteForm({
   websiteNewFilterData,
   setCurrentWebsiteRecordId,
   channels,
+  setErrorMessage,
 }) {
   const testWebsiteSubmit = async (e) => {
     e.preventDefault();
@@ -43,12 +46,14 @@ export default function WebsiteForm({
         websiteFilterData: websiteFilterData,
         websiteNewFilterData: websiteNewFilterData,
       });
+      console.log(response);
       if (response.status === 200) {
         setJobs(response.data.jobs);
         setVisibleComponent("WebsiteTest");
       }
     } catch (error) {
       console.error("Error:", error);
+      setErrorMessage(error.response.data.error);
     }
     setOpenLoader(false);
   };
@@ -127,107 +132,89 @@ export default function WebsiteForm({
     );
   };
 
+  const filterTypeOptions = [
+    { value: "", name: "" },
+    { value: "select", name: "Select" },
+  ];
+
+  const channelOptions = channels.map((channel) => ({
+    value: channel["id"],
+    name: channel["name"],
+  }));
+
   return (
     <Paper
       elevation={24}
       sx={{ padding: "4rem", borderRadius: "2rem", backgroundColor: "#3e3e42" }}
     >
       <form onSubmit={testWebsiteSubmit}>
-        <Select
-          labelId="filter-type-label"
-          name="channelId"
+        <DarkSelect
+          id="channel"
           label="Channel"
-          sx={{ display: "block", marginBottom: "2rem" }}
+          name="channelId"
           onChange={handleChange}
           value={websiteFormData.channelId}
-        >
-          {channels.map((channel) => (
-            <MenuItem
-              key={channel.id}
-              value={channel.id}
-              selected={channel.id === websiteFormData.channelId}
-            >
-              {channel.name}
-            </MenuItem>
-          ))}
-        </Select>
+          options={channelOptions}
+        />
 
-        <TextField
+        <DarkTextField
           id="urlField"
-          fullWidth
           name="url"
           label="Website Url"
-          variant="outlined"
-          sx={{ display: "block", marginBottom: "2rem", borderColor: "white" }}
-          onFocus={() => setFocusedElement("url")}
-          onBlur={() => setFocusedElement(null)}
+          onFocusElement={"url"}
           onChange={handleChange}
           value={websiteFormData.url}
+          setFocusedElement={setFocusedElement}
         />
 
-        <TextField
+        <DarkTextField
           id="companyField"
-          fullWidth
           name="company"
           label="Company Name"
-          variant="outlined"
-          sx={{ display: "block", marginBottom: "2rem", borderColor: "white" }}
-          onFocus={() => setFocusedElement("company")}
-          onBlur={() => setFocusedElement(null)}
+          onFocusElement={"company"}
           onChange={handleChange}
           value={websiteFormData.company}
+          setFocusedElement={setFocusedElement}
         />
 
-        <TextField
+        <DarkTextField
           id="containerXpathField"
-          fullWidth
           name="containerXpath"
           label="Container Xpath"
-          variant="outlined"
-          sx={{ display: "block", marginBottom: "2rem", borderColor: "white" }}
-          onFocus={() => setFocusedElement("container")}
-          onBlur={() => setFocusedElement(null)}
+          onFocusElement={"container"}
           onChange={handleChange}
           value={websiteFormData.containerXpath}
+          setFocusedElement={setFocusedElement}
         />
 
-        <TextField
+        <DarkTextField
           id="titleXpathField"
-          fullWidth
           name="titleXpath"
           label="Title Xpath"
-          variant="outlined"
-          sx={{ display: "block", marginBottom: "2rem", borderColor: "white" }}
-          onFocus={() => setFocusedElement("title")}
-          onBlur={() => setFocusedElement(null)}
+          onFocusElement={"title"}
           onChange={handleChange}
           value={websiteFormData.titleXpath}
+          setFocusedElement={setFocusedElement}
         />
 
-        <TextField
+        <DarkTextField
           id="titleAttributeField"
-          fullWidth
           name="titleAttribute"
           label="Title Attribute (optional)"
-          variant="outlined"
-          sx={{ display: "block", marginBottom: "2rem", borderColor: "white" }}
-          onFocus={() => setFocusedElement("title")}
-          onBlur={() => setFocusedElement(null)}
+          onFocusElement={"title"}
           onChange={handleChange}
           value={websiteFormData.titleAttribute}
+          setFocusedElement={setFocusedElement}
         />
 
-        <TextField
+        <DarkTextField
           id="linkXpathField"
-          fullWidth
           name="linkXpath"
           label="Link Xpath"
-          variant="outlined"
-          sx={{ display: "block", marginBottom: "2rem", borderColor: "white" }}
-          onFocus={() => setFocusedElement("link")}
-          onBlur={handleChange}
+          onFocusElement={"link"}
           onChange={handleChange}
           value={websiteFormData.linkXpath}
+          setFocusedElement={setFocusedElement}
         />
 
         <Box sx={{ marginBottom: "2rem" }}>
@@ -260,9 +247,18 @@ export default function WebsiteForm({
                 marginBottom: "2rem",
               }}
             >
-              <h2>Filter</h2>
+              <Typography
+                variant="h5"
+                sx={{
+                  display: "inline-block",
+                  textAlign: "left",
+                  color: "white",
+                }}
+              >
+                Filter
+              </Typography>
               <Fab
-                color="primary"
+                sx={{ backgroundColor: "#ff3333", color: "white" }}
                 aria-label="remove"
                 onClick={() => removeFilter(filter.id)}
               >
@@ -270,43 +266,36 @@ export default function WebsiteForm({
               </Fab>
             </Box>
 
-            <TextField
-              fullWidth
+            <DarkTextField
               name="filterXpath"
               label="Filter Xpath"
-              variant="outlined"
-              sx={{ display: "block", marginBottom: "2rem" }}
-              onChange={(e) =>
-                handleFilterChange(filter.id, "filterXpath", e.target.value)
-              }
               value={filter.filterXpath}
+              setFocusedElement={setFocusedElement}
+              onFocusElement={"filter"}
+              targetId={filter.id}
+              targetName="filterXpath"
+              handleFilterChange={handleFilterChange}
             />
 
-            <Select
-              labelId="filter-type-label"
-              name="type"
+            <DarkSelect
+              id="type"
               label="Filter Type"
-              sx={{ display: "block", marginBottom: "2rem" }}
-              onChange={(e) =>
-                handleFilterChange(filter.id, "type", e.target.value)
-              }
+              name="type"
+              handleFilterChange={handleNewFilterChange}
+              filterId={filter.id}
               value={filter.type}
-            >
-              <MenuItem value="select" selected={filter.type === "select"}>
-                Select
-              </MenuItem>
-            </Select>
+              options={filterTypeOptions}
+            />
 
-            <TextField
-              fullWidth
+            <DarkTextField
               name="selectValue"
               label="Select Value"
-              variant="outlined"
-              sx={{ display: "block" }}
-              onChange={(e) =>
-                handleFilterChange(filter.id, "selectValue", e.target.value)
-              }
               value={filter.selectValue}
+              setFocusedElement={setFocusedElement}
+              onFocusElement={"filter"}
+              targetId={filter.id}
+              targetName="selectValue"
+              handleFilterChange={handleFilterChange}
             />
           </Box>
         ))}
@@ -329,9 +318,18 @@ export default function WebsiteForm({
                 marginBottom: "2rem",
               }}
             >
-              <h2>Filter</h2>
+              <Typography
+                variant="h5"
+                sx={{
+                  display: "inline-block",
+                  textAlign: "left",
+                  color: "white",
+                }}
+              >
+                Filter
+              </Typography>
               <Fab
-                color="primary"
+                sx={{ backgroundColor: "#ff3333", color: "white" }}
                 aria-label="remove"
                 onClick={() => removeNewFilter(filter.id)}
               >
@@ -339,45 +337,36 @@ export default function WebsiteForm({
               </Fab>
             </Box>
 
-            <TextField
-              id="outlined-basic"
-              fullWidth
+            <DarkTextField
               name="filterXpath"
               label="Filter Xpath"
-              variant="outlined"
-              sx={{ display: "block", marginBottom: "2rem" }}
-              onFocus={() => setFocusedElement("filter")}
-              onBlur={() => setFocusedElement(null)}
-              onChange={(e) =>
-                handleNewFilterChange(filter.id, "filterXpath", e.target.value)
-              }
+              value={filter.filterXpath}
+              setFocusedElement={setFocusedElement}
+              onFocusElement={"filter"}
+              targetId={filter.id}
+              targetName={"filterXpath"}
+              handleFilterChange={handleNewFilterChange}
             />
 
-            <Select
-              labelId="filter-type-label"
+            <DarkSelect
               id="type"
-              //value={age}
               label="Filter Type"
-              sx={{ display: "block", marginBottom: "2rem" }}
-              onChange={(e) =>
-                handleNewFilterChange(filter.id, "type", e.target.value)
-              }
-            >
-              <MenuItem value={"select"}>Select</MenuItem>
-            </Select>
+              name="type"
+              handleFilterChange={handleNewFilterChange}
+              filterId={filter.id}
+              value={filter.type}
+              options={filterTypeOptions}
+            />
 
-            <TextField
-              id="outlined-basic"
-              fullWidth
+            <DarkTextField
               name="selectValue"
               label="Select Value"
-              variant="outlined"
-              sx={{ display: "block" }}
-              onFocus={() => setFocusedElement("filter")}
-              onBlur={() => setFocusedElement(null)}
-              onChange={(e) =>
-                handleNewFilterChange(filter.id, "selectValue", e.target.value)
-              }
+              value={filter.selectValue}
+              setFocusedElement={setFocusedElement}
+              onFocusElement={"filter"}
+              targetId={filter.id}
+              targetName="selectValue"
+              handleFilterChange={handleNewFilterChange}
             />
           </Box>
         ))}
@@ -388,26 +377,6 @@ export default function WebsiteForm({
             sx={{ marginRight: "1rem" }}
           >
             Submit
-          </Button>
-          <Button
-            variant="contained"
-            color="secondary"
-            onClick={() => {
-              setVisibleComponent("WebsiteIndex");
-              setWebsiteNewFilterData([]);
-              setWebsiteFilterData([]);
-              setWebsiteFormData({
-                url: "",
-                company: "",
-                containerXpath: "",
-                titleXpath: "",
-                titleAttribute: "",
-                linkXpath: "",
-              });
-              setCurrentWebsiteRecordId("");
-            }}
-          >
-            Cancel
           </Button>
         </Box>
       </form>

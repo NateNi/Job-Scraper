@@ -4,7 +4,13 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import "./App.css";
-import { Backdrop, CircularProgress, Alert, Fade, Box } from "@mui/material";
+import {
+  Backdrop,
+  CircularProgress,
+  Alert,
+  Snackbar,
+  Box,
+} from "@mui/material";
 import WebsiteRecord from "./WebsiteRecord.js";
 import WebsiteIndex from "./WebsiteIndex.js";
 import WebsiteTest from "./WebsiteTest.js";
@@ -29,6 +35,15 @@ function App() {
   const [jobs, setJobs] = useState([]);
   const [channels, setChannels] = useState([]);
   const [successMessage, setSuccessMessage] = useState();
+  const [errorMessage, setErrorMessage] = useState();
+
+  const handleSuccessMessageClose = () => {
+    setSuccessMessage("");
+  };
+
+  const handleErrorMessageClose = () => {
+    setErrorMessage("");
+  };
 
   const renderComponent = () => {
     switch (visibleComponent) {
@@ -56,6 +71,7 @@ function App() {
             setWebsiteNewFilterData={setWebsiteNewFilterData}
             setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
             channels={channels}
+            setErrorMessage={setErrorMessage}
           />
         );
       case "WebsiteEdit":
@@ -73,6 +89,7 @@ function App() {
             setWebsiteNewFilterData={setWebsiteNewFilterData}
             setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
             channels={channels}
+            setErrorMessage={setErrorMessage}
           />
         );
       case "WebsiteTest":
@@ -133,7 +150,11 @@ function App() {
             height: "6rem",
           }}
         >
-          <Fade in={successMessage}>
+          <Snackbar
+            open={successMessage}
+            autoHideDuration={3000}
+            onClose={handleSuccessMessageClose}
+          >
             <Alert
               variant="outlined"
               severity="success"
@@ -146,7 +167,25 @@ function App() {
             >
               {successMessage}
             </Alert>
-          </Fade>
+          </Snackbar>
+          <Snackbar
+            open={errorMessage}
+            autoHideDuration={3000}
+            onClose={handleErrorMessageClose}
+          >
+            <Alert
+              variant="outlined"
+              severity="error"
+              sx={{
+                bottom: "2rem",
+                backgroundColor: "white",
+                marginLeft: "auto",
+                marginRight: "auto",
+              }}
+            >
+              {errorMessage}
+            </Alert>
+          </Snackbar>
         </Box>
         {renderComponent()}
       </div>

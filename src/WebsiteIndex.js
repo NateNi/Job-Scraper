@@ -62,7 +62,6 @@ export default function WebsiteIndex({
       setOpenLoader(false);
       fetchWebsites();
       setSuccessMessage("Website scraper deleted successfully");
-      resetSuccessMessage();
     }
   };
 
@@ -73,18 +72,6 @@ export default function WebsiteIndex({
     setChannels(response.data.channels);
     setOpenLoader(false);
   };
-
-  useEffect(() => {
-    resetSuccessMessage();
-  }, []);
-
-  function resetSuccessMessage() {
-    return (setSuccessMessage) => {
-      setTimeout(() => {
-        setSuccessMessage();
-      }, 3000);
-    };
-  }
 
   useEffect(() => {
     fetchWebsites();

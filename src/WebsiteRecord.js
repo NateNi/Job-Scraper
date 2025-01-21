@@ -5,9 +5,19 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import "./App.css";
-import { Grid, Paper, Grow, Typography, Divider } from "@mui/material";
+import {
+  Grid,
+  Paper,
+  Grow,
+  Typography,
+  Divider,
+  Box,
+  Fab,
+} from "@mui/material";
+import { ArrowBack } from "@mui/icons-material";
 import MockWebpage from "./MockWebpage.js";
 import WebsiteForm from "./WebsiteForm.js";
+import DescriptionBox from "./DescriptionBox.js";
 
 export default function WebsiteRecord({
   setVisibleComponent,
@@ -22,6 +32,7 @@ export default function WebsiteRecord({
   currentWebsiteRecordId = null,
   setCurrentWebsiteRecordId,
   channels,
+  setErrorMessage,
 }) {
   const [focusedElement, setFocusedElement] = useState(null);
   useEffect(() => {
@@ -57,6 +68,28 @@ export default function WebsiteRecord({
           marginRight: "auto",
         }}
       >
+        <Box sx={{ width: "100%", marginBottom: "2rem" }}>
+          <Fab
+            color="primary"
+            onClick={() => {
+              setVisibleComponent("WebsiteIndex");
+              setWebsiteNewFilterData([]);
+              setWebsiteFilterData([]);
+              setWebsiteFormData({
+                url: "",
+                company: "",
+                containerXpath: "",
+                titleXpath: "",
+                titleAttribute: "",
+                linkXpath: "",
+              });
+              setCurrentWebsiteRecordId("");
+            }}
+          >
+            <ArrowBack />
+          </Fab>
+        </Box>
+
         <Typography
           variant="h3"
           sx={{
@@ -88,18 +121,12 @@ export default function WebsiteRecord({
               websiteNewFilterData={websiteNewFilterData}
               setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
               channels={channels}
+              setErrorMessage={setErrorMessage}
             />
           </Grid>
           <Grid key={2} item xs={12} md={6}>
-            <MockWebpage
-              focusedElement={focusedElement}
-              // emphasizeURL={isURLInputFocused}
-              // emphasizeCompany={isCompanyInputFocused}
-              // emphasizeContainer={isContainerInputFocused}
-              // emphasizeTitle={isTitleInputFocused}
-              // emphasizeLink={isLinkInputFocused}
-              // emphasizeFilter={isFilterInputFocused}
-            />
+            <MockWebpage focusedElement={focusedElement} />
+            <DescriptionBox focusedElement={focusedElement} />
           </Grid>
         </Grid>
       </Paper>

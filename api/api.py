@@ -58,11 +58,15 @@ def getFavicon(html, url):
 def test_website():
     try:
         data = request.get_json()
+        print(data['websiteFormData'])
         required_fields = ['url', 'company', 'containerXpath', 'titleXpath', 'linkXpath']
+        missing_fields = []
         for field in required_fields:
-            if field not in data['websiteFormData']:
-                app.logger.error(f"Missing required field for test website: {field}")
-                return jsonify({'error': f"Missing required field: {field}"}), 400
+            if not data['websiteFormData'].get(field):
+                missing_fields.append(field)
+        if missing_fields:
+            app.logger.error(f"Missing required field for test website: {', '.join(missing_fields)}")
+            return jsonify({'error': f"Missing required field(s): {', '.join(missing_fields)}"}), 400
 
         filters = data['websiteFilterData']
         newFilters = data['websiteNewFilterData']
@@ -94,11 +98,15 @@ def create_website():
     try:
         data = request.get_json()
         required_fields = ['url', 'company', 'containerXpath', 'titleXpath', 'linkXpath']
-        for field in required_fields:
-            if field not in data:
-                app.logger.error(f"Missing required field for create website: {field}")
-                return jsonify({'error': f"Missing required field: {field}"}), 400
             
+        missing_fields = []
+        for field in required_fields:
+            if not data['websiteFormData'].get(field):
+                missing_fields.append(field)
+        if missing_fields:
+            app.logger.error(f"Missing required field for create website: {', '.join(missing_fields)}")
+            return jsonify({'error': f"Missing required field(s): {', '.join(missing_fields)}"}), 400
+
         connection = create_db_connection(app)
         if not connection['success']:
             return jsonify({'error': connection['error']}), connection['status']
@@ -354,10 +362,14 @@ def get_links_list(website_id):
         except sqlite3.Error as e:
                 app.logger.error(f"Error fetching previously sent links: {e}")
                 return jsonify({'error': 'Failed to fetch previously sent links'}), 500
+
+        jobWebsiteResult = fetch_job_website(app, connection['cursor'], connection['conn'], website_id)
+        if not jobWebsiteResult['success']:
+            return jsonify({'error': jobWebsiteResult['error']}), jobWebsiteResult['status']
         
         connection['conn'].commit()
         connection['conn'].close()
-        return jsonify({'links': links})
+        return jsonify({'links': links, 'company': jobWebsiteResult['jobWebsite'][3]})
     
     except Exception as e:
         app.logger.error(f"Unexpected error during get_links_list: {e}")

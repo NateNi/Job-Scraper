@@ -5,6 +5,7 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import "./App.css";
+import DarkTextField from "./DarkTextField";
 import {
   Button,
   TextField,
@@ -16,7 +17,7 @@ import {
   Divider,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import { Delete, Add } from "@mui/icons-material";
+import { Delete, Add, ArrowBack, Save } from "@mui/icons-material";
 
 export default function Settings({
   setVisibleComponent,
@@ -111,6 +112,16 @@ export default function Settings({
           marginRight: "auto",
         }}
       >
+        <Box sx={{ width: "100%", marginBottom: "2rem" }}>
+          <Fab
+            color="primary"
+            onClick={() => {
+              setVisibleComponent("WebsiteIndex");
+            }}
+          >
+            <ArrowBack />
+          </Fab>
+        </Box>
         <Typography
           variant="h3"
           sx={{
@@ -138,25 +149,70 @@ export default function Settings({
             backgroundColor: "#3e3e42",
           }}
         >
+          <Typography
+            variant="h5"
+            sx={{
+              display: "inline-block",
+              textAlign: "left",
+              color: "white",
+              marginBottom: "2rem",
+            }}
+          >
+            Slack Integration
+          </Typography>
           <form onSubmit={settingsSubmit}>
             {settings.map((setting) => (
-              <TextField
+              <DarkTextField
                 key={setting.id}
                 id="slackToken"
-                fullWidth
                 name={setting.name}
                 label={setting.name}
-                variant="outlined"
-                sx={{ display: "block", marginBottom: "2rem" }}
-                onChange={(e) =>
-                  handleSettingsChange(setting.id, "value", e.target.value)
-                }
-                type="password"
+                handleEventChange={handleSettingsChange}
+                targetId={setting.id}
+                targetName="value"
                 value={setting.value}
+                type="password"
               />
             ))}
 
-            <Box sx={{ marginBottom: "2rem" }}>
+            <Box
+              sx={{
+                padding: "24px 24px",
+                borderRadius: "8px",
+                border: "1px solid #ccc",
+                marginBottom: "24px",
+              }}
+            >
+              <Box
+                sx={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: "1rem",
+                }}
+              >
+                <Typography
+                  variant="h5"
+                  sx={{
+                    display: "inline-block",
+                    textAlign: "left",
+                    color: "white",
+                    marginBottom: "2rem",
+                  }}
+                >
+                  Channels
+                </Typography>
+                <Fab
+                  color="primary"
+                  aria-label="add"
+                  onClick={() => addNewChannel()}
+                >
+                  <Add />
+                </Fab>
+              </Box>
+
+              {/* <Box sx={{ marginBottom: "2rem" }}>
               <Fab
                 color="primary"
                 variant="extended"
@@ -166,95 +222,84 @@ export default function Settings({
                 <Add sx={{ marginRight: "0.5rem" }} />
                 Slack Channel
               </Fab>
+            </Box> */}
+
+              {channels.map((channel) => (
+                <Box key={channel.id}>
+                  <Box
+                    sx={{
+                      width: "100%",
+                      display: "flex",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <DarkTextField
+                      label="Channel"
+                      handleEventChange={handleChannelChange}
+                      targetId={channel.id}
+                      targetName="name"
+                      value={channel.name}
+                    />
+
+                    <Fab
+                      sx={{
+                        backgroundColor: "#ff3333",
+                        color: "white",
+                        marginLeft: "1.5rem",
+                      }}
+                      aria-label="remove"
+                      onClick={() => removeChannel(channel.id)}
+                    >
+                      <Delete />
+                    </Fab>
+                  </Box>
+                </Box>
+              ))}
+
+              {newChannels.map((channel) => (
+                <Box key={channel.id}>
+                  <Box
+                    sx={{
+                      width: "100%",
+                      display: "flex",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <DarkTextField
+                      label="Channel"
+                      handleEventChange={handleNewChannelChange}
+                      targetId={channel.id}
+                      targetName="name"
+                      value={channel.name}
+                    />
+
+                    <Fab
+                      sx={{
+                        backgroundColor: "#ff3333",
+                        color: "white",
+                        marginLeft: "1.5rem",
+                      }}
+                      aria-label="remove"
+                      onClick={() => removeNewChannel(channel.id)}
+                    >
+                      <Delete />
+                    </Fab>
+                  </Box>
+                </Box>
+              ))}
             </Box>
 
-            {channels.map((channel) => (
-              <Box key={channel.id}>
-                <Box
-                  sx={{
-                    width: "100%",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginBottom: "2rem",
-                  }}
-                >
-                  <TextField
-                    id="outlined-basic"
-                    fullWidth
-                    name="channel"
-                    label="Channel"
-                    variant="outlined"
-                    sx={{ display: "block", marginBottom: "2rem" }}
-                    onChange={(e) =>
-                      handleChannelChange(channel.id, "name", e.target.value)
-                    }
-                    value={channel.name}
-                  />
-                  <Fab
-                    color="primary"
-                    aria-label="remove"
-                    onClick={() => removeChannel(channel.id)}
-                  >
-                    <Delete />
-                  </Fab>
-                </Box>
-              </Box>
-            ))}
-
-            {newChannels.map((channel) => (
-              <Box key={channel.id}>
-                <Box
-                  sx={{
-                    width: "100%",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginBottom: "2rem",
-                  }}
-                >
-                  <TextField
-                    id="outlined-basic"
-                    fullWidth
-                    name="channel"
-                    label="Channel"
-                    variant="outlined"
-                    sx={{
-                      display: "block",
-                      marginBottom: "0.5rem",
-                      marginRight: "1rem",
-                    }}
-                    onChange={(e) =>
-                      handleNewChannelChange(channel.id, "name", e.target.value)
-                    }
-                    value={channel.name}
-                  />
-                  <Fab
-                    color="primary"
-                    aria-label="remove"
-                    onClick={() => removeNewChannel(channel.id)}
-                  >
-                    <Delete />
-                  </Fab>
-                </Box>
-              </Box>
-            ))}
-
             <Box sx={{ width: "100%", textAlign: "right" }}>
-              <Button
-                variant="contained"
+              <Fab
                 type="submit"
-                sx={{ marginRight: "1rem" }}
-              >
-                Submit
-              </Button>
-              <Button
-                variant="contained"
-                color="secondary"
-                onClick={() => {
-                  setVisibleComponent("WebsiteIndex");
+                sx={{
+                  backgroundColor: "#22bb33",
+                  color: "white",
+                  marginRight: "1.5rem",
                 }}
               >
-                Cancel
-              </Button>
+                <Save />
+              </Fab>
             </Box>
           </form>
         </Paper>
