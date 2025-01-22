@@ -58,6 +58,7 @@ export default function DarkTextField({
   targetId,
   handleEventChange,
   type,
+  width,
 }) {
   return (
     <ThemeProvider theme={darkTheme}>
@@ -67,7 +68,12 @@ export default function DarkTextField({
         name={name}
         label={label}
         variant="outlined"
-        sx={{ display: "block", marginBottom: "32px", borderColor: "white" }}
+        sx={{
+          display: "block",
+          marginBottom: "32px",
+          borderColor: "white",
+          width: width,
+        }}
         onFocus={() =>
           setFocusedElement ? setFocusedElement(onFocusElement) : true
         }

@@ -15,8 +15,9 @@ import {
   Fab,
   Divider,
 } from "@mui/material";
-import { ArrowBack } from "@mui/icons-material";
+import { Close } from "@mui/icons-material";
 import { DataGrid } from "@mui/x-data-grid";
+import DarkTextField from "./DarkTextField";
 
 export default function LinkList({
   setVisibleComponent,
@@ -35,7 +36,12 @@ export default function LinkList({
         response.data.links.map(function (job, index) {
           return {
             id: job["id"],
-            linkHTML: "<a href='" + job["link"] + "'>" + job["title"] + "</a>",
+            linkHTML:
+              "<a class='jobLink' href='" +
+              job["link"] +
+              "'>" +
+              job["title"] +
+              "</a>",
             viewed: job["viewed"],
             created_at: job["created_at"],
           };
@@ -114,7 +120,7 @@ export default function LinkList({
           return {
             id: job["id"],
             linkHTML:
-              "<a target='_blank' href='" +
+              "<a class='jobLink' target='_blank' href='" +
               job["link"] +
               "'>" +
               job["title"] +
@@ -134,7 +140,7 @@ export default function LinkList({
           return {
             id: job["id"],
             linkHTML:
-              "<a target='_blank' href='" +
+              "<a class='jobLink' target='_blank' href='" +
               job["link"] +
               "'>" +
               job["title"] +
@@ -164,11 +170,12 @@ export default function LinkList({
           <Tooltip title={<span class="tooltipText">Return home</span>}>
             <Fab
               color="primary"
+              className="blueFab"
               onClick={() => {
                 setVisibleComponent("WebsiteIndex");
               }}
             >
-              <ArrowBack />
+              <Close />
             </Fab>
           </Tooltip>
         </Box>
@@ -180,7 +187,7 @@ export default function LinkList({
             fontWeight: "normal",
           }}
         >
-          {company} Jobs Found
+          {company} Jobs
         </Typography>
         <Divider
           orientation="horizontal"
@@ -191,19 +198,44 @@ export default function LinkList({
             marginBottom: "2rem",
           }}
         />
-        <TextField
-          label="Search"
-          variant="outlined"
-          fullWidth
-          value={searchText}
-          onChange={handleSearch}
-          sx={{ mb: 2 }}
-        />
+        <Box sx={{ width: "100%", display: "flex", justifyContent: "end" }}>
+          <DarkTextField
+            label="Search"
+            value={searchText}
+            onChange={handleSearch}
+            width="200px"
+            sx={{ mb: 2 }}
+          />
+        </Box>
+
         <DataGrid
           rows={rows}
           columns={columns}
           initialState={{ pagination: { paginationModel } }}
-          sx={{ border: 0, marginBottom: "1rem" }}
+          sx={{
+            border: 0,
+            marginBottom: "1rem",
+            "& .MuiDataGrid-root": {
+              color: "white", // Text color
+              borderColor: "white", // Border color
+            },
+            "& .MuiDataGrid-cell": {
+              color: "white",
+              borderColor: "white", // Cell border color
+            },
+            "& .MuiDataGrid-columnHeaders": {
+              borderColor: "white", // Header border color
+            },
+            "& .MuiDataGrid-footerContainer": {
+              borderColor: "white", // Footer border color
+            },
+            "& .MuiTablePagination-root": {
+              color: "white", // Pagination text color
+            },
+            "& .MuiSvgIcon-root": {
+              color: "white", // Pagination icons color (e.g., arrows)
+            },
+          }}
         />
       </Paper>
     </Grow>

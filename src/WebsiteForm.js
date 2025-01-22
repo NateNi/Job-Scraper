@@ -49,7 +49,6 @@ export default function WebsiteForm({
         setVisibleComponent("WebsiteTest");
       }
     } catch (error) {
-      console.error("Error:", error);
       setErrorMessage(error.response.data.error);
     }
     setOpenLoader(false);
@@ -218,6 +217,7 @@ export default function WebsiteForm({
           <Tooltip title={<span class="tooltipText">Add new filter</span>}>
             <Fab
               color="primary"
+              className="blueFab"
               variant="extended"
               aria-label="add"
               onClick={() => addNewFilter()}
@@ -264,6 +264,7 @@ export default function WebsiteForm({
                 </Typography>
                 <Tooltip title={<span class="tooltipText">Remove filter</span>}>
                   <Fab
+                    className="redFab"
                     sx={{ backgroundColor: "#ff3333", color: "white" }}
                     aria-label="remove"
                     onClick={() => removeNewFilter(filter.id)}
@@ -354,6 +355,7 @@ export default function WebsiteForm({
                 </Typography>
                 <Tooltip title={<span class="tooltipText">Remove filter</span>}>
                   <Fab
+                    className="redFab"
                     sx={{ backgroundColor: "#ff3333", color: "white" }}
                     aria-label="remove"
                     onClick={() => removeNewFilter(filter.id)}
@@ -409,18 +411,21 @@ export default function WebsiteForm({
         ))}
 
         <Box sx={{ width: "100%", textAlign: "right" }}>
-          <Fab
-            color="primary"
-            aria-label="test"
-            type="submit"
-            sx={{
-              backgroundColor: "#22bb33",
-              color: "white",
-              marginRight: "1.5rem",
-            }}
-          >
-            <PlayArrow />
-          </Fab>
+          <Tooltip title={<span class="tooltipText">Test the scraper</span>}>
+            <Fab
+              className="blueFab"
+              color="primary"
+              aria-label="test"
+              type="submit"
+              sx={{
+                backgroundColor: "#22bb33",
+                color: "white",
+                marginRight: "1.5rem",
+              }}
+            >
+              <PlayArrow />
+            </Fab>
+          </Tooltip>
         </Box>
       </form>
     </Paper>

@@ -27,7 +27,7 @@ def create_db_connection(app):
 
 def addJobWebsite(app, cursor, conn, data, favicon):
     try:
-        cursor.execute('''INSERT INTO jobWebsites (url, favicon, company, channelId, containerXpath, titleXpath, linkXpath, titleAttribute) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ''', (data['url'], favicon, data['company'], data['channelId'], data['containerXpath'], data['titleXpath'], data['linkXpath'], data['titleAttribute']))
+        cursor.execute('''INSERT INTO jobWebsites (url, favicon, company, channelId, containerXpath, titleXpath, linkXpath, titleAttribute) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ''', (data['url'], favicon, data['company'], data['channelId'] if 'channelId' in data else None, data['containerXpath'], data['titleXpath'], data['linkXpath'], data['titleAttribute']))
         jobWebsiteId = cursor.lastrowid
     except sqlite3.Error as e:
         app.logger.error(f"Error inserting into jobWebsites table: {e}")

@@ -101,7 +101,7 @@ def create_website():
             
         missing_fields = []
         for field in required_fields:
-            if not data['websiteFormData'].get(field):
+            if not data.get(field):
                 missing_fields.append(field)
         if missing_fields:
             app.logger.error(f"Missing required field for create website: {', '.join(missing_fields)}")
@@ -182,9 +182,9 @@ def get_settings():
 def update_settings():
     data = request.get_json()
 
-    # if 'settings' not in data or 'channels' not in data or 'newChannels' not in data:
-    #     app.logger.error("Missing required fields: 'settings', 'channels', or 'newChannels'")
-    #     return jsonify({'error': "Missing required fields: 'settings', 'channels', or 'newChannels'"}), 400
+    if 'settings' not in data or ((data['channels'] or data['newChannels']) and not next((item.get('value') for item in data['settings'] if item.get('name') == 'slackToken'), None)):
+        app.logger.error("Slack channels cannot be set without a Slack token")
+        return jsonify({'error': "Slack channels cannot be set without a Slack token"}), 400
 
     connection = create_db_connection(app)
     if not connection['success']:
@@ -340,7 +340,7 @@ def run_scraper(website_id):
         except Exception as e:
             app.logger.error(f"Error sending notification: {e}")
             return jsonify({'error': 'Failed to send notification'}), 500
-        return jsonify({'success': 1})
+        return jsonify({'success': 1, 'newJobsCount': len(newJobs)}), 200
     
     except Exception as e:
         app.logger.error(f"Unexpected error during run_scraper: {e}")
@@ -441,7 +441,7 @@ def update_website(website_id):
             connection['conn'].close()
             return jsonify({'error': 'Failed to retrieve favicon'}), 500
         try:
-            connection['cursor'].execute('''UPDATE jobWebsites SET url = ?, favicon = ?, company = ?, channelId = ?, containerXpath = ?, titleXpath = ?, linkXpath = ?, titleAttribute = ? WHERE id = ? ''', (data['url'], favicon, data['company'], data['channelId'], data['containerXpath'], data['titleXpath'], data['linkXpath'], data['titleAttribute'], website_id))
+            connection['cursor'].execute('''UPDATE jobWebsites SET url = ?, favicon = ?, company = ?, channelId = ?, containerXpath = ?, titleXpath = ?, linkXpath = ?, titleAttribute = ? WHERE id = ? ''', (data['url'], favicon, data['company'], data['channelId'] if 'channelId' in data else None, data['containerXpath'], data['titleXpath'], data['linkXpath'], data['titleAttribute'], website_id))
         except sqlite3.Error as e:
             app.logger.error(f"Error updating jobWebsites table: {e}")
             connection['conn'].close()

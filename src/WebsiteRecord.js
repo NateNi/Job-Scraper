@@ -15,7 +15,7 @@ import {
   Fab,
   Tooltip,
 } from "@mui/material";
-import { ArrowBack } from "@mui/icons-material";
+import { Close } from "@mui/icons-material";
 import MockWebpage from "./MockWebpage.js";
 import WebsiteForm from "./WebsiteForm.js";
 import DescriptionBox from "./DescriptionBox.js";
@@ -75,6 +75,7 @@ export default function WebsiteRecord({
           >
             <Fab
               color="primary"
+              className="blueFab"
               onClick={() => {
                 setVisibleComponent("WebsiteIndex");
                 setWebsiteNewFilterData([]);
@@ -90,7 +91,7 @@ export default function WebsiteRecord({
                 setCurrentWebsiteRecordId("");
               }}
             >
-              <ArrowBack />
+              <Close />
             </Fab>
           </Tooltip>
         </Box>

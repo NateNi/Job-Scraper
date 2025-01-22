@@ -5,7 +5,18 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import "./App.css";
-import { Typography, Box, Paper, Grow, Button } from "@mui/material";
+import {
+  Typography,
+  Box,
+  Paper,
+  Grow,
+  Button,
+  Tooltip,
+  Fab,
+  Divider,
+} from "@mui/material";
+import { ArrowBack, Close, Save } from "@mui/icons-material";
+import { DataGrid } from "@mui/x-data-grid";
 
 export default function WebsiteTest({
   jobs,
@@ -52,6 +63,40 @@ export default function WebsiteTest({
     }
     setOpenLoader(false);
   };
+
+  const columns = [
+    {
+      field: "linkHTML",
+      headerName: "Job(s)",
+      flex: 1,
+      renderCell: (params) => (
+        <Box
+          dangerouslySetInnerHTML={{ __html: params.value }}
+          sx={{
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        />
+      ),
+    },
+  ];
+  const [rows, setRows] = useState(
+    jobs.map(function (job, index) {
+      return {
+        id: index,
+        linkHTML:
+          "<a class='jobLink' target='_blank' href='" +
+          job["link"] +
+          "'>" +
+          job["title"] +
+          "</a>",
+      };
+    })
+  );
+
+  const paginationModel = { page: 0, pageSize: 10 };
+
   return (
     <Grow in={true}>
       <Paper
@@ -59,55 +104,114 @@ export default function WebsiteTest({
         className="componentPage"
         sx={{
           padding: "4rem",
-          maxWidth: "70%",
+          maxWidth: "600px",
           marginLeft: "auto",
           marginRight: "auto",
-          textAlign: "right",
         }}
       >
-        {[...jobs].map((job, index) => (
-          <Box
-            sx={{
-              padding: "24px 24px",
-              borderRadius: "8px",
-              border: "1px solid #ccc",
-              marginBottom: "24px",
-              textAlign: "start",
-            }}
+        <Box sx={{ width: "100%", marginBottom: "2rem" }}>
+          <Tooltip
+            sx={{ mr: "1rem" }}
+            title={<span class="tooltipText">Cancel</span>}
           >
-            <Typography variant="h4" sx={{ display: "inline-block" }}>
-              <a target="_blank" href={job.link}>
-                {job.title}
-              </a>
-            </Typography>
-          </Box>
-        ))}
-        <Button
-          variant="contained"
-          onClick={() => createWebsiteSubmit()}
-          sx={{ marginRight: "1rem" }}
-        >
-          Save
-        </Button>
-        <Button
-          variant="contained"
-          onClick={() => {
-            setVisibleComponent("WebsiteIndex");
-            setWebsiteNewFilterData([]);
-            setWebsiteFilterData([]);
-            setWebsiteFormData({
-              url: "",
-              company: "",
-              containerXpath: "",
-              titleXpath: "",
-              titleAttribute: "",
-              linkXpath: "",
-            });
-            setCurrentWebsiteRecordId("");
+            <Fab
+              color="primary"
+              className="blueFab"
+              onClick={() => {
+                setVisibleComponent("WebsiteIndex");
+                setWebsiteNewFilterData([]);
+                setWebsiteFilterData([]);
+                setWebsiteFormData({
+                  url: "",
+                  company: "",
+                  containerXpath: "",
+                  titleXpath: "",
+                  titleAttribute: "",
+                  linkXpath: "",
+                });
+                setCurrentWebsiteRecordId("");
+              }}
+            >
+              <Close />
+            </Fab>
+          </Tooltip>
+          <Tooltip title={<span class="tooltipText">Back to edit</span>}>
+            <Fab
+              color="primary"
+              className="blueFab"
+              onClick={() => {
+                setVisibleComponent(
+                  currentWebsiteRecordId ? "WebsiteEdit" : "WebsiteCreate"
+                );
+              }}
+            >
+              <ArrowBack />
+            </Fab>
+          </Tooltip>
+        </Box>
+        <Typography
+          variant="h3"
+          sx={{
+            display: "inline-block",
+            color: "white",
+            fontWeight: "normal",
           }}
         >
-          Cancel
-        </Button>
+          {rows.length} {websiteFormData["company"]} Job(s) Found
+        </Typography>
+        <Divider
+          orientation="horizontal"
+          flexItem
+          className="whiteDivider"
+          sx={{
+            marginTop: "1rem",
+            marginBottom: "2rem",
+          }}
+        />
+        <DataGrid
+          rows={rows}
+          columns={columns}
+          initialState={{ pagination: { paginationModel } }}
+          sx={{
+            border: 0,
+            marginBottom: "1rem",
+            "& .MuiDataGrid-root": {
+              color: "white", // Text color
+              borderColor: "white", // Border color
+            },
+            "& .MuiDataGrid-cell": {
+              borderColor: "white", // Cell border color
+            },
+            "& .MuiDataGrid-columnHeaders": {
+              borderColor: "white", // Header border color
+            },
+            "& .MuiDataGrid-footerContainer": {
+              borderColor: "white", // Footer border color
+            },
+            "& .MuiTablePagination-root": {
+              color: "white", // Pagination text color
+            },
+            "& .MuiSvgIcon-root": {
+              color: "white", // Pagination icons color (e.g., arrows)
+            },
+          }}
+        />
+        <Box sx={{ textAlign: "right" }}>
+          <Tooltip title={<span class="tooltipText">Save the scraper</span>}>
+            <Fab
+              className="greenFab"
+              aria-label="test"
+              onClick={() => createWebsiteSubmit()}
+              sx={{
+                backgroundColor: "#22bb33",
+                color: "white",
+                marginRight: "1.5rem",
+              }}
+            >
+              <Save />
+            </Fab>
+          </Tooltip>
+        </Box>
       </Paper>
     </Grow>
   );

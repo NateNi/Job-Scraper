@@ -78,6 +78,7 @@ export default function DarkSelect({
       <FormControl fullWidth variant="outlined" sx={{ margin: "0" }}>
         <InputLabel id="dark-mode-select-label">{label}</InputLabel>
         <Select
+          name={name}
           labelId="filter-type-label"
           id={id}
           label={label}

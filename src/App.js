@@ -130,6 +130,7 @@ function App() {
             currentWebsiteRecordId={currentWebsiteRecordId}
             setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
             setSuccessMessage={setSuccessMessage}
+            setErrorMessage={setErrorMessage}
           />
         );
       default:

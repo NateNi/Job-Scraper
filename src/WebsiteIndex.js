@@ -52,6 +52,7 @@ export default function WebsiteIndex({
     if (response.status === 200) {
       setOpenLoader(false);
       fetchWebsites();
+      setSuccessMessage(response.data.newJobsCount + " new jobs found");
     }
   };
 
@@ -120,6 +121,7 @@ export default function WebsiteIndex({
           <Tooltip title={<span class="tooltipText">Open settings</span>}>
             <Fab
               color="primary"
+              className="blueFab"
               aria-label="settings"
               onClick={() => setVisibleComponent("Settings")}
             >
@@ -160,6 +162,7 @@ export default function WebsiteIndex({
           >
             <Fab
               color="primary"
+              className="blueFab"
               sx={{ mb: "14px" }}
               onClick={() => setVisibleComponent("WebsiteCreate")}
             >
@@ -221,6 +224,7 @@ export default function WebsiteIndex({
                   <Fab
                     color="primary"
                     aria-label="run"
+                    className="greenFab"
                     sx={{
                       backgroundColor: "#22bb33",
                       color: "white",
@@ -241,6 +245,7 @@ export default function WebsiteIndex({
                   >
                     <Fab
                       color="primary"
+                      className="blueFab"
                       aria-label="history"
                       sx={{ marginRight: "1.5rem" }}
                       onClick={() => setLinkListView(website.id)}
@@ -252,6 +257,7 @@ export default function WebsiteIndex({
                 <Tooltip title={<span class="tooltipText">Edit scraper</span>}>
                   <Fab
                     color="primary"
+                    className="blueFab"
                     aria-label="edit"
                     sx={{ marginRight: "1.5rem" }}
                     onClick={() => setEditView(website.id)}
@@ -263,6 +269,7 @@ export default function WebsiteIndex({
                   title={<span class="tooltipText">Delete scraper</span>}
                 >
                   <Fab
+                    className="redFab"
                     sx={{ backgroundColor: "#ff3333", color: "white" }}
                     aria-label="delete"
                     onClick={() => deleteWebsite(website.id)}
