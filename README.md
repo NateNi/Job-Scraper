@@ -65,6 +65,8 @@ The application uses a SQLite database (`jobs.db`) with the following tables:
 
 ## Slack Integration
 
+![Screen Shot 2025-01-22 at 6 48 54 PM](https://github.com/user-attachments/assets/8be743b8-375c-42a2-a625-2da3fe3733fa)
+
 The application integrates with Slack to send notifications about new job links. The Slack token and channels are stored in the `settings` table. When a new job link is created, it is sent to the Slack channel associated with the corresponding website record.
 
 ## Contributing
