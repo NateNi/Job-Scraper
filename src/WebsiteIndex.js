@@ -104,7 +104,7 @@ export default function WebsiteIndex({
         className="componentPage"
         sx={{
           padding: "4rem",
-          maxWidth: "70%",
+          maxWidth: "1200px",
           marginLeft: "auto",
           marginRight: "auto",
         }}

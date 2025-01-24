@@ -494,7 +494,7 @@ def update_website(website_id):
                 )
             for filter in data['filters']:
                 connection['cursor'].execute(
-                    "UPDATE jobWebsiteFilters SET (filterXpath = ?, type = ?, selectValue = ?) WHERE id = ?",
+                    "UPDATE jobWebsiteFilters SET filterXpath = ?, type = ?, selectValue = ? WHERE id = ?",
                     (filter['filterXpath'], filter['type'], filter['selectValue'], filter['id'])
                 )
         except sqlite3.Error as e:
