@@ -79,7 +79,7 @@ To run the application, use the following commands:
    - **GET /links/{jobWebsiteId}**: Fetch a history of all jobs found by a scraper
    - **PUT /links/{jobWebsiteId}**: Set all jobs found by a scraper as viewed
 
-   ![Screen Shot 2025-01-23 at 9 52 24 PM](https://github.com/user-attachments/assets/1f0b8de9-a75a-4459-bc7d-6b462e023ad9)
+   ![Screen Shot 2025-01-24 at 11 47 59 AM](https://github.com/user-attachments/assets/4266cd4f-6f3e-4d21-8afb-1a5194fd5856)
 
 - Settings: Manage slack integration details
 
