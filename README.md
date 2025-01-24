@@ -46,29 +46,49 @@ To run the application, use the following commands:
   npm start
   ```
 
-## API Endpoints
+## Functionality
 
-- **GET /index**: Retrieves all job websites and their associated data.
+- Homepage: Display all websites set up for scraping and provide a hub for all other app functionality
 
+   API Routes:
+   - **GET /index**: Retrieves all job website scrapers and their associated data.
+   - **GET /website/{jobWebsiteId}/run**: Runs a job website scraper
+   - **DELETE /website/{jobWebsiteId}**: Delete a job website scraper
+  
   ![Screen Shot 2025-01-21 at 5 40 37 PM](https://github.com/user-attachments/assets/b40d3b55-53fe-4946-83dd-23542f93e096)
 
-- **POST /website**: Creates a new job website entry.
+- Add/Update Website Scraper: Display a form for setting up a new website scraper with a mock webpage and details about each input reactively displayed to the left
+
+  API ROUTES:
+  - **POST /website/test**: Tests a website and retrieves job listings.
+  - **GET /website/{jobWebsiteId}**: Fetch the job scraper details for the update page
 
    ![Screen Shot 2025-01-23 at 9 52 24 PM](https://github.com/user-attachments/assets/1f0b8de9-a75a-4459-bc7d-6b462e023ad9)
 
-- **POST /website/test**: Tests a website and retrieves job listings.
+- Test Website Results: Display the jobs retrieved from testing a new/updated website scraper and allow for the user to save or return to the edit screen
+
+  API ROUTES:
+  - **POST /website**: Creates a new job website entry.
+  - **PUT /website/{jobWebsiteId}**: Update a job website entry.
   
    ![Screen Shot 2025-01-23 at 10 12 33 PM](https://github.com/user-attachments/assets/a06c6222-f8d8-4c22-acce-a9850e9be16e)
 
-- **POST /website**: Creates a new job website entry.
+- List Jobs: Display all jobs found by a scraper with a marker indicating new ones
+  
+   API ROUTES:
+   - **GET /links/{jobWebsiteId}**: Fetch a history of all jobs found by a scraper
+   - **PUT /links/{jobWebsiteId}**: Set all jobs found by a scraper as viewed
 
    ![Screen Shot 2025-01-23 at 9 52 24 PM](https://github.com/user-attachments/assets/1f0b8de9-a75a-4459-bc7d-6b462e023ad9)
-  
-- **GET /settings**: Retrieves settings.
 
+- Settings: Manage slack integration details
+
+  API ROUTES:
+   - **GET /settings**: Retrieves settings.
+   - **POST /settings**: Updates settings.
+     
    ![Screen Shot 2025-01-22 at 6 48 54 PM](https://github.com/user-attachments/assets/8be743b8-375c-42a2-a625-2da3fe3733fa)
 
-- **POST /settings**: Updates settings.
 
 ## Database Structure
 
