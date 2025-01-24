@@ -58,18 +58,30 @@ def getFavicon(html, url):
 def test_website():
     try:
         data = request.get_json()
-        print(data['websiteFormData'])
+        filters = data['websiteFilterData']
+        newFilters = data['websiteNewFilterData']
         required_fields = ['url', 'company', 'containerXpath', 'titleXpath', 'linkXpath']
         missing_fields = []
         for field in required_fields:
             if not data['websiteFormData'].get(field):
                 missing_fields.append(field)
+        
+        required_filter_fields = ['filterXpath', 'selectValue', 'type']
+        if filters:
+            for filter in filters:
+                for field in required_filter_fields:
+                    if not filter.get(field):
+                        missing_fields.append(field)
+        if newFilters:
+            for filter in newFilters:
+                for field in required_filter_fields:
+                    if not filter.get(field):
+                        missing_fields.append(field)
+
         if missing_fields:
             app.logger.error(f"Missing required field for test website: {', '.join(missing_fields)}")
             return jsonify({'error': f"Missing required field(s): {', '.join(missing_fields)}"}), 400
 
-        filters = data['websiteFilterData']
-        newFilters = data['websiteNewFilterData']
         options = Options()
         options.add_argument('--headless=new')
         try:

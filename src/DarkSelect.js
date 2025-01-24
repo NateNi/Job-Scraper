@@ -13,14 +13,14 @@ const darkTheme = createTheme({
   palette: {
     mode: "dark",
     primary: {
-      main: "#ffffff", // White color for focus and active states
+      main: "#ffffff",
     },
     text: {
-      primary: "#ffffff", // White text
+      primary: "#ffffff",
     },
     background: {
-      default: "#121212", // Dark background
-      paper: "#1e1e1e", // Slightly lighter dark for dropdown items
+      default: "#121212",
+      paper: "#1e1e1e",
     },
   },
   components: {

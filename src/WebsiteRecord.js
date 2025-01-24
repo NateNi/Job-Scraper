@@ -64,12 +64,12 @@ export default function WebsiteRecord({
         className="componentPage"
         sx={{
           padding: "4rem",
-          maxWidth: "70%",
+          maxWidth: "1200px",
           marginLeft: "auto",
           marginRight: "auto",
         }}
       >
-        <Box sx={{ width: "100%", marginBottom: "2rem" }}>
+        <Box sx={{ width: "100%" }}>
           <Tooltip
             title={<span class="tooltipText">Cancel and return home</span>}
           >
@@ -95,47 +95,48 @@ export default function WebsiteRecord({
             </Fab>
           </Tooltip>
         </Box>
-
-        <Typography
-          variant="h3"
-          sx={{
-            display: "inline-block",
-            color: "white",
-            fontWeight: "normal",
-          }}
-        >
-          {currentWebsiteRecordId ? "Update" : "Create"} Website Scraper
-        </Typography>
-        <Divider
-          orientation="horizontal"
-          flexItem
-          className="whiteDivider"
-          sx={{ marginTop: "1rem", marginBottom: "2rem" }}
-        />
-        <Grid container spacing={6}>
-          <Grid key={1} item xs={12} md={6}>
-            <WebsiteForm
-              setFocusedElement={setFocusedElement}
-              setVisibleComponent={setVisibleComponent}
-              setOpenLoader={setOpenLoader}
-              setJobs={setJobs}
-              setWebsiteFilterData={setWebsiteFilterData}
-              setWebsiteNewFilterData={setWebsiteNewFilterData}
-              setWebsiteFormData={setWebsiteFormData}
-              currentWebsiteRecordId={currentWebsiteRecordId}
-              websiteFormData={websiteFormData}
-              websiteFilterData={websiteFilterData}
-              websiteNewFilterData={websiteNewFilterData}
-              setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
-              channels={channels}
-              setErrorMessage={setErrorMessage}
-            />
+        <Box sx={{ padding: "2rem 4rem 4rem 4rem" }}>
+          <Typography
+            variant="h3"
+            sx={{
+              display: "inline-block",
+              color: "white",
+              fontWeight: "normal",
+            }}
+          >
+            {currentWebsiteRecordId ? "Update" : "Create"} Website Scraper
+          </Typography>
+          <Divider
+            orientation="horizontal"
+            flexItem
+            className="whiteDivider"
+            sx={{ marginTop: "1rem", marginBottom: "2rem" }}
+          />
+          <Grid container spacing={6}>
+            <Grid key={1} item xs={12} md={6}>
+              <WebsiteForm
+                setFocusedElement={setFocusedElement}
+                setVisibleComponent={setVisibleComponent}
+                setOpenLoader={setOpenLoader}
+                setJobs={setJobs}
+                setWebsiteFilterData={setWebsiteFilterData}
+                setWebsiteNewFilterData={setWebsiteNewFilterData}
+                setWebsiteFormData={setWebsiteFormData}
+                currentWebsiteRecordId={currentWebsiteRecordId}
+                websiteFormData={websiteFormData}
+                websiteFilterData={websiteFilterData}
+                websiteNewFilterData={websiteNewFilterData}
+                setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
+                channels={channels}
+                setErrorMessage={setErrorMessage}
+              />
+            </Grid>
+            <Grid key={2} item xs={12} md={6}>
+              <MockWebpage focusedElement={focusedElement} />
+              <DescriptionBox focusedElement={focusedElement} />
+            </Grid>
           </Grid>
-          <Grid key={2} item xs={12} md={6}>
-            <MockWebpage focusedElement={focusedElement} />
-            <DescriptionBox focusedElement={focusedElement} />
-          </Grid>
-        </Grid>
+        </Box>
       </Paper>
     </Grow>
   );

@@ -18,7 +18,7 @@ export default function MockWebpage({ focusedElement }) {
     <Paper
       elevation={24}
       sx={{
-        margin: "20px auto",
+        marginBottom: "40px",
         borderRadius: 2,
         overflow: "hidden",
         border: "1px solid #1e1e1e",
@@ -95,18 +95,30 @@ export default function MockWebpage({ focusedElement }) {
               width: "150px",
               marginBottom: "1rem",
               border: `2px solid ${
-                focusedElement == "filter" ? "white" : "#1e1e1e"
+                ["filterXpath", "filterSelectValue"].includes(focusedElement)
+                  ? "white"
+                  : "#1e1e1e"
               }`,
             }}
           >
             <Typography
               variant="body1"
-              color={focusedElement == "filter" ? "white" : "#1e1e1e"}
+              color={
+                ["filterXpath", "filterSelectValue"].includes(focusedElement)
+                  ? "white"
+                  : "#1e1e1e"
+              }
             >
               Sort
             </Typography>
             <ArrowDropDown
-              sx={{ color: focusedElement == "filter" ? "white" : "#1e1e1e" }}
+              sx={{
+                color: ["filterXpath", "filterSelectValue"].includes(
+                  focusedElement
+                )
+                  ? "white"
+                  : "#1e1e1e",
+              }}
             />
           </Box>
         </Box>
@@ -130,8 +142,10 @@ export default function MockWebpage({ focusedElement }) {
           >
             <h4
               className={
-                (focusedElement == "title" ? "focusedElement" : "") +
-                " mockWebElement"
+                (focusedElement == "titleAttribute" ||
+                focusedElement == "titleXpath"
+                  ? "focusedElement"
+                  : "") + " mockWebElement"
               }
             >
               Job Title

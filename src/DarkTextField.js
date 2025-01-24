@@ -6,13 +6,13 @@ const darkTheme = createTheme({
   palette: {
     mode: "dark",
     primary: {
-      main: "#ffffff", // White color for focus and active states
+      main: "#ffffff",
     },
     text: {
-      primary: "#ffffff", // White text color
+      primary: "#ffffff",
     },
     background: {
-      default: "#121212", // Dark background
+      default: "#121212",
       paper: "#1e1e1e",
     },
   },
@@ -20,15 +20,15 @@ const darkTheme = createTheme({
     MuiOutlinedInput: {
       styleOverrides: {
         root: {
-          color: "#ffffff", // White text
+          color: "#ffffff",
           "& .MuiOutlinedInput-notchedOutline": {
-            borderColor: "#ffffff", // White border
+            borderColor: "#ffffff",
           },
           "&:hover .MuiOutlinedInput-notchedOutline": {
-            borderColor: "#ffffff", // White border on hover
+            borderColor: "#ffffff",
           },
           "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-            borderColor: "#ffffff", // White border on focus
+            borderColor: "#ffffff",
           },
         },
       },
@@ -36,9 +36,9 @@ const darkTheme = createTheme({
     MuiInputLabel: {
       styleOverrides: {
         root: {
-          color: "#ffffff", // White label text
+          color: "#ffffff",
           "&.Mui-focused": {
-            color: "#ffffff", // White label text on focus
+            color: "#ffffff",
           },
         },
       },

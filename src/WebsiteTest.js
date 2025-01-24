@@ -149,68 +149,69 @@ export default function WebsiteTest({
             </Fab>
           </Tooltip>
         </Box>
-        <Typography
-          variant="h3"
-          sx={{
-            display: "inline-block",
-            color: "white",
-            fontWeight: "normal",
-          }}
-        >
-          {rows.length} {websiteFormData["company"]} Job(s) Found
-        </Typography>
-        <Divider
-          orientation="horizontal"
-          flexItem
-          className="whiteDivider"
-          sx={{
-            marginTop: "1rem",
-            marginBottom: "2rem",
-          }}
-        />
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          initialState={{ pagination: { paginationModel } }}
-          sx={{
-            border: 0,
-            marginBottom: "1rem",
-            "& .MuiDataGrid-root": {
-              color: "white", // Text color
-              borderColor: "white", // Border color
-            },
-            "& .MuiDataGrid-cell": {
-              borderColor: "white", // Cell border color
-            },
-            "& .MuiDataGrid-columnHeaders": {
-              borderColor: "white", // Header border color
-            },
-            "& .MuiDataGrid-footerContainer": {
-              borderColor: "white", // Footer border color
-            },
-            "& .MuiTablePagination-root": {
-              color: "white", // Pagination text color
-            },
-            "& .MuiSvgIcon-root": {
-              color: "white", // Pagination icons color (e.g., arrows)
-            },
-          }}
-        />
-        <Box sx={{ textAlign: "right" }}>
-          <Tooltip title={<span class="tooltipText">Save the scraper</span>}>
-            <Fab
-              className="greenFab"
-              aria-label="test"
-              onClick={() => createWebsiteSubmit()}
-              sx={{
-                backgroundColor: "#22bb33",
-                color: "white",
-                marginRight: "1.5rem",
-              }}
-            >
-              <Save />
-            </Fab>
-          </Tooltip>
+        <Box sx={{ padding: "2rem 4rem 4rem 4rem" }}>
+          <Typography
+            variant="h3"
+            sx={{
+              display: "inline-block",
+              color: "white",
+              fontWeight: "normal",
+            }}
+          >
+            {rows.length} {websiteFormData["company"]} Job(s) Found
+          </Typography>
+          <Divider
+            orientation="horizontal"
+            flexItem
+            className="whiteDivider"
+            sx={{
+              marginTop: "1rem",
+              marginBottom: "2rem",
+            }}
+          />
+          <DataGrid
+            rows={rows}
+            columns={columns}
+            initialState={{ pagination: { paginationModel } }}
+            sx={{
+              border: 0,
+              marginBottom: "1rem",
+              "& .MuiDataGrid-root": {
+                color: "white", // Text color
+                borderColor: "white", // Border color
+              },
+              "& .MuiDataGrid-cell": {
+                borderColor: "white", // Cell border color
+              },
+              "& .MuiDataGrid-columnHeaders": {
+                borderColor: "white", // Header border color
+              },
+              "& .MuiDataGrid-footerContainer": {
+                borderColor: "white", // Footer border color
+              },
+              "& .MuiTablePagination-root": {
+                color: "white", // Pagination text color
+              },
+              "& .MuiSvgIcon-root": {
+                color: "white", // Pagination icons color (e.g., arrows)
+              },
+            }}
+          />
+          <Box sx={{ textAlign: "right" }}>
+            <Tooltip title={<span class="tooltipText">Save the scraper</span>}>
+              <Fab
+                className="greenFab"
+                aria-label="test"
+                onClick={() => createWebsiteSubmit()}
+                sx={{
+                  backgroundColor: "#22bb33",
+                  color: "white",
+                }}
+              >
+                <Save />
+              </Fab>
+            </Tooltip>
+          </Box>
         </Box>
       </Paper>
     </Grow>

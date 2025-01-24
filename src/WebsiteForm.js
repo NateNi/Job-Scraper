@@ -187,7 +187,7 @@ export default function WebsiteForm({
           id="titleXpathField"
           name="titleXpath"
           label="Title Xpath"
-          onFocusElement={"title"}
+          onFocusElement={"titleXpath"}
           onChange={handleChange}
           value={websiteFormData.titleXpath}
           setFocusedElement={setFocusedElement}
@@ -197,7 +197,7 @@ export default function WebsiteForm({
           id="titleAttributeField"
           name="titleAttribute"
           label="Title Attribute (optional)"
-          onFocusElement={"title"}
+          onFocusElement={"titleAttribute"}
           onChange={handleChange}
           value={websiteFormData.titleAttribute}
           setFocusedElement={setFocusedElement}
@@ -289,17 +289,17 @@ export default function WebsiteForm({
                 label="Filter Xpath"
                 value={filter.filterXpath}
                 setFocusedElement={setFocusedElement}
-                onFocusElement={"filter"}
+                onFocusElement={"filterXpath"}
                 targetId={filter.id}
                 targetName="filterXpath"
-                handleFilterChange={handleFilterChange}
+                handleEventChange={handleFilterChange}
               />
 
               <DarkSelect
                 id="type"
                 label="Filter Type"
                 name="type"
-                handleFilterChange={handleNewFilterChange}
+                handleFilterChange={handleFilterChange}
                 filterId={filter.id}
                 value={filter.type}
                 options={filterTypeOptions}
@@ -310,10 +310,10 @@ export default function WebsiteForm({
                 label="Select Value"
                 value={filter.selectValue}
                 setFocusedElement={setFocusedElement}
-                onFocusElement={"filter"}
+                onFocusElement={"filterSelectValue"}
                 targetId={filter.id}
                 targetName="selectValue"
-                handleFilterChange={handleFilterChange}
+                handleEventChange={handleFilterChange}
               />
             </Box>
           </Box>
@@ -380,10 +380,10 @@ export default function WebsiteForm({
                 label="Filter Xpath"
                 value={filter.filterXpath}
                 setFocusedElement={setFocusedElement}
-                onFocusElement={"filter"}
+                onFocusElement={"filterXpath"}
                 targetId={filter.id}
                 targetName={"filterXpath"}
-                handleFilterChange={handleNewFilterChange}
+                handleEventChange={handleNewFilterChange}
               />
 
               <DarkSelect
@@ -401,10 +401,10 @@ export default function WebsiteForm({
                 label="Select Value"
                 value={filter.selectValue}
                 setFocusedElement={setFocusedElement}
-                onFocusElement={"filter"}
+                onFocusElement={"filterSelectValue"}
                 targetId={filter.id}
                 targetName="selectValue"
-                handleFilterChange={handleNewFilterChange}
+                handleEventChange={handleNewFilterChange}
               />
             </Box>
           </Box>
