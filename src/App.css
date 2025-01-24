@@ -56,7 +56,7 @@
 }
 
 .jobLink {
-    color: white;
+    color: white !important;
 }
 
 .greenFab:hover {

@@ -25,9 +25,16 @@ export default function Settings({
 }) {
   useEffect(() => {
     const fetchSettings = async () => {
-      const response = await axios.get("/settings");
-      setSettings(response.data.settings);
-      setChannels(response.data.channels);
+      try {
+        let response = null;
+        response = await axios.get("/settings");
+        if (response.status === 200) {
+          setSettings(response.data.settings);
+          setChannels(response.data.channels);
+        }
+      } catch (error) {
+        setErrorMessage(error.response.data.error);
+      }
     };
     fetchSettings();
   }, []);
@@ -155,6 +162,7 @@ export default function Settings({
             <form onSubmit={settingsSubmit}>
               {settings.map((setting) => (
                 <Box
+                  key={setting.id}
                   sx={{
                     borderRadius: "24px",
                     border: "1px solid #ccc",

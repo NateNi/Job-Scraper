@@ -57,8 +57,15 @@ export default function WebsiteForm({
   useEffect(() => {
     const fetchWebsite = async () => {
       const response = await axios.get("/website/" + currentWebsiteRecordId);
-      setWebsiteFormData(response.data.website);
-      setWebsiteFilterData(response.data.filters);
+      console.log(response);
+      try {
+        if (response.status === 200) {
+          setWebsiteFormData(response.data.website);
+          setWebsiteFilterData(response.data.filters);
+        }
+      } catch (error) {
+        setErrorMessage(error.response.data.error);
+      }
     };
     if (currentWebsiteRecordId) {
       fetchWebsite();
@@ -420,7 +427,6 @@ export default function WebsiteForm({
               sx={{
                 backgroundColor: "#22bb33",
                 color: "white",
-                marginRight: "1.5rem",
               }}
             >
               <PlayArrow />

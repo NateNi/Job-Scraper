@@ -30,6 +30,7 @@ export default function WebsiteIndex({
   setOpenLoader,
   setChannels,
   setSuccessMessage,
+  setErrorMessage,
 }) {
   const [websites, setWebsites] = useState([]);
 
@@ -46,32 +47,49 @@ export default function WebsiteIndex({
   const runScraper = async (websiteId) => {
     setOpenLoader(true);
     let response = null;
-    response = await axios.get(
-      "http://localhost:5000/website/" + websiteId + "/run"
-    );
-    if (response.status === 200) {
-      setOpenLoader(false);
-      fetchWebsites();
-      setSuccessMessage(response.data.newJobsCount + " new jobs found");
+    try {
+      response = await axios.get(
+        "http://localhost:5000/website/" + websiteId + "/run"
+      );
+      if (response.status === 200) {
+        setOpenLoader(false);
+        fetchWebsites();
+        setSuccessMessage(response.data.newJobsCount + " new jobs found");
+      }
+    } catch (error) {
+      setErrorMessage(error.response.data.error);
     }
   };
 
   const deleteWebsite = async (websiteId) => {
     setOpenLoader(true);
     let response = null;
-    response = await axios.delete("http://localhost:5000/website/" + websiteId);
-    if (response.status === 200) {
-      setOpenLoader(false);
-      fetchWebsites();
-      setSuccessMessage("Website scraper deleted successfully");
+    try {
+      response = await axios.delete(
+        "http://localhost:5000/website/" + websiteId
+      );
+      if (response.status === 200) {
+        fetchWebsites();
+        setSuccessMessage("Website scraper deleted successfully");
+      }
+    } catch (error) {
+      setErrorMessage(error.response.data.error);
     }
+    setOpenLoader(false);
   };
 
   const fetchWebsites = async () => {
     setOpenLoader(true);
-    const response = await axios.get("/index");
-    setWebsites(response.data.websites);
-    setChannels(response.data.channels);
+    let response = null;
+    try {
+      response = await axios.get("/index");
+      if (response.status === 200) {
+        setWebsites(response.data.websites);
+        setChannels(response.data.channels);
+      }
+    } catch (error) {
+      setErrorMessage(error.response.data.error);
+    }
     setOpenLoader(false);
   };
 

@@ -211,6 +211,7 @@ def update_settings():
                 connection['cursor'].execute('''UPDATE settings SET value = ? WHERE name = ?''', (setting.get('value'), setting.get('name')))
         except sqlite3.Error as e:
             app.logger.error(f"Error updating settings: {e}")
+            connection['conn'].close()
             return jsonify({'error': 'Failed to update settings'}), 500
         try:
             channelIds = {channel["id"] for channel in channels}
@@ -236,6 +237,7 @@ def update_settings():
                 )
         except sqlite3.Error as e:
             app.logger.error(f"Error updating channels: {e}")
+            connection['conn'].close()
             return jsonify({'error': 'Failed to update channels'}), 500
         try:
             for channel in data['newChannels']:
@@ -245,6 +247,7 @@ def update_settings():
                 connection['cursor'].execute('INSERT INTO channels (name) VALUES (?)', (channel.get('name'),))
         except sqlite3.Error as e:
             app.logger.error(f"Error inserting new channels: {e}")
+            connection['conn'].close()
             return jsonify({'error': 'Failed to add new channels'}), 500
         connection['conn'].commit()
         connection['conn'].close()
@@ -276,6 +279,7 @@ def get_websites():
         connection['conn'].close()
     except sqlite3.Error as e:
         app.logger.error(f"Database connection error: {e}")
+        connection['conn'].close()
         return jsonify({'error': 'Database connection failed'}), 500
 
     try:
@@ -331,6 +335,7 @@ def run_scraper(website_id):
             previouslySentLinks = [{'link': row[1], 'title': row[2]} for row in previouslySentLinkResults]
         except sqlite3.Error as e:
                 app.logger.error(f"Error fetching previously sent links: {e}")
+                connection['conn'].close()
                 return jsonify({'error': 'Failed to fetch previously sent links'}), 500
 
         try:
@@ -373,6 +378,7 @@ def get_links_list(website_id):
                 links.append({'id': row[0], 'link': row[1], 'title': row[2], 'viewed': row[4], 'created_at': datetime.datetime.strptime(row[5], "%Y-%m-%d %H:%M:%S.%f").strftime("%m/%d/%Y %I:%M %p")})
         except sqlite3.Error as e:
                 app.logger.error(f"Error fetching previously sent links: {e}")
+                connection['conn'].close()
                 return jsonify({'error': 'Failed to fetch previously sent links'}), 500
 
         jobWebsiteResult = fetch_job_website(app, connection['cursor'], connection['conn'], website_id)
@@ -398,6 +404,7 @@ def set_viewed_links(website_id):
             connection['cursor'].execute('''UPDATE jobLinks SET viewed = 1 WHERE jobWebsiteId = ?''', (website_id,))
         except sqlite3.Error as e:
             app.logger.error(f"Error setting links as viewed: {e}")
+            connection['conn'].close()
             return jsonify({'error': 'Failed to set links as viewed'}), 500
         connection['conn'].commit()
         connection['conn'].close()
@@ -475,6 +482,7 @@ def update_website(website_id):
             existingFilterIds = {row[0] for row in connection['cursor'].fetchall()}
         except sqlite3.Error as e:
             app.logger.error(f"Error fetching jobWebsiteFilters: {e}")
+            connection['conn'].close()
             return jsonify({'error': 'Failed to fetch filters'}), 500
     
         try:
@@ -491,6 +499,7 @@ def update_website(website_id):
                 )
         except sqlite3.Error as e:
             app.logger.error(f"Error updating filters: {e}")
+            connection['conn'].close()
             return jsonify({'error': 'Failed to update filters'}), 500
         
         try:
@@ -499,6 +508,7 @@ def update_website(website_id):
             previouslySentLinks = [{'link': row[1], 'title': row[2]} for row in previouslySentLinkResults]
         except sqlite3.Error as e:
                 app.logger.error(f"Error fetching previously sent links: {e}")
+                connection['conn'].close()
                 return jsonify({'error': 'Failed to fetch previously sent links'}), 500
     
         try:
@@ -510,6 +520,7 @@ def update_website(website_id):
                     newJobs.append(jobDict)
         except Exception as e:
             app.logger.error(f"Error adding new job links: {e}")
+            connection['conn'].close()
             return jsonify({'error': 'Failed to add new job links'}), 500
     
         connection['conn'].commit()
@@ -572,6 +583,7 @@ def send_message(jobs, company, channelId, websiteId):
                 connection['cursor'].execute(''' UPDATE jobWebsites SET channelId = null WHERE id = ? ''', (websiteId,))
         except sqlite3.Error as e:
             app.logger.error(f"Error querying the slack channel: {e}")
+            connection['conn'].close()
             return jsonify({'error': 'Failed to query the slack channel'}), 500
 
         connection['conn'].commit()
@@ -602,6 +614,7 @@ def scrape_all():
             connection['cursor'].executescript(INITIALIZE_DB)
         except sqlite3.Error as e:
             app.logger.error(f"Error executing INITIALIZE_DB: {e}")
+            connection['conn'].close()
             return jsonify({'error': 'Failed to initialize the database'}), 500
         
         jobWebsiteResults = fetch_job_websites(app, connection['cursor'], connection['conn'])

@@ -25,39 +25,49 @@ export default function LinkList({
   currentWebsiteRecordId,
   setJobs,
   jobs,
+  setErrorMessage,
 }) {
   useEffect(() => {
     const fetchLinkList = async () => {
       setOpenLoader(true);
-      const response = await axios.get("/links/" + currentWebsiteRecordId);
-      setJobs(response.data.links);
-      setCompany(response.data.company);
-      setRows(
-        response.data.links.map(function (job, index) {
-          return {
-            id: job["id"],
-            linkHTML:
-              "<a class='jobLink' href='" +
-              job["link"] +
-              "'>" +
-              job["title"] +
-              "</a>",
-            viewed: job["viewed"],
-            created_at: job["created_at"],
-          };
-        })
-      );
+      try {
+        let response = null;
+        response = await axios.get("/links/" + currentWebsiteRecordId);
+        if (response.status === 200) {
+          setJobs(response.data.links);
+          setCompany(response.data.company);
+          setRows(
+            response.data.links.map(function (job, index) {
+              return {
+                id: job["id"],
+                linkHTML:
+                  "<a class='jobLink' href='" +
+                  job["link"] +
+                  "'>" +
+                  job["title"] +
+                  "</a>",
+                viewed: job["viewed"],
+                created_at: job["created_at"],
+              };
+            })
+          );
+          setViewedLinks();
+        }
+      } catch (error) {
+        setErrorMessage(error.response.data.error);
+      }
       setOpenLoader(false);
-      setViewedLinks();
     };
 
     fetchLinkList();
   }, []);
 
   const setViewedLinks = async () => {
-    setOpenLoader(true);
-    const response = await axios.put("/links/" + currentWebsiteRecordId);
-    setOpenLoader(false);
+    try {
+      const response = await axios.put("/links/" + currentWebsiteRecordId);
+    } catch (error) {
+      setErrorMessage(error.response.data.error);
+    }
   };
 
   const [searchText, setSearchText] = useState("");
@@ -161,7 +171,7 @@ export default function LinkList({
         className="componentPage"
         sx={{
           padding: "4rem",
-          maxWidth: "70%",
+          maxWidth: "1000px",
           marginLeft: "auto",
           marginRight: "auto",
         }}
@@ -179,64 +189,66 @@ export default function LinkList({
             </Fab>
           </Tooltip>
         </Box>
-        <Typography
-          variant="h3"
-          sx={{
-            display: "inline-block",
-            color: "white",
-            fontWeight: "normal",
-          }}
-        >
-          {company} Jobs
-        </Typography>
-        <Divider
-          orientation="horizontal"
-          flexItem
-          className="whiteDivider"
-          sx={{
-            marginTop: "1rem",
-            marginBottom: "2rem",
-          }}
-        />
-        <Box sx={{ width: "100%", display: "flex", justifyContent: "end" }}>
-          <DarkTextField
-            label="Search"
-            value={searchText}
-            onChange={handleSearch}
-            width="200px"
-            sx={{ mb: 2 }}
+        <Box sx={{ padding: "2rem 4rem 4rem 4rem" }}>
+          <Typography
+            variant="h3"
+            sx={{
+              display: "inline-block",
+              color: "white",
+              fontWeight: "normal",
+            }}
+          >
+            {company} Jobs
+          </Typography>
+          <Divider
+            orientation="horizontal"
+            flexItem
+            className="whiteDivider"
+            sx={{
+              marginTop: "1rem",
+              marginBottom: "2rem",
+            }}
+          />
+          <Box sx={{ width: "100%", display: "flex", justifyContent: "end" }}>
+            <DarkTextField
+              label="Search"
+              value={searchText}
+              onChange={handleSearch}
+              width="200px"
+              sx={{ mb: 2 }}
+            />
+          </Box>
+
+          <DataGrid
+            rows={rows}
+            columns={columns}
+            initialState={{ pagination: { paginationModel } }}
+            sx={{
+              border: 0,
+              marginBottom: "1rem",
+              "& .MuiDataGrid-root": {
+                color: "white", // Text color
+                borderColor: "white", // Border color
+              },
+              "& .MuiDataGrid-cell": {
+                color: "white",
+                borderColor: "white", // Cell border color
+              },
+              "& .MuiDataGrid-columnHeaders": {
+                borderColor: "white", // Header border color
+              },
+              "& .MuiDataGrid-footerContainer": {
+                borderColor: "white", // Footer border color
+              },
+              "& .MuiTablePagination-root": {
+                color: "white", // Pagination text color
+              },
+              "& .MuiSvgIcon-root": {
+                color: "white", // Pagination icons color (e.g., arrows)
+              },
+            }}
           />
         </Box>
-
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          initialState={{ pagination: { paginationModel } }}
-          sx={{
-            border: 0,
-            marginBottom: "1rem",
-            "& .MuiDataGrid-root": {
-              color: "white", // Text color
-              borderColor: "white", // Border color
-            },
-            "& .MuiDataGrid-cell": {
-              color: "white",
-              borderColor: "white", // Cell border color
-            },
-            "& .MuiDataGrid-columnHeaders": {
-              borderColor: "white", // Header border color
-            },
-            "& .MuiDataGrid-footerContainer": {
-              borderColor: "white", // Footer border color
-            },
-            "& .MuiTablePagination-root": {
-              color: "white", // Pagination text color
-            },
-            "& .MuiSvgIcon-root": {
-              color: "white", // Pagination icons color (e.g., arrows)
-            },
-          }}
-        />
       </Paper>
     </Grow>
   );

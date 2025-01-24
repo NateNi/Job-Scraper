@@ -31,6 +31,7 @@ export default function WebsiteTest({
   setWebsiteFormData,
   setCurrentWebsiteRecordId,
   setSuccessMessage,
+  setErrorMessage,
 }) {
   const createWebsiteSubmit = async () => {
     setOpenLoader(true);
@@ -59,7 +60,8 @@ export default function WebsiteTest({
         setSuccessMessage(message);
       }
     } catch (error) {
-      console.error("Error:", error);
+      console.error(error.response.data.error);
+      setErrorMessage(error.response.data.error);
     }
     setOpenLoader(false);
   };

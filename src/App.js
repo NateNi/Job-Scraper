@@ -55,6 +55,7 @@ function App() {
             setChannels={setChannels}
             setOpenLoader={setOpenLoader}
             setSuccessMessage={setSuccessMessage}
+            setErrorMessage={setErrorMessage}
           />
         );
       case "WebsiteCreate":
@@ -107,6 +108,7 @@ function App() {
             setWebsiteFormData={setWebsiteFormData}
             setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
             setSuccessMessage={setSuccessMessage}
+            setErrorMessage={setErrorMessage}
           />
         );
       case "LinkList":
@@ -118,6 +120,7 @@ function App() {
             setJobs={setJobs}
             currentWebsiteRecordId={currentWebsiteRecordId}
             setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
+            setErrorMessage={setErrorMessage}
           />
         );
       case "Settings":
