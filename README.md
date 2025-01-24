@@ -6,6 +6,8 @@
 
 This project is a web scraping application built with React for the frontend and Flask for the backend. It interacts with a SQLite database to manage job listings and provides an API for creating and retrieving postings on job websites.
 
+![Screen Shot 2025-01-23 at 9 52 24 PM](https://github.com/user-attachments/assets/1f0b8de9-a75a-4459-bc7d-6b462e023ad9)
+
 ## Technologies Used
 
 - React
