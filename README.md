@@ -106,6 +106,7 @@ The application integrates with Slack to send notifications about new job links.
 ## Planned Enhancements
 
 - Package the application as a desktop app with Electron.js
+- Simplify the process of running the scrapers on a schedule
 - Suggest inputs for a web scraper if the url matches a recognized pattern
 - Attempt to autogenerate a web scraper
 
