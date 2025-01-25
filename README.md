@@ -22,7 +22,7 @@ This project is a web scraping application built with React for the frontend and
 1. Clone the repository:
    ```bash
    git clone <repository-url>
-   cd job-scraper
+   cd Job-Scraper
    ```
 2. Install the frontend dependencies:
    ```bash
