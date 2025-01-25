@@ -103,6 +103,12 @@ The application uses a SQLite database (`jobs.db`) with the following tables:
 
 The application integrates with Slack to send notifications about new job links. The Slack token and channels are stored in the `settings` table. When a new job link is created, it is sent to the Slack channel associated with the corresponding website record.
 
+## Planned Enhancements
+
+- Package the application as a desktop app with Electron.js
+- Suggest inputs for a web scraper if the url matches a recognized pattern
+- Attempt to autogenerate a web scraper
+
 ## Contributing
 
 Contributions are welcome! Please submit a pull request or open an issue for discussion.
