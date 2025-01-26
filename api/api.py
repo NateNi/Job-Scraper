@@ -60,7 +60,7 @@ def test_website():
         data = request.get_json()
         filters = data['websiteFilterData']
         newFilters = data['websiteNewFilterData']
-        required_fields = ['url', 'company', 'containerXpath', 'titleXpath', 'linkXpath']
+        required_fields = ['url', 'company', 'containerXpath']
         missing_fields = []
         for field in required_fields:
             if not data['websiteFormData'].get(field):
@@ -109,7 +109,7 @@ def test_website():
 def create_website():
     try:
         data = request.get_json()
-        required_fields = ['url', 'company', 'containerXpath', 'titleXpath', 'linkXpath']
+        required_fields = ['url', 'company', 'containerXpath']
             
         missing_fields = []
         for field in required_fields:
@@ -700,8 +700,8 @@ def getJobs(driver, url, company, containerXpath, titleXpath, linkXpath, titleAt
                         titleElement = option.find_element(By.XPATH, titleXpath)
                         title = titleElement.get_attribute(titleAttribute) if titleAttribute else titleElement.text
                     except NoSuchElementException:
-                        app.logger.warning(f"Title element not found using XPath: {titleXpath}. Using fallback title.")
-                if not title:
+                        app.logger.warning(f"Title element not found using XPath: {titleXpath}.")
+                else:
                     title = f'New {company} Job'
 
                 link = None
@@ -710,10 +710,10 @@ def getJobs(driver, url, company, containerXpath, titleXpath, linkXpath, titleAt
                         link = option.find_element(By.XPATH, linkXpath).get_attribute('href')
                     except NoSuchElementException:
                             app.logger.warning(f"Link element not found using XPath: {linkXpath}. Using fallback link.")
-                if not link:
-                        link = url
-                
-                jobs.append({'title': title, 'link': link})
+                else:
+                    link = url
+                if link or title:
+                    jobs.append({'title': title, 'link': link})
             except Exception as e:
                     app.logger.error(f"Unexpected error while processing a job container: {e}")
 
