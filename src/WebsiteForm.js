@@ -43,7 +43,6 @@ export default function WebsiteForm({
         websiteFilterData: websiteFilterData,
         websiteNewFilterData: websiteNewFilterData,
       });
-      console.log(response);
       if (response.status === 200) {
         setJobs(response.data.jobs);
         setVisibleComponent("WebsiteTest");
@@ -53,35 +52,6 @@ export default function WebsiteForm({
     }
     setOpenLoader(false);
   };
-
-  useEffect(() => {
-    const fetchWebsite = async () => {
-      const response = await axios.get("/website/" + currentWebsiteRecordId);
-      console.log(response);
-      try {
-        if (response.status === 200) {
-          setWebsiteFormData(response.data.website);
-          setWebsiteFilterData(response.data.filters);
-        }
-      } catch (error) {
-        setErrorMessage(error.response.data.error);
-      }
-    };
-    if (currentWebsiteRecordId) {
-      fetchWebsite();
-    } else {
-      setWebsiteFormData({
-        url: "",
-        company: "",
-        containerXpath: "",
-        titleXpath: "",
-        titleAttribute: "",
-        linkXpath: "",
-        channelId: "",
-      });
-      setWebsiteFilterData([]);
-    }
-  }, []);
 
   const handleChange = (event) => {
     setWebsiteFormData({

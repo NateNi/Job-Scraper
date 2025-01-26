@@ -44,17 +44,8 @@ export default function WebsiteRecord({
     };
     if (currentWebsiteRecordId) {
       fetchWebsite();
-    } else {
-      setWebsiteFormData({
-        url: "",
-        company: "",
-        containerXpath: "",
-        titleXpath: "",
-        titleAttribute: "",
-        linkXpath: "",
-      });
-      setWebsiteFilterData([]);
-    }
+    } 
+ 
   }, []);
 
   return (

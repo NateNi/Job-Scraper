@@ -440,7 +440,6 @@ def edit_website(website_id):
 
 @app.route('/website/<int:website_id>', methods=['PUT'])
 def update_website(website_id):
-    #TODO: Add Logging
     try:
         data = request.get_json()
         required_fields = ['url', 'company', 'containerXpath', 'titleXpath', 'linkXpath']
