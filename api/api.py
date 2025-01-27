@@ -603,46 +603,6 @@ def send_message(jobs, company, channelId, websiteId):
         app.logger.error(f"Unexpected error during send_message: {e}")
         return jsonify({'error': 'An unexpected error occurred'}), 500
     
-def scrape_all():
-    try:
-        connection = create_db_connection(app)
-        if not connection['success']:
-            return jsonify({'error': connection['error']}), connection['status']
-
-        try:
-            connection['cursor'].executescript(INITIALIZE_DB)
-        except sqlite3.Error as e:
-            app.logger.error(f"Error executing INITIALIZE_DB: {e}")
-            connection['conn'].close()
-            return jsonify({'error': 'Failed to initialize the database'}), 500
-        
-        jobWebsiteResults = fetch_job_websites(app, connection['cursor'], connection['conn'])
-        if not jobWebsiteResults['success']:
-            return jsonify({'error': jobWebsiteResults['error']}), jobWebsiteResults['status']
-        websites = [{'id': row[0], 'url': row[1], 'company': row[2], 'channel': row[3], 'containerXpath': row[4], 'titleXpath': row[5], 'linkXpath': row[6], 'titleAttribute': row[7], 'filters': processed_filters(fetch_filters_for_job_website(app, connection['cursor'], connection['conn'], row[0]))} for row in jobWebsiteResults['jobWebsites']]
-       
-        connection['conn'].close()
-
-        for website in websites:
-            options = Options()
-            options.add_argument('--headless=new')
-            try:
-                driver = webdriver.Chrome(options=options)
-            except Exception as e:
-                app.logger.error(f"Failed to initialize WebDriver: {e}")
-                return jsonify({'error': 'Failed to initialize WebDriver'}), 500
-            try:
-                getJobs(driver, website['id'], website['url'], website['company'], website['channel'], website['containerXpath'], website['titleXpath'], website['linkXpath'], website['titleAttribute'])
-            except Exception as e:
-                app.logger.error(f"Error while executing getJobs: {e}")
-                driver.quit()
-                return jsonify({'error': 'Failed to fetch jobs'}), 500
-            driver.quit()
-        return True
-    except Exception as e:
-        app.logger.error(f"Unexpected error during scrape_all: {e}")
-        return jsonify({'error': 'An unexpected error occurred'}), 500
-    
 def processed_filters(filterResults):
     return [{'id': filterResult[0], 'filterXpath': filterResult[2], 'selectValue': filterResult[3], 'type': filterResult[4]} for filterResult in filterResults]
 
@@ -681,7 +641,7 @@ def getJobs(driver, url, company, containerXpath, titleXpath, linkXpath, titleAt
     try:
         driver.get(url)
         # Wait for the JavaScript content to load
-        time.sleep(4)
+        time.sleep(5)
 
         if not applyFilters(filters, driver):
             app.logger.warning("Failed to apply filters.")
