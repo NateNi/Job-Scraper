@@ -33,26 +33,45 @@ file_handler = logging.FileHandler('app.log')
 file_handler.setLevel(logging.INFO)
 app.logger.addHandler(file_handler)
 
-def getFavicon(html, url):
-    soup = BeautifulSoup(html, 'html.parser')
-    favicon_tag = soup.find('link', rel=lambda rel: rel and 'icon' in rel.lower())
-    if favicon_tag:
+def get_favicon(html, base_url):
+
+    # Validate parameters (html must not be empty)
+    if not html:
+        app.logger.error("Invalid input: HTML content is missing.")
+        return None
+    
+    try:    
+        # Find the favicon link from the html
+        soup = BeautifulSoup(html, 'html.parser')
+        favicon_tag = soup.find('link', rel=lambda rel: rel and 'icon' in rel.lower())
+
+        if not favicon_tag:
+            app.logger.info(f"No favicon tag found in the HTML for URL: {base_url}")
+            return None
+
+        # Modify the favicon link if it 's relative
         favicon_url = favicon_tag['href']
         if not favicon_url.startswith(('http://', 'https://')):
-            favicon_url = requests.compat.urljoin(url, favicon_url)
-        try:
-            response = requests.get(favicon_url, stream=True)
-            if response.status_code == 200:
-                return response.content
-            else:
-                app.logger.warning(f"Failed to retrieve favicon, status code: {response.status_code}")
-                return None
-        except requests.RequestException as e:
-            app.logger.error(f"Error fetching favicon: {e}")
-            return None
-    else:
-        app.logger.info("No favicon tag found in the HTML for url: {url}")
+            favicon_url = requests.compat.urljoin(base_url, favicon_url)
+
+        return fetch_favicon(favicon_url)
+    except Exception as e:
+        app.logger.error(f"Unexpected error in get_favicon: {e}")
         return None
+    
+
+def fetch_favicon(favicon_url):
+    try:
+        response = requests.get(favicon_url, stream=True)
+        if response.status_code == 200:
+            return response.content
+        else:
+            app.logger.warning(f"Failed to retrieve favicon from {favicon_url}, status code: {response.status_code}")
+            return None
+    except requests.RequestException as e:
+        app.logger.error(f"Error fetching favicon from {favicon_url}: {e}")
+        return None
+    
 
 @app.route('/website/test', methods=['POST'])
 def test_website():
@@ -124,7 +143,7 @@ def create_website():
             return jsonify({'error': connection['error']}), connection['status']
         
         try:
-            favicon = getFavicon(webpageSourceData, data['url'])
+            favicon = get_favicon(webpageSourceData, data['url'])
         except Exception as e:
             app.logger.error(f"Error retrieving favicon: {e}")
             connection['conn'].close()
@@ -454,7 +473,7 @@ def update_website(website_id):
             return jsonify({'error': connection['error']}), connection['status']     
 
         try:
-            favicon = getFavicon(webpageSourceData, data['url'])
+            favicon = get_favicon(webpageSourceData, data['url'])
         except Exception as e:
             app.logger.error(f"Error retrieving favicon: {e}")
             connection['conn'].close()
