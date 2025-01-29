@@ -21,6 +21,13 @@ app.run(debug=True)
 
 CORS(app)
 
+JOB_WEBSITE_REQUIRED_FIELDS = ['url', 'company', 'containerXpath']
+JOB_WEBSITE_FILTER_REQUIRED_FIELDS = ['filterXpath', 'selectValue', 'type']
+JOB_LINK_REQUIRED_FIELDS = ['link', 'title']
+SETTING_REQUIRED_FIELDS = ['name', 'value']
+EXISTING_CHANNEL_REQUIRED_FIELDS = ['id', 'name']
+NEW_CHANNEL_REQUIRED_FIELDS = ['id', 'name']
+
 webpageSourceData = None
 jobResults = None
 
@@ -72,6 +79,21 @@ def fetch_favicon(favicon_url):
         app.logger.error(f"Error fetching favicon from {favicon_url}: {e}")
         return None
     
+def initialize_webdriver():
+    options = Options()
+    options.add_argument('--headless=new')
+    try:
+        driver = webdriver.Chrome(options=options)
+        return driver
+    except Exception as e:
+        app.logger.error(f"Failed to initialize WebDriver: {e}")
+        return None
+    
+def validate_fields(data, required_fields):
+    missing_fields = [field for field in required_fields if not data.get(field)]
+    if missing_fields:
+        app.logger.error(f"Missing required fields: {', '.join(missing_fields)}")
+    return missing_fields
 
 @app.route('/website/test', methods=['POST'])
 def test_website():
@@ -79,45 +101,44 @@ def test_website():
         data = request.get_json()
         filters = data['websiteFilterData']
         newFilters = data['websiteNewFilterData']
-        required_fields = ['url', 'company', 'containerXpath']
-        missing_fields = []
-        for field in required_fields:
-            if not data['websiteFormData'].get(field):
-                missing_fields.append(field)
         
-        required_filter_fields = ['filterXpath', 'selectValue', 'type']
+        # Validate job website data
+        missing_fields = validate_fields(data, JOB_WEBSITE_REQUIRED_FIELDS)
+        
+        # Validate existing job website filter data
         if filters:
             for filter in filters:
-                for field in required_filter_fields:
-                    if not filter.get(field):
-                        missing_fields.append(field)
+                missing_fields += validate_fields(filter, JOB_WEBSITE_FILTER_REQUIRED_FIELDS)
+
+        # Validate new job website filter data
         if newFilters:
             for filter in newFilters:
-                for field in required_filter_fields:
-                    if not filter.get(field):
-                        missing_fields.append(field)
+                missing_fields += validate_fields(filter, JOB_WEBSITE_FILTER_REQUIRED_FIELDS)
 
         if missing_fields:
             app.logger.error(f"Missing required field for test website: {', '.join(missing_fields)}")
             return jsonify({'error': f"Missing required field(s): {', '.join(missing_fields)}"}), 400
 
-        options = Options()
-        options.add_argument('--headless=new')
-        try:
-            driver = webdriver.Chrome(options=options)
-        except Exception as e:
-            app.logger.error(f"Failed to initialize WebDriver: {e}")
+        # Initialize WebDriver
+        driver = initialize_webdriver()
+        if not driver:
             return jsonify({'error': 'Failed to initialize WebDriver'}), 500
+
         try:
             jobs = getJobs(driver, data['websiteFormData']['url'], data['websiteFormData']['company'], data['websiteFormData']['containerXpath'], data['websiteFormData']['titleXpath'], data['websiteFormData']['linkXpath'], data['websiteFormData']['titleAttribute'], filters, newFilters)
         except Exception as e:
-                app.logger.error(f"Error while executing getJobs: {e}")
-                driver.quit()
-                return jsonify({'error': 'Failed to fetch jobs'}), 500
+            app.logger.error(f"Error while executing getJobs: {e}")
+            driver.quit()
+            return jsonify({'error': 'Failed to fetch jobs'}), 500
+        
+        # Save source data in global variable to fetch the favicon when saving the job data
         global webpageSourceData 
         webpageSourceData = driver.page_source
+
+        # Save the job results in global variable to save to the database if the scraper is running properly
         global jobResults
         jobResults = jobs
+
         driver.quit()
         return jsonify({'jobs': jobs})
     except Exception as e:
@@ -128,20 +149,31 @@ def test_website():
 def create_website():
     try:
         data = request.get_json()
-        required_fields = ['url', 'company', 'containerXpath']
-            
-        missing_fields = []
-        for field in required_fields:
-            if not data.get(field):
-                missing_fields.append(field)
+        filters = data['filters']
+
+        # Validate job website data
+        missing_fields = validate_fields(data, JOB_WEBSITE_REQUIRED_FIELDS)
+
+         # Validate job website filter data
+        if filters:
+            for filter in filters:
+                missing_fields += validate_fields(filter, JOB_WEBSITE_FILTER_REQUIRED_FIELDS)
+
+         # Validate job links data
+        if jobResults:
+            for job in jobResults:
+                missing_fields += validate_fields(job, JOB_LINK_REQUIRED_FIELDS)
+
         if missing_fields:
             app.logger.error(f"Missing required field for create website: {', '.join(missing_fields)}")
             return jsonify({'error': f"Missing required field(s): {', '.join(missing_fields)}"}), 400
 
+        # Establish database connection
         connection = create_db_connection(app)
         if not connection['success']:
             return jsonify({'error': connection['error']}), connection['status']
         
+        # Get the favicon
         try:
             favicon = get_favicon(webpageSourceData, data['url'])
         except Exception as e:
@@ -149,32 +181,27 @@ def create_website():
             connection['conn'].close()
             return jsonify({'error': 'Failed to retrieve favicon'}), 500
 
-        jobWebsiteCreateResult = addJobWebsite(app, connection['cursor'], connection['conn'], data, favicon)
+        # Create the Job Website record
+        jobWebsiteCreateResult = store_job_website(app, connection['cursor'], connection['conn'], data, favicon)
         if not jobWebsiteCreateResult['success']:
             return jsonify({'error': jobWebsiteCreateResult['error']}), jobWebsiteCreateResult['status']
         
-        try:
-            for filter in data['filters']:
-                if not all(k in filter for k in ['filterXpath', 'selectValue', 'type']):
-                    app.logger.error(f"Missing required filter fields in: {filter}")
-                    return jsonify({'error': 'Invalid filter format'}), 400
-                connection['cursor'].execute('INSERT INTO jobWebsiteFilters (jobWebsiteId, filterXpath, selectValue, type) VALUES (?, ?, ?, ?)', (jobWebsiteCreateResult['jobWebsiteId'], filter['filterXpath'], filter['selectValue'], filter['type']))
-        except sqlite3.Error as e:
-            app.logger.error(f"Error inserting into jobWebsiteFilters table: {e}")
-            connection['conn'].close()
-            return jsonify({'error': 'Failed to add filters'}), 500
-        try:
-            for job in jobResults:
-                if not all(k in job for k in ['link', 'title']):
-                    app.logger.error(f"Missing required job fields in: {job}")
-                    return jsonify({'error': 'Invalid job format'}), 400
-                connection['cursor'].execute(f"INSERT OR IGNORE INTO jobLinks(link, title, jobWebsiteId, viewed, created_at) VALUES(?, ?, ?, ?, ?)", (job['link'], job['title'], jobWebsiteCreateResult['jobWebsiteId'], 0, datetime.datetime.now()))
-        except sqlite3.Error as e:
-            app.logger.error(f"Error inserting into jobLinks table: {e}")
-            connection['conn'].close()
-            return jsonify({'error': 'Failed to save job links'}), 500
+        # Create the Job Website Filter records
+        for filter in data['filters']:
+            jobWebsiteFilterCreateResult = store_job_website_filter(app, connection['cursor'], connection['conn'], filter, jobWebsiteCreateResult['jobWebsiteId'])
+            if not jobWebsiteFilterCreateResult['success']:
+                return jsonify({'error': jobWebsiteFilterCreateResult['error']}), jobWebsiteFilterCreateResult['status']
+
+        # Create the Job Link records
+        for job_link in jobResults:
+            jobLinkCreateResult = store_job_link(app, connection['cursor'], connection['conn'], job_link, jobWebsiteCreateResult['jobWebsiteId'])
+            if not jobLinkCreateResult['success']:
+                return jsonify({'error': jobLinkCreateResult['error']}), jobLinkCreateResult['status']
+
         connection['conn'].commit()
         connection['conn'].close()
+
+        # Send slack message for new jobs
         try:
             send_message([{'link': job['link'], 'title': job['title']} for job in jobResults], data['company'], data['channelId'], jobWebsiteCreateResult['jobWebsiteId'])
         except Exception as e:
@@ -192,17 +219,19 @@ def get_settings():
         return jsonify({'error': connection['error']}), connection['status']
 
     try:
+        # Fetch the saved settings
         settingsResults = fetch_settings(app, connection['cursor'], connection['conn'])
         if not settingsResults['success']:
             return jsonify({'error': settingsResults['error']}), settingsResults['status']
-        
+        settings = [{'id': setting[0], 'name': setting[1], 'value': setting[2]} for setting in settingsResults['settings']]
+
+        # Fetch the saved channels
         channelResults = fetch_channels(app, connection['cursor'], connection['conn'])
         if not channelResults['success']:
             return jsonify({'error': channelResults['error']}), channelResults['status']
+        channels = [{'id': channel[0], 'name': channel[1]} for channel in channelResults['channels']]
 
         connection['conn'].close()
-        settings = [{'id': setting[0], 'name': setting[1], 'value': setting[2]} for setting in settingsResults['settings']]
-        channels = [{'id': channel[0], 'name': channel[1]} for channel in channelResults['channels']]
 
         return jsonify({'settings': settings, 'channels': channels})
     except Exception as e:
@@ -212,64 +241,72 @@ def get_settings():
 @app.route('/settings', methods=['POST'])
 def update_settings():
     data = request.get_json()
+    channels = data['channels']
+    newChannels = data['newChannels']
+    settings = data['settings']
 
     if 'settings' not in data or ((data['channels'] or data['newChannels']) and not next((item.get('value') for item in data['settings'] if item.get('name') == 'slackToken'), None)):
         app.logger.error("Slack channels cannot be set without a Slack token")
         return jsonify({'error': "Slack channels cannot be set without a Slack token"}), 400
+    
+    # Validate settings fields
+    for setting in settings:
+        missing_fields = validate_fields(setting, SETTING_REQUIRED_FIELDS)
 
+    # Validate existing channel fields
+    for channel in channels:
+        missing_fields = validate_fields(channel, EXISTING_CHANNEL_REQUIRED_FIELDS)
+
+    # Validate new channel fields
+    for channel in newChannels:
+        missing_fields = validate_fields(channel, NEW_CHANNEL_REQUIRED_FIELDS)
+    
+    if missing_fields:
+        app.logger.error(f"Missing required field for settings: {', '.join(missing_fields)}")
+        return jsonify({'error': f"Missing required field(s): {', '.join(missing_fields)}"}), 400
+
+    # Establish database connection
     connection = create_db_connection(app)
     if not connection['success']:
             return jsonify({'error': connection['error']}), connection['status']
-    channels = data['channels']
+    
     try:
-        try:
-            for setting in data['settings']:
-                if 'name' not in setting or 'value' not in setting:
-                    app.logger.error(f"Invalid setting format: {setting}")
-                    return jsonify({'error': 'Invalid setting format'}), 400
-                connection['cursor'].execute('''UPDATE settings SET value = ? WHERE name = ?''', (setting.get('value'), setting.get('name')))
-        except sqlite3.Error as e:
-            app.logger.error(f"Error updating settings: {e}")
-            connection['conn'].close()
-            return jsonify({'error': 'Failed to update settings'}), 500
-        try:
-            channelIds = {channel["id"] for channel in channels}
+        # Update settings (just slack token at the moment)
+        for setting in data['settings']:
+            settingUpdateResult = update_setting(app, connection['cursor'], connection['conn'], setting)
+            if not settingUpdateResult['success']:
+                return jsonify({'error': settingUpdateResult['error']}), settingUpdateResult['status']
 
-            channelResults = fetch_channels(app, connection['cursor'], connection['conn'])
-            if not channelResults['success']:
-                return jsonify({'error': channelResults['error']}), channelResults['status']
-            existingChannelIds = {row[0] for row in channelResults['channels']}
+        channelIds = {channel["id"] for channel in channels}
 
-            idsToDelete = existingChannelIds - channelIds
-            if idsToDelete:
-                connection['cursor'].execute(
-                    f"DELETE FROM channels WHERE id IN ({','.join(['?'] * len(idsToDelete))})",
-                    tuple(idsToDelete)
-                )
-            for channel in channels:
-                if 'id' not in channel or 'name' not in channel:
-                    app.logger.error(f"Invalid channel format: {channel}")
-                    return jsonify({'error': 'Invalid channel format'}), 400
-                connection['cursor'].execute(
-                    "UPDATE channels SET name = ? WHERE id = ?",
-                    (channel['name'], channel['id'])
-                )
-        except sqlite3.Error as e:
-            app.logger.error(f"Error updating channels: {e}")
-            connection['conn'].close()
-            return jsonify({'error': 'Failed to update channels'}), 500
-        try:
-            for channel in data['newChannels']:
-                if 'name' not in channel:
-                    app.logger.error(f"Invalid new channel format: {channel}")
-                    return jsonify({'error': 'Invalid new channel format'}), 400
-                connection['cursor'].execute('INSERT INTO channels (name) VALUES (?)', (channel.get('name'),))
-        except sqlite3.Error as e:
-            app.logger.error(f"Error inserting new channels: {e}")
-            connection['conn'].close()
-            return jsonify({'error': 'Failed to add new channels'}), 500
+        # Get the existing channels
+        channelResults = fetch_channels(app, connection['cursor'], connection['conn'])
+        if not channelResults['success']:
+            return jsonify({'error': channelResults['error']}), channelResults['status']
+        existingChannelIds = {row[0] for row in channelResults['channels']}
+
+        # Delete channels that are no longer in the list
+        idsToDelete = existingChannelIds - channelIds
+        if idsToDelete:
+            channelDeleteResult = delete_channels(app, connection['cursor'], connection['conn'], idsToDelete)
+            if not channelDeleteResult['success']:
+                return jsonify({'error': channelDeleteResult['error']}), channelDeleteResult['status']
+
+        # Update channels that are still in the list
+        for channel in channels:
+            channelUpdateResult = update_channel(app, connection['cursor'], connection['conn'], channel)
+            if not channelUpdateResult['success']:
+                return jsonify({'error': channelUpdateResult['error']}), channelUpdateResult['status']
+
+        # Add new channels in the list
+        for channel in newChannels:
+            channelStoreResult = store_channel(app, connection['cursor'], connection['conn'], channel)
+            if not channelStoreResult['success']:
+                return jsonify({'error': channelStoreResult['error']}), channelStoreResult['status']
+
         connection['conn'].commit()
         connection['conn'].close()
+
         return jsonify({'success': 1})
     except Exception as e:
         app.logger.error(f"Unexpected error during update_settings: {e}")
@@ -278,39 +315,36 @@ def update_settings():
 @app.route('/index', methods=['GET'])
 def get_websites():
     try:
+        # Establish database connection
         connection = create_db_connection(app)
         if not connection['success']:
             return jsonify({'error': connection['error']}), connection['status']
 
+        # Initialize database if it does not exist
         initializationResult = initialize_db(app, connection['cursor'], connection['conn'])
         if not initializationResult['success']:
             return jsonify({'error': initializationResult['error']}), initializationResult['status']
 
+        # Fetch websites scrapers
         jobWebsiteResults = fetch_job_websites_with_new_link_counts(app, connection['cursor'], connection['conn'])
         if not jobWebsiteResults['success']:
             return jsonify({'error': jobWebsiteResults['error']}), jobWebsiteResults['status']
-    
+
+        # Fetch slack channels
         channelResults = fetch_channels(app, connection['cursor'], connection['conn'])
         if not channelResults['success']:
             return jsonify({'error': channelResults['error']}), channelResults['status']
         
-        connection['conn'].commit()
         connection['conn'].close()
-    except sqlite3.Error as e:
-        app.logger.error(f"Database connection error: {e}")
-        connection['conn'].close()
-        return jsonify({'error': 'Database connection failed'}), 500
 
-    try:
-        websites = []
-        for row in jobWebsiteResults['jobWebsites']:
-            image_base64 = base64.b64encode(row[2]).decode('utf-8') if row[2] is not None else None
-            websites.append({'id': row[0], 'url': row[1], 'favicon': image_base64, 'company': row[3], 'channelId': row[4], 'containerXpath': row[5], 'titleXpath': row[6], 'linkXpath': row[7], 'titleAttribute': row[8], 'numLinksFound': row[9]})
+        websites = [{'id': row[0], 'url': row[1], 'favicon': (base64.b64encode(row[2]).decode('utf-8') if row[2] is not None else None), 'company': row[3], 'channelId': row[4], 'containerXpath': row[5], 'titleXpath': row[6], 'linkXpath': row[7], 'titleAttribute': row[8], 'numLinksFound': row[9]} for row in jobWebsiteResults['jobWebsites']]
         channels = [{'id': channel[0], 'name': channel[1]} for channel in channelResults['channels']]
+
+        return jsonify({'websites': websites, 'channels': channels})
+    
     except Exception as e:
-        app.logger.error(f"Error processing results: {e}")
-        return jsonify({'error': 'Failed to process results'}), 500
-    return jsonify({'websites': websites, 'channels': channels})
+        app.logger.error(f"Unexpected error during get_websites: {e}")
+        return jsonify({'error': 'An unexpected error occurred'}), 500
 
 @app.route('/website/<int:website_id>/run', methods=['GET'])
 def run_scraper(website_id):
@@ -461,8 +495,7 @@ def edit_website(website_id):
 def update_website(website_id):
     try:
         data = request.get_json()
-        required_fields = ['url', 'company', 'containerXpath', 'titleXpath', 'linkXpath']
-        for field in required_fields:
+        for field in JOB_WEBSITE_REQUIRED_FIELDS:
             if field not in data:
                 app.logger.error(f"Missing required field for create website: {field}")
                 return jsonify({'error': f"Missing required field: {field}"}), 400

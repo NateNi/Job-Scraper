@@ -1,4 +1,5 @@
 import sqlite3
+import datetime
 
 INITIALIZE_DB = '''CREATE TABLE IF NOT EXISTS jobWebsites (id INTEGER PRIMARY KEY, url VARCHAR NOT NULL, favicon BLOB, company VARCHAR NOT NULL, channelId INT, containerXpath VARCHAR NOT NULL, titleXpath VARCHAR NOT NULL, linkXpath VARCHAR NOT NULL, titleAttribute VARCHAR, FOREIGN KEY ("channelId") REFERENCES "channels"("id"));
                 CREATE TABLE IF NOT EXISTS jobWebsiteFilters (id INTEGER PRIMARY KEY, jobWebsiteId INT NOT NULL, filterXpath VARCHAR NOT NULL, selectValue VARCHAR, type VARCHAR NOT NULL, FOREIGN KEY ("jobWebsiteId") REFERENCES "jobWebsites"("id")); 
@@ -10,6 +11,7 @@ INITIALIZE_DB = '''CREATE TABLE IF NOT EXISTS jobWebsites (id INTEGER PRIMARY KE
 def initialize_db(app, cursor, conn):
     try:
         cursor.executescript(INITIALIZE_DB)
+        conn.commit()
     except sqlite3.Error as e:
         app.logger.error(f"Error initializing the database: {e}")
         conn.close()
@@ -25,7 +27,7 @@ def create_db_connection(app):
         return {'success': False, 'error': 'Database connection failed', 'status': 500}
     return {'success': True, 'conn': conn, 'cursor': cursor}
 
-def addJobWebsite(app, cursor, conn, data, favicon):
+def store_job_website(app, cursor, conn, data, favicon):
     try:
         cursor.execute('''INSERT INTO jobWebsites (url, favicon, company, channelId, containerXpath, titleXpath, linkXpath, titleAttribute) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ''', (data['url'], favicon, data['company'], data['channelId'] if 'channelId' in data else None, data['containerXpath'], data['titleXpath'], data['linkXpath'], data['titleAttribute']))
         jobWebsiteId = cursor.lastrowid
@@ -105,4 +107,63 @@ def fetch_filters_for_job_website(app, cursor, conn, website_id):
         return {'success': False, 'error': 'Failed to fetch jobWebsiteFilters', 'status': 500}
     return {'success': True, 'filters': filters}
 
+def store_job_website_filter(app, cursor, conn, filter, job_website_id):
+    try:
+        cursor.execute('INSERT INTO jobWebsiteFilters (jobWebsiteId, filterXpath, selectValue, type) VALUES (?, ?, ?, ?)', (job_website_id, filter['filterXpath'], filter['selectValue'], filter['type']))
+    except sqlite3.Error as e:
+        app.logger.error(f"Error inserting into jobWebsiteFilters table: {e}")
+        conn.close()
+        return {'success': False, 'error': 'Failed to create job website filter entry', 'status': 500}
+    return {'success': True}
 
+def store_job_link(app, cursor, conn, job_link, job_website_id):
+    try:
+        cursor.execute(f"INSERT OR IGNORE INTO jobLinks(link, title, jobWebsiteId, viewed, created_at) VALUES(?, ?, ?, ?, ?)", (job_link['link'], job_link['title'], job_website_id, 0, datetime.datetime.now()))
+    except sqlite3.Error as e:
+        app.logger.error(f"Error inserting into jobLinks table: {e}")
+        conn.close()
+        return {'success': False, 'error': 'Failed to create job link entry', 'status': 500}
+    return {'success': True}
+
+def update_setting(app, cursor, conn, setting):
+    try:
+        cursor.execute('''UPDATE settings SET value = ? WHERE name = ?''', (setting.get('value'), setting.get('name')))
+    except sqlite3.Error as e:
+        app.logger.error(f"Error updating settings table: {e}")
+        conn.close()
+        return {'success': False, 'error': 'Failed to update setting', 'status': 500}
+    return {'success': True}
+
+def delete_channels(app, cursor, conn, idsToDelete):
+    try:
+        cursor.execute(
+                    f"DELETE FROM channels WHERE id IN ({','.join(['?'] * len(idsToDelete))})",
+                    tuple(idsToDelete)
+        )
+    except sqlite3.Error as e:
+        app.logger.error(f"Error deleting from the channel table: {e}")
+        conn.close()
+        return {'success': False, 'error': 'Failed to delete channel', 'status': 500}
+    return {'success': True}
+
+
+def update_channel(app, cursor, conn, channel):
+    try:
+        cursor.execute(
+                    "UPDATE channels SET name = ? WHERE id = ?",
+                    (channel['name'], channel['id'])
+                )
+    except sqlite3.Error as e:
+        app.logger.error(f"Error updating channels table: {e}")
+        conn.close()
+        return {'success': False, 'error': 'Failed to update channel', 'status': 500}
+    return {'success': True}
+
+def store_channel(app, cursor, conn, channel):
+    try:
+        cursor.execute('INSERT INTO channels (name) VALUES (?)', (channel.get('name'),))
+    except sqlite3.Error as e:
+        app.logger.error(f"Error inserting into channel table: {e}")
+        conn.close()
+        return {'success': False, 'error': 'Failed to create channel', 'status': 500}
+    return {'success': True}
