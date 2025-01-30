@@ -57,6 +57,16 @@ export default function WebsiteTest({
       }
       if (response.status == 200) {
         setVisibleComponent("WebsiteIndex");
+        setWebsiteNewFilterData([]);
+        setWebsiteFilterData([]);
+        setWebsiteFormData({
+          url: "",
+          company: "",
+          containerXpath: "",
+          titleXpath: "",
+          titleAttribute: "",
+          linkXpath: "",
+        });
         setSuccessMessage(message);
       }
     } catch (error) {

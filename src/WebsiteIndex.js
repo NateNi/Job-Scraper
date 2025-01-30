@@ -57,6 +57,7 @@ export default function WebsiteIndex({
         setSuccessMessage(response.data.newJobsCount + " new jobs found");
       }
     } catch (error) {
+      setOpenLoader(false);
       setErrorMessage(error.response.data.error);
     }
   };
