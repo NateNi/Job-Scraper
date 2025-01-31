@@ -1,50 +1,42 @@
-import React from "react";
+import React, { useMemo, useCallback } from "react";
 import { TextField, createTheme, ThemeProvider } from "@mui/material";
 
-// Custom theme for dark mode
-const darkTheme = createTheme({
-  palette: {
-    mode: "dark",
-    primary: {
-      main: "#ffffff",
-    },
-    text: {
-      primary: "#ffffff",
-    },
-    background: {
-      default: "#121212",
-      paper: "#1e1e1e",
-    },
-  },
-  components: {
-    MuiOutlinedInput: {
-      styleOverrides: {
-        root: {
-          color: "#ffffff",
-          "& .MuiOutlinedInput-notchedOutline": {
-            borderColor: "#ffffff",
+const useDarkTheme = () =>
+  useMemo(
+    () =>
+      createTheme({
+        palette: {
+          mode: "dark",
+          primary: { main: "#ffffff" },
+          text: { primary: "#ffffff" },
+          background: { default: "#121212", paper: "#1e1e1e" },
+        },
+        components: {
+          MuiOutlinedInput: {
+            styleOverrides: {
+              root: {
+                color: "#ffffff",
+                "& .MuiOutlinedInput-notchedOutline": {
+                  borderColor: "#ffffff",
+                },
+                "&:hover .MuiOutlinedInput-notchedOutline": {
+                  borderColor: "#ffffff",
+                },
+                "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                  borderColor: "#ffffff",
+                },
+              },
+            },
           },
-          "&:hover .MuiOutlinedInput-notchedOutline": {
-            borderColor: "#ffffff",
-          },
-          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-            borderColor: "#ffffff",
+          MuiInputLabel: {
+            styleOverrides: {
+              root: { color: "#ffffff", "&.Mui-focused": { color: "#ffffff" } },
+            },
           },
         },
-      },
-    },
-    MuiInputLabel: {
-      styleOverrides: {
-        root: {
-          color: "#ffffff",
-          "&.Mui-focused": {
-            color: "#ffffff",
-          },
-        },
-      },
-    },
-  },
-});
+      }),
+    []
+  );
 
 export default function DarkTextField({
   id,
@@ -60,6 +52,21 @@ export default function DarkTextField({
   type,
   width,
 }) {
+  const darkTheme = useDarkTheme();
+
+  const handleFocus = useCallback(
+    () => setFocusedElement?.(onFocusElement),
+    [setFocusedElement, onFocusElement]
+  );
+
+  const handleChange = useCallback(
+    (e) =>
+      handleEventChange
+        ? handleEventChange(targetId, targetName, e.target.value)
+        : onChange?.(e),
+    [handleEventChange, onChange, targetId, targetName]
+  );
+
   return (
     <ThemeProvider theme={darkTheme}>
       <TextField
@@ -72,17 +79,10 @@ export default function DarkTextField({
           display: "block",
           marginBottom: "32px",
           borderColor: "white",
-          width: width,
+          width,
         }}
-        onFocus={() =>
-          setFocusedElement ? setFocusedElement(onFocusElement) : true
-        }
-        // onBlur={() => (setFocusedElement ? setFocusedElement(null) : true)}
-        onChange={
-          handleEventChange
-            ? (e) => handleEventChange(targetId, targetName, e.target.value)
-            : onChange
-        }
+        onFocus={handleFocus}
+        onChange={handleChange}
         value={value}
         type={type}
       />

@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
-import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
@@ -20,90 +19,84 @@ import { Delete, Add, Close, Save } from "@mui/icons-material";
 export default function Settings({
   setVisibleComponent,
   setOpenLoader,
-  setSuccessMessage,
-  setErrorMessage,
+  setSnackbar,
 }) {
+  const [data, setData] = useState({
+    settings: [],
+    channels: [],
+    newChannels: [],
+  });
+
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        let response = null;
-        response = await axios.get("/settings");
+        const response = await axios.get("/settings");
         if (response.status === 200) {
-          setSettings(response.data.settings);
-          setChannels(response.data.channels);
+          setData((prev) => ({
+            ...prev,
+            settings: response.data.settings,
+            channels: response.data.channels,
+          }));
         }
       } catch (error) {
-        setErrorMessage(error.response.data.error);
+        setSnackbar({
+          message: error.response?.data?.error || "An error occurred",
+          type: "error",
+          open: true,
+        });
       }
     };
     fetchSettings();
+  }, [setSnackbar]);
+
+  const handleChange = useCallback((listName, id, field, value) => {
+    setData((prev) => ({
+      ...prev,
+      [listName]: prev[listName].map((item) =>
+        item.id === id ? { ...item, [field]: value } : item
+      ),
+    }));
   }, []);
 
-  const [settings, setSettings] = useState([]);
-  const [channels, setChannels] = useState([]);
-  const [newChannels, setNewChannels] = useState([]);
+  const removeItem = useCallback((listName, id) => {
+    setData((prev) => ({
+      ...prev,
+      [listName]: prev[listName].filter((item) => item.id !== id),
+    }));
+  }, []);
+
+  const addNewChannel = useCallback(() => {
+    setData((prev) => ({
+      ...prev,
+      newChannels: [...prev.newChannels, { id: Date.now(), name: "" }],
+    }));
+  }, []);
 
   const settingsSubmit = async (e) => {
     e.preventDefault();
     setOpenLoader(true);
     try {
-      let response = null;
-      response = await axios.post("http://localhost:5000/settings", {
-        settings: settings,
-        channels: channels,
-        newChannels: newChannels,
+      const response = await axios.post("/settings", {
+        settings: data.settings,
+        channels: data.channels,
+        newChannels: data.newChannels,
       });
       if (response.status === 200) {
         setVisibleComponent("WebsiteIndex");
-        setSuccessMessage("Settings updated successfully");
+        setSnackbar({
+          message: "Settings updated successfully",
+          type: "success",
+          open: true,
+        });
       }
     } catch (error) {
-      setErrorMessage(error.response.data.error);
+      setSnackbar({
+        message: error.response?.data?.error || "An error occurred",
+        type: "error",
+        open: true,
+      });
     }
     setOpenLoader(false);
-  };
-
-  const handleSettingsChange = (id, field, value) => {
-    setSettings(
-      settings.map((setting) =>
-        setting.id === id ? { ...setting, [field]: value } : setting
-      )
-    );
-  };
-
-  const handleChannelChange = (id, field, value) => {
-    setChannels(
-      channels.map((channel) =>
-        channel.id === id ? { ...channel, [field]: value } : channel
-      )
-    );
-  };
-
-  const handleNewChannelChange = (id, field, value) => {
-    setNewChannels(
-      newChannels.map((channel) =>
-        channel.id === id ? { ...channel, [field]: value } : channel
-      )
-    );
-  };
-
-  const removeChannel = (id) => {
-    setChannels(channels.filter((channel) => channel.id !== id));
-  };
-
-  const removeNewChannel = (id) => {
-    setNewChannels(newChannels.filter((channel) => channel.id !== id));
-  };
-
-  const addNewChannel = () => {
-    let maxChannelId = 0;
-    if (newChannels.length > 0) {
-      let maxChannelIdRecord = newChannels.reduce(function (prev, current) {
-        return prev && prev.id > current.id ? prev : current;
-      });
-      maxChannelId = maxChannelIdRecord.id;
-    }
-    setNewChannels([...newChannels, { id: maxChannelId + 1, name: "" }]);
   };
 
   return (
@@ -111,45 +104,29 @@ export default function Settings({
       <Paper
         elevation={24}
         className="componentPage"
-        sx={{
-          padding: "4rem",
-          maxWidth: "800px",
-          marginLeft: "auto",
-          marginRight: "auto",
-        }}
+        sx={{ padding: "4rem", maxWidth: "800px", margin: "auto" }}
       >
         <Box sx={{ width: "100%" }}>
-          <Tooltip title={<span class="tooltipText">Return home</span>}>
+          <Tooltip title="Return home">
             <Fab
               color="primary"
               className="blueFab"
-              onClick={() => {
-                setVisibleComponent("WebsiteIndex");
-              }}
+              onClick={() => setVisibleComponent("WebsiteIndex")}
             >
               <Close />
             </Fab>
           </Tooltip>
         </Box>
-        <Box sx={{ padding: "2rem 4rem 4rem 4rem" }}>
+        <Box sx={{ padding: "2rem 4rem" }}>
           <Typography
             variant="h3"
-            sx={{
-              display: "inline-block",
-              color: "white",
-              fontWeight: "normal",
-            }}
+            sx={{ color: "white", fontWeight: "normal" }}
           >
             Settings
           </Typography>
           <Divider
-            orientation="horizontal"
-            flexItem
+            sx={{ marginTop: "1rem", marginBottom: "2rem" }}
             className="whiteDivider"
-            sx={{
-              marginTop: "1rem",
-              marginBottom: "2rem",
-            }}
           />
           <Paper
             elevation={24}
@@ -160,7 +137,7 @@ export default function Settings({
             }}
           >
             <form onSubmit={settingsSubmit}>
-              {settings.map((setting) => (
+              {data.settings.map((setting) => (
                 <Box
                   key={setting.id}
                   sx={{
@@ -172,47 +149,24 @@ export default function Settings({
                   }}
                 >
                   <Box
-                    sx={{
-                      padding: "24px 30px 24px 30px",
-                      backgroundColor: "#1e1e1e",
-                    }}
+                    sx={{ padding: "24px 30px", backgroundColor: "#1e1e1e" }}
                   >
-                    <Box
-                      sx={{
-                        width: "100%",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <Typography
-                        variant="h4"
-                        sx={{
-                          display: "inline-block",
-                          textAlign: "left",
-                          color: "white",
-                        }}
-                      >
-                        Slack Token
-                      </Typography>
-                    </Box>
+                    <Typography variant="h4" sx={{ color: "white" }}>
+                      Slack Token
+                    </Typography>
                   </Box>
                   <Divider
-                    orientation="horizontal"
-                    flexItem
+                    sx={{ marginBottom: "2rem" }}
                     className="whiteDivider"
-                    sx={{
-                      marginBottom: "2rem",
-                    }}
                   />
-
                   <Box sx={{ padding: "12px 36px" }}>
                     <DarkTextField
-                      key={setting.id}
                       id="slackToken"
                       name={setting.name}
                       label={setting.name}
-                      handleEventChange={handleSettingsChange}
+                      handleEventChange={(id, field, value) =>
+                        handleChange("settings", id, field, value)
+                      }
                       targetId={setting.id}
                       targetName="value"
                       value={setting.value}
@@ -233,128 +187,58 @@ export default function Settings({
               >
                 <Box
                   sx={{
-                    padding: "24px 30px 24px 30px",
+                    padding: "24px 30px",
                     backgroundColor: "#1e1e1e",
+                    display: "flex",
+                    justifyContent: "space-between",
                   }}
                 >
-                  <Box
-                    sx={{
-                      width: "100%",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <Typography
-                      variant="h4"
-                      sx={{
-                        display: "inline-block",
-                        textAlign: "left",
-                        color: "white",
-                      }}
+                  <Typography variant="h4" sx={{ color: "white" }}>
+                    Slack Channels
+                  </Typography>
+                  <Tooltip title="Add new channel">
+                    <Fab
+                      color="primary"
+                      className="blueFab"
+                      onClick={addNewChannel}
                     >
-                      Slack Channels
-                    </Typography>
-                    <Tooltip
-                      title={<span class="tooltipText">Add new channel</span>}
-                    >
-                      <Fab
-                        color="primary"
-                        className="blueFab"
-                        aria-label="add"
-                        onClick={() => addNewChannel()}
-                      >
-                        <Add />
-                      </Fab>
-                    </Tooltip>
-                  </Box>
+                      <Add />
+                    </Fab>
+                  </Tooltip>
                 </Box>
-
                 <Divider
-                  orientation="horizontal"
-                  flexItem
+                  sx={{ marginBottom: "2rem" }}
                   className="whiteDivider"
-                  sx={{
-                    marginBottom: "2rem",
-                  }}
                 />
-
                 <Box sx={{ padding: "12px 36px" }}>
-                  {channels.map((channel) => (
-                    <Box key={channel.id}>
-                      <Box
-                        sx={{
-                          width: "100%",
-                          display: "flex",
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <DarkTextField
-                          label="Channel"
-                          handleEventChange={handleChannelChange}
-                          targetId={channel.id}
-                          targetName="name"
-                          value={channel.name}
-                        />
-                        <Box sx={{ ml: "1.5rem" }}>
-                          <Tooltip
-                            title={
-                              <span class="tooltipText">Remove channel</span>
-                            }
-                          >
-                            <Fab
-                              sx={{
-                                backgroundColor: "#ff3333",
-                                color: "white",
-                              }}
-                              className="redFab"
-                              aria-label="remove"
-                              onClick={() => removeChannel(channel.id)}
-                            >
-                              <Delete />
-                            </Fab>
-                          </Tooltip>
-                        </Box>
-                      </Box>
-                    </Box>
-                  ))}
-
-                  {newChannels.map((channel) => (
-                    <Box key={channel.id}>
-                      <Box
-                        sx={{
-                          width: "100%",
-                          display: "flex",
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <DarkTextField
-                          label="Channel"
-                          handleEventChange={handleNewChannelChange}
-                          targetId={channel.id}
-                          targetName="name"
-                          value={channel.name}
-                        />
-                        <Box sx={{ ml: "1.5rem" }}>
-                          <Tooltip
-                            title={
-                              <span class="tooltipText">Remove channel</span>
-                            }
-                          >
-                            <Fab
-                              sx={{
-                                backgroundColor: "#ff3333",
-                                color: "white",
-                              }}
-                              className="redFab"
-                              aria-label="remove"
-                              onClick={() => removeNewChannel(channel.id)}
-                            >
-                              <Delete />
-                            </Fab>
-                          </Tooltip>
-                        </Box>
-                      </Box>
+                  {[...data.channels, ...data.newChannels].map((channel) => (
+                    <Box
+                      key={channel.id}
+                      sx={{ display: "flex", justifyContent: "space-between" }}
+                    >
+                      <DarkTextField
+                        label="Channel"
+                        handleEventChange={(id, field, value) =>
+                          handleChange("channels", id, field, value)
+                        }
+                        targetId={channel.id}
+                        targetName="name"
+                        value={channel.name}
+                        width="24rem"
+                      />
+                      <Tooltip title="Remove channel">
+                        <Fab
+                          size="large"
+                          sx={{
+                            backgroundColor: "#ff3333",
+                            color: "white",
+                            marginLeft: "1rem",
+                          }}
+                          onClick={() => removeItem("channels", channel.id)}
+                        >
+                          <Delete />
+                        </Fab>
+                      </Tooltip>
                     </Box>
                   ))}
                 </Box>
@@ -363,14 +247,10 @@ export default function Settings({
               <Box
                 sx={{ width: "100%", textAlign: "right", marginTop: "2rem" }}
               >
-                <Tooltip title={<span class="tooltipText">Save settings</span>}>
+                <Tooltip title="Save settings">
                   <Fab
                     type="submit"
-                    className="greenFab"
-                    sx={{
-                      backgroundColor: "#22bb33",
-                      color: "white",
-                    }}
+                    sx={{ backgroundColor: "#22bb33", color: "white" }}
                   >
                     <Save />
                   </Fab>

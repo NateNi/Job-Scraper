@@ -499,8 +499,8 @@ def edit_website(website_id):
 def update_website(website_id):
     try:
         data = request.get_json()
-        filters = data['filters']
-        newFilters = data['newFilters']
+        filters = data['filters'] if 'filters' in data else []
+        newFilters = data['newFilters'] if 'newFilters' in data else []
 
         # Validate job website data
         missing_fields = validate_fields(data, JOB_WEBSITE_REQUIRED_FIELDS)

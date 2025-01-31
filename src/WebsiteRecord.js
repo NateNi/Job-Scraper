@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
@@ -30,70 +30,87 @@ export default function WebsiteRecord({
   websiteFormData,
   websiteFilterData,
   websiteNewFilterData,
-  currentWebsiteRecordId = null,
+  currentWebsiteRecordId,
   setCurrentWebsiteRecordId,
   channels,
-  setErrorMessage,
+  setSnackbar,
 }) {
   const [focusedElement, setFocusedElement] = useState(null);
+
+  const resetForm = useCallback(() => {
+    setWebsiteNewFilterData([]);
+    setWebsiteFilterData([]);
+    setWebsiteFormData({
+      url: "",
+      company: "",
+      containerXpath: "",
+      titleXpath: "",
+      titleAttribute: "",
+      linkXpath: "",
+    });
+    setCurrentWebsiteRecordId("");
+  }, [
+    setWebsiteNewFilterData,
+    setWebsiteFilterData,
+    setWebsiteFormData,
+    setCurrentWebsiteRecordId,
+  ]);
+
   useEffect(() => {
+    if (!currentWebsiteRecordId) return;
+
     const fetchWebsite = async () => {
-      const response = await axios.get("/website/" + currentWebsiteRecordId);
-      setWebsiteFormData(response.data.website);
-      setWebsiteFilterData(response.data.filters);
+      try {
+        const response = await axios.get(`/website/${currentWebsiteRecordId}`);
+        setWebsiteFormData(response.data.website);
+        setWebsiteFilterData(response.data.filters);
+      } catch (error) {
+        setSnackbar({
+          message:
+            error.response?.data?.error || "Failed to fetch website data",
+          type: "error",
+          open: true,
+        });
+      }
     };
-    if (currentWebsiteRecordId) {
-      fetchWebsite();
-    } 
- 
-  }, []);
+
+    fetchWebsite();
+  }, [
+    currentWebsiteRecordId,
+    setWebsiteFormData,
+    setWebsiteFilterData,
+    setSnackbar,
+  ]);
 
   return (
-    <Grow in={true}>
+    <Grow in>
       <Paper
         elevation={24}
         className="componentPage"
         sx={{
           padding: "4rem",
           maxWidth: "1200px",
-          marginLeft: "auto",
-          marginRight: "auto",
+          margin: "auto",
         }}
       >
         <Box sx={{ width: "100%" }}>
-          <Tooltip
-            title={<span class="tooltipText">Cancel and return home</span>}
-          >
+          <Tooltip title="Cancel and return home">
             <Fab
               color="primary"
               className="blueFab"
               onClick={() => {
                 setVisibleComponent("WebsiteIndex");
-                setWebsiteNewFilterData([]);
-                setWebsiteFilterData([]);
-                setWebsiteFormData({
-                  url: "",
-                  company: "",
-                  containerXpath: "",
-                  titleXpath: "",
-                  titleAttribute: "",
-                  linkXpath: "",
-                });
-                setCurrentWebsiteRecordId("");
+                resetForm();
               }}
             >
               <Close />
             </Fab>
           </Tooltip>
         </Box>
-        <Box sx={{ padding: "2rem 4rem 4rem 4rem" }}>
+        <Box sx={{ padding: "2rem 4rem 4rem" }}>
           <Typography
             variant="h3"
-            sx={{
-              display: "inline-block",
-              color: "white",
-              fontWeight: "normal",
-            }}
+            sx={{ color: "white", fontWeight: "normal" }}
           >
             {currentWebsiteRecordId ? "Update" : "Create"} Website Scraper
           </Typography>
@@ -104,7 +121,7 @@ export default function WebsiteRecord({
             sx={{ marginTop: "1rem", marginBottom: "2rem" }}
           />
           <Grid container spacing={6}>
-            <Grid key={1} item xs={12} md={6}>
+            <Grid item xs={12} md={6}>
               <WebsiteForm
                 setFocusedElement={setFocusedElement}
                 setVisibleComponent={setVisibleComponent}
@@ -119,10 +136,10 @@ export default function WebsiteRecord({
                 websiteNewFilterData={websiteNewFilterData}
                 setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
                 channels={channels}
-                setErrorMessage={setErrorMessage}
+                setSnackbar={setSnackbar}
               />
             </Grid>
-            <Grid key={2} item xs={12} md={6}>
+            <Grid item xs={12} md={6}>
               <MockWebpage focusedElement={focusedElement} />
               <DescriptionBox focusedElement={focusedElement} />
             </Grid>

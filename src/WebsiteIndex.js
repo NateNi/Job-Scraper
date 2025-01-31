@@ -29,8 +29,7 @@ export default function WebsiteIndex({
   setCurrentWebsiteRecordId,
   setOpenLoader,
   setChannels,
-  setSuccessMessage,
-  setErrorMessage,
+  setSnackbar,
 }) {
   const [websites, setWebsites] = useState([]);
 
@@ -54,11 +53,19 @@ export default function WebsiteIndex({
       if (response.status === 200) {
         setOpenLoader(false);
         fetchWebsites();
-        setSuccessMessage(response.data.newJobsCount + " new jobs found");
+        setSnackbar({
+          message: response.data.newJobsCount + " new jobs found",
+          type: "success",
+          open: true,
+        });
       }
     } catch (error) {
       setOpenLoader(false);
-      setErrorMessage(error.response.data.error);
+      setSnackbar({
+        message: error.response.data.error,
+        type: "error",
+        open: true,
+      });
     }
   };
 
@@ -71,10 +78,18 @@ export default function WebsiteIndex({
       );
       if (response.status === 200) {
         fetchWebsites();
-        setSuccessMessage("Website scraper deleted successfully");
+        setSnackbar({
+          message: "Website scraper deleted successfully",
+          type: "success",
+          open: true,
+        });
       }
     } catch (error) {
-      setErrorMessage(error.response.data.error);
+      setSnackbar({
+        message: error.response.data.error,
+        type: "error",
+        open: true,
+      });
     }
     setOpenLoader(false);
   };
@@ -89,7 +104,11 @@ export default function WebsiteIndex({
         setChannels(response.data.channels);
       }
     } catch (error) {
-      setErrorMessage(error.response.data.error);
+      setSnackbar({
+        message: error.response.data.error,
+        type: "error",
+        open: true,
+      });
     }
     setOpenLoader(false);
   };

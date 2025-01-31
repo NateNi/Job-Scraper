@@ -7,7 +7,6 @@ import "@fontsource/roboto/700.css";
 import "./App.css";
 import {
   Tooltip,
-  TextField,
   Grow,
   Paper,
   Box,
@@ -25,7 +24,7 @@ export default function LinkList({
   currentWebsiteRecordId,
   setJobs,
   jobs,
-  setErrorMessage,
+  setSnackbar,
 }) {
   useEffect(() => {
     const fetchLinkList = async () => {
@@ -54,7 +53,11 @@ export default function LinkList({
           setViewedLinks();
         }
       } catch (error) {
-        setErrorMessage(error.response.data.error);
+        setSnackbar({
+          message: error.response.data.error,
+          type: "error",
+          open: true,
+        });
       }
       setOpenLoader(false);
     };
@@ -66,7 +69,11 @@ export default function LinkList({
     try {
       const response = await axios.put("/links/" + currentWebsiteRecordId);
     } catch (error) {
-      setErrorMessage(error.response.data.error);
+      setSnackbar({
+        message: error.response.data.error,
+        type: "error",
+        open: true,
+      });
     }
   };
 

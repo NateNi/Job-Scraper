@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
@@ -34,112 +34,108 @@ function App() {
   const [openLoader, setOpenLoader] = useState(false);
   const [jobs, setJobs] = useState([]);
   const [channels, setChannels] = useState([]);
-  const [successMessage, setSuccessMessage] = useState();
-  const [errorMessage, setErrorMessage] = useState();
+  const [snackbar, setSnackbar] = useState({
+    message: "",
+    type: "",
+    open: false,
+  });
 
-  const handleSuccessMessageClose = () => {
-    setSuccessMessage("");
-  };
+  const closeSnackbar = useCallback(() => {
+    setSnackbar((prev) => ({ ...prev, open: false }));
+  }, []);
 
-  const handleErrorMessageClose = () => {
-    setErrorMessage("");
-  };
-
-  const renderComponent = () => {
-    switch (visibleComponent) {
-      case "WebsiteIndex":
-        return (
-          <WebsiteIndex
-            setVisibleComponent={setVisibleComponent}
-            setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
-            setChannels={setChannels}
-            setOpenLoader={setOpenLoader}
-            setSuccessMessage={setSuccessMessage}
-            setErrorMessage={setErrorMessage}
-          />
-        );
-      case "WebsiteCreate":
-        return (
-          <WebsiteRecord
-            setVisibleComponent={setVisibleComponent}
-            setOpenLoader={setOpenLoader}
-            setJobs={setJobs}
-            websiteFilterData={websiteFilterData}
-            websiteNewFilterData={websiteNewFilterData}
-            websiteFormData={websiteFormData}
-            setWebsiteFormData={setWebsiteFormData}
-            setWebsiteFilterData={setWebsiteFilterData}
-            setWebsiteNewFilterData={setWebsiteNewFilterData}
-            setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
-            channels={channels}
-            setErrorMessage={setErrorMessage}
-          />
-        );
-      case "WebsiteEdit":
-        return (
-          <WebsiteRecord
-            setVisibleComponent={setVisibleComponent}
-            setOpenLoader={setOpenLoader}
-            setJobs={setJobs}
-            websiteFormData={websiteFormData}
-            websiteFilterData={websiteFilterData}
-            websiteNewFilterData={websiteNewFilterData}
-            currentWebsiteRecordId={currentWebsiteRecordId}
-            setWebsiteFormData={setWebsiteFormData}
-            setWebsiteFilterData={setWebsiteFilterData}
-            setWebsiteNewFilterData={setWebsiteNewFilterData}
-            setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
-            channels={channels}
-            setErrorMessage={setErrorMessage}
-          />
-        );
-      case "WebsiteTest":
-        return (
-          <WebsiteTest
-            jobs={jobs}
-            setOpenLoader={setOpenLoader}
-            currentWebsiteRecordId={currentWebsiteRecordId}
-            websiteFormData={websiteFormData}
-            setVisibleComponent={setVisibleComponent}
-            websiteFilterData={websiteFilterData}
-            websiteNewFilterData={websiteNewFilterData}
-            setWebsiteFilterData={setWebsiteFilterData}
-            setWebsiteNewFilterData={setWebsiteNewFilterData}
-            setWebsiteFormData={setWebsiteFormData}
-            setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
-            setSuccessMessage={setSuccessMessage}
-            setErrorMessage={setErrorMessage}
-          />
-        );
-      case "LinkList":
-        return (
-          <LinkList
-            setVisibleComponent={setVisibleComponent}
-            setOpenLoader={setOpenLoader}
-            jobs={jobs}
-            setJobs={setJobs}
-            currentWebsiteRecordId={currentWebsiteRecordId}
-            setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
-            setErrorMessage={setErrorMessage}
-          />
-        );
-      case "Settings":
-        return (
-          <Settings
-            setVisibleComponent={setVisibleComponent}
-            setOpenLoader={setOpenLoader}
-            jobs={jobs}
-            setJobs={setJobs}
-            currentWebsiteRecordId={currentWebsiteRecordId}
-            setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
-            setSuccessMessage={setSuccessMessage}
-            setErrorMessage={setErrorMessage}
-          />
-        );
-      default:
-        return null;
-    }
-  };
+  const componentMap = useMemo(
+    () => ({
+      WebsiteIndex: (
+        <WebsiteIndex
+          setVisibleComponent={setVisibleComponent}
+          setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
+          setChannels={setChannels}
+          setOpenLoader={setOpenLoader}
+          setSnackbar={setSnackbar}
+        />
+      ),
+      WebsiteCreate: (
+        <WebsiteRecord
+          setVisibleComponent={setVisibleComponent}
+          setOpenLoader={setOpenLoader}
+          setJobs={setJobs}
+          websiteFilterData={websiteFilterData}
+          websiteNewFilterData={websiteNewFilterData}
+          websiteFormData={websiteFormData}
+          setWebsiteFormData={setWebsiteFormData}
+          setWebsiteFilterData={setWebsiteFilterData}
+          setWebsiteNewFilterData={setWebsiteNewFilterData}
+          setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
+          channels={channels}
+          setSnackbar={setSnackbar}
+        />
+      ),
+      WebsiteEdit: (
+        <WebsiteRecord
+          setVisibleComponent={setVisibleComponent}
+          setOpenLoader={setOpenLoader}
+          setJobs={setJobs}
+          websiteFormData={websiteFormData}
+          websiteFilterData={websiteFilterData}
+          websiteNewFilterData={websiteNewFilterData}
+          currentWebsiteRecordId={currentWebsiteRecordId}
+          setWebsiteFormData={setWebsiteFormData}
+          setWebsiteFilterData={setWebsiteFilterData}
+          setWebsiteNewFilterData={setWebsiteNewFilterData}
+          setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
+          channels={channels}
+          setSnackbar={setSnackbar}
+        />
+      ),
+      WebsiteTest: (
+        <WebsiteTest
+          jobs={jobs}
+          setOpenLoader={setOpenLoader}
+          currentWebsiteRecordId={currentWebsiteRecordId}
+          websiteFormData={websiteFormData}
+          setVisibleComponent={setVisibleComponent}
+          websiteFilterData={websiteFilterData}
+          websiteNewFilterData={websiteNewFilterData}
+          setWebsiteFilterData={setWebsiteFilterData}
+          setWebsiteNewFilterData={setWebsiteNewFilterData}
+          setWebsiteFormData={setWebsiteFormData}
+          setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
+          setSnackbar={setSnackbar}
+        />
+      ),
+      LinkList: (
+        <LinkList
+          setVisibleComponent={setVisibleComponent}
+          setOpenLoader={setOpenLoader}
+          jobs={jobs}
+          setJobs={setJobs}
+          currentWebsiteRecordId={currentWebsiteRecordId}
+          setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
+          setSnackbar={setSnackbar}
+        />
+      ),
+      Settings: (
+        <Settings
+          setVisibleComponent={setVisibleComponent}
+          setOpenLoader={setOpenLoader}
+          jobs={jobs}
+          setJobs={setJobs}
+          currentWebsiteRecordId={currentWebsiteRecordId}
+          setCurrentWebsiteRecordId={setCurrentWebsiteRecordId}
+          setSnackbar={setSnackbar}
+        />
+      ),
+    }),
+    [
+      jobs,
+      websiteFormData,
+      websiteFilterData,
+      websiteNewFilterData,
+      currentWebsiteRecordId,
+      channels,
+    ]
+  );
 
   return (
     <div className="App">
@@ -155,13 +151,13 @@ function App() {
           }}
         >
           <Snackbar
-            open={successMessage}
+            open={snackbar.open}
             autoHideDuration={3000}
-            onClose={handleSuccessMessageClose}
+            onClose={closeSnackbar}
           >
             <Alert
               variant="outlined"
-              severity="success"
+              severity={snackbar.type}
               sx={{
                 bottom: "2rem",
                 backgroundColor: "white",
@@ -169,29 +165,11 @@ function App() {
                 marginRight: "auto",
               }}
             >
-              {successMessage}
-            </Alert>
-          </Snackbar>
-          <Snackbar
-            open={errorMessage}
-            autoHideDuration={3000}
-            onClose={handleErrorMessageClose}
-          >
-            <Alert
-              variant="outlined"
-              severity="error"
-              sx={{
-                bottom: "2rem",
-                backgroundColor: "white",
-                marginLeft: "auto",
-                marginRight: "auto",
-              }}
-            >
-              {errorMessage}
+              {snackbar.message}
             </Alert>
           </Snackbar>
         </Box>
-        {renderComponent()}
+        {componentMap[visibleComponent] || null}
       </div>
       <Backdrop
         sx={(theme) => ({ color: "#fff", zIndex: theme.zIndex.drawer + 1 })}
