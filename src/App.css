@@ -79,3 +79,7 @@
 .MuiDataGrid-selectedRowCount {
     display: none !important;
 }
+
+.MuiTooltip-tooltip {
+    font-size: 1rem !important;
+}
