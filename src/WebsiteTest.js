@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 import axios from "axios";
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
@@ -49,6 +49,7 @@ export default function WebsiteTest({
     setWebsiteFilterData,
     setWebsiteFormData,
     setCurrentWebsiteRecordId,
+    setVisibleComponent,
   ]);
 
   const createWebsiteSubmit = useCallback(async () => {
@@ -124,7 +125,7 @@ export default function WebsiteTest({
     () =>
       jobs.map((job, index) => ({
         id: index,
-        linkHTML: `<a class='jobLink' target='_blank' href='${job.link}'>${job.title}</a>`,
+        linkHTML: `<a class='jobLink' target='_blank' rel="noreferrer" href='${job.link}'>${job.title}</a>`,
       })),
     [jobs]
   );

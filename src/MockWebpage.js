@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
@@ -13,6 +13,88 @@ import {
   Home,
 } from "@mui/icons-material";
 
+const isFocused = (focusedElement, element) =>
+  Array.isArray(element)
+    ? element.includes(focusedElement)
+    : focusedElement === element;
+
+const NavigationBar = ({ focusedElement }) => (
+  <Box
+    sx={{
+      display: "flex",
+      alignItems: "center",
+      padding: "8px 16px",
+      borderBottom: "1px solid #1e1e1e",
+      backgroundColor: "#3e3e42",
+    }}
+  >
+    <ArrowBack sx={{ padding: "0.5rem", color: "#1e1e1e" }} />
+    <ArrowForward sx={{ padding: "0.5rem", color: "#1e1e1e" }} />
+    <Refresh sx={{ padding: "0.5rem", color: "#1e1e1e" }} />
+    <Home sx={{ padding: "0.5rem", color: "#1e1e1e" }} />
+    <FocusableBox
+      focusedElement={focusedElement}
+      elementKey="url"
+      children="Enter URL"
+    />
+  </Box>
+);
+
+const FocusableBox = ({ focusedElement, elementKey, children }) => (
+  <Box
+    sx={{
+      border: `2px solid ${
+        isFocused(focusedElement, elementKey) ? "white" : "#1e1e1e"
+      }`,
+      transition: "border-color 0.5s ease",
+      flexGrow: 1,
+      mx: 2,
+      padding: "0.5rem",
+      paddingLeft: "1rem",
+      borderRadius: 50,
+      color: isFocused(focusedElement, elementKey) ? "white" : "#1e1e1e",
+    }}
+  >
+    {children}
+  </Box>
+);
+
+const JobItem = ({ focusedElement, index }) => (
+  <Box
+    sx={{
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      padding: "10px",
+      border: isFocused(focusedElement, "container")
+        ? "2px solid white"
+        : "1px solid #1e1e1e",
+      transition: "all 0.3s ease",
+      borderRadius: "5px",
+      marginBottom: "10px",
+    }}
+  >
+    <Typography
+      variant="h6"
+      sx={{ marginLeft: "1rem" }}
+      className={
+        isFocused(focusedElement, ["titleAttribute", "titleXpath"])
+          ? "focusedElement"
+          : ""
+      }
+    >
+      Job Title
+    </Typography>
+    <Typography
+      variant="body1"
+      className={isFocused(focusedElement, "link") ? "focusedElement" : ""}
+      sx={{ textDecoration: "underline", marginRight: "1rem" }}
+    >
+      Click Here
+    </Typography>
+  </Box>
+);
+
 export default function MockWebpage({ focusedElement }) {
   return (
     <Paper
@@ -24,39 +106,8 @@ export default function MockWebpage({ focusedElement }) {
         border: "1px solid #1e1e1e",
       }}
     >
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          padding: "8px 16px",
-          borderBottom: "1px solid #1e1e1e",
-          backgroundColor: "#3e3e42",
-        }}
-      >
-        <ArrowBack sx={{ padding: "0.5rem", color: "#1e1e1e" }} />
-        <ArrowForward sx={{ padding: "0.5rem", color: "#1e1e1e" }} />
-        <Refresh sx={{ padding: "0.5rem", color: "#1e1e1e" }} />
-        <Home sx={{ padding: "0.5rem", color: "#1e1e1e" }} />
+      <NavigationBar focusedElement={focusedElement} />
 
-        <Box
-          sx={{
-            border: `2px solid ${
-              focusedElement == "url" ? "white" : "#1e1e1e"
-            }`,
-            transition: "border-color 0.5s ease",
-            flexGrow: 1,
-            mx: 2,
-            padding: "0.5rem",
-            paddingLeft: "1rem",
-            borderRadius: 50,
-            color: `${focusedElement == "url" ? "white" : "#1e1e1e"}`,
-          }}
-        >
-          Enter URL
-        </Box>
-      </Box>
-
-      {/* Browser Content Area */}
       <Box
         sx={{
           height: "400px",
@@ -69,10 +120,15 @@ export default function MockWebpage({ focusedElement }) {
           sx={{ color: "#1e1e1e", marginBottom: "1rem" }}
         >
           Welcome to{" "}
-          <span className={focusedElement == "company" ? "focusedElement" : ""}>
+          <span
+            className={
+              isFocused(focusedElement, "company") ? "focusedElement" : ""
+            }
+          >
             COMPANY
           </span>
         </Typography>
+
         <Box
           sx={{
             width: "100%",
@@ -84,9 +140,9 @@ export default function MockWebpage({ focusedElement }) {
           <Typography variant="h5" sx={{ color: "#1e1e1e" }}>
             Job Results
           </Typography>
+
           <Box
             sx={{
-              border: "1px solid #1e1e1e",
               borderRadius: "4px",
               padding: "8px 12px",
               display: "flex",
@@ -94,17 +150,18 @@ export default function MockWebpage({ focusedElement }) {
               justifyContent: "space-between",
               width: "150px",
               marginBottom: "1rem",
-              border: `2px solid ${
-                ["filterXpath", "filterSelectValue"].includes(focusedElement)
-                  ? "white"
-                  : "#1e1e1e"
-              }`,
+              border: isFocused(focusedElement, [
+                "filterXpath",
+                "filterSelectValue",
+              ])
+                ? "2px solid white"
+                : "1px solid #1e1e1e",
             }}
           >
             <Typography
               variant="body1"
               color={
-                ["filterXpath", "filterSelectValue"].includes(focusedElement)
+                isFocused(focusedElement, ["filterXpath", "filterSelectValue"])
                   ? "white"
                   : "#1e1e1e"
               }
@@ -113,52 +170,19 @@ export default function MockWebpage({ focusedElement }) {
             </Typography>
             <ArrowDropDown
               sx={{
-                color: ["filterXpath", "filterSelectValue"].includes(
-                  focusedElement
-                )
+                color: isFocused(focusedElement, [
+                  "filterXpath",
+                  "filterSelectValue",
+                ])
                   ? "white"
                   : "#1e1e1e",
               }}
             />
           </Box>
         </Box>
-        {[1, 2, 3].map((value, index) => (
-          <Box
-            key={value}
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              padding: "10px",
-              border: `${
-                focusedElement == "container"
-                  ? "2px solid white"
-                  : "1px solid #1e1e1e"
-              }`,
-              transition: "all 0.3s ease",
-              borderRadius: "5px",
-              marginBottom: "10px",
-            }}
-          >
-            <h4
-              className={
-                (focusedElement == "titleAttribute" ||
-                focusedElement == "titleXpath"
-                  ? "focusedElement"
-                  : "") + " mockWebElement"
-              }
-            >
-              Job Title
-            </h4>
-            <p
-              className={
-                (focusedElement == "link" ? "focusedElement" : "") +
-                " mockWebElement"
-              }
-            >
-              <u>Click Here</u>
-            </p>
-          </Box>
+
+        {[1, 2, 3, 4].map((value) => (
+          <JobItem key={value} focusedElement={focusedElement} index={value} />
         ))}
       </Box>
     </Paper>

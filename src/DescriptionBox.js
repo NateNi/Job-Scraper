@@ -1,235 +1,115 @@
-import React, { useState, useEffect } from "react";
+import React, { useMemo } from "react";
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import "./App.css";
-import { Typography, Box, Paper } from "@mui/material";
-import {
-  ArrowBack,
-  ArrowForward,
-  ArrowDropDown,
-  Refresh,
-  Home,
-} from "@mui/icons-material";
+import { Box, Paper } from "@mui/material";
 
-export default function DescriptionBox({ focusedElement }) {
-  return (
-    <Box>
-      {focusedElement === "url" && (
-        <Paper
-          elevation={24}
-          sx={{
-            padding: "3rem",
-            borderRadius: "2rem",
-            backgroundColor: "#3e3e42",
-          }}
-        >
-          <Box sx={{ color: "white" }}>
-            <p>The url for the website you wish to scrape.</p>
-            <p>
-              <em>Hints:</em>
-            </p>
-            <ul>
-              <li>
-                Use the url generated after searching for any keywords, applying
-                filters, and sorting the results. Take note if the url reflects
-                these selections in its parameters
-              </li>
-            </ul>
-          </Box>
-        </Paper>
-      )}
+const descriptions = {
+  url: {
+    text: "The URL for the website you wish to scrape.",
+    hints: [
+      "Use the URL generated after searching for any keywords, applying filters, and sorting the results.",
+      "Take note if the URL reflects these selections in its parameters.",
+    ],
+  },
+  company: {
+    text: "The name you wish to associate with this URL.",
+  },
+  container: {
+    text: "The XPath to the common parent element that each job listing has on the page.",
+    hints: [
+      "If the job title and link are within the same element on the page, this can serve as your container.",
+      {
+        text: "XPath Guide",
+        link: "https://www.w3schools.com/xml/xpath_syntax.asp",
+      },
+    ],
+  },
+  titleXpath: {
+    text: "The XPath to the element with the job title relative to the container.",
+    hints: [
+      'If the job title and link are within the same element on the page, this XPath should be "."',
+      {
+        text: "XPath Guide",
+        link: "https://www.w3schools.com/xml/xpath_syntax.asp",
+      },
+    ],
+  },
+  titleAttribute: {
+    text: "The attribute of the element defined by the title XPath that contains the job title.",
+    hints: [
+      "This field is optional.",
+      "If no entry is provided, the text of the title XPath element will be used for the job title.",
+    ],
+  },
+  link: {
+    text: "The XPath to the element with the job link relative to the container.",
+    hints: [
+      'If the job title and link are within the same element on the page, this XPath should be "."',
+      {
+        text: "XPath Guide",
+        link: "https://www.w3schools.com/xml/xpath_syntax.asp",
+      },
+    ],
+  },
+  filterXpath: {
+    text: "The XPath to the filter element.",
+    hints: [
+      {
+        text: "XPath Guide",
+        link: "https://www.w3schools.com/xml/xpath_syntax.asp",
+      },
+    ],
+  },
+  filterSelectValue: {
+    text: "The value of the option to use in the filter select box.",
+  },
+};
 
-      {focusedElement === "company" && (
-        <Paper
-          elevation={24}
-          sx={{
-            padding: "3rem",
-            borderRadius: "2rem",
-            backgroundColor: "#3e3e42",
-          }}
-        >
-          <Box sx={{ color: "white" }}>
-            <p>The name you wish to associate with this url.</p>
-          </Box>
-        </Paper>
-      )}
-      {focusedElement === "container" && (
-        <Paper
-          elevation={24}
-          sx={{
-            padding: "3rem",
-            borderRadius: "2rem",
-            backgroundColor: "#3e3e42",
-          }}
-        >
-          <Box sx={{ color: "white" }}>
-            <p>
-              The Xpath to the common parent element that each job listing has
-              on the page.
-            </p>
-            <p>
-              <em>Hints:</em>
-            </p>
-            <ul>
-              <li className="liSpacing">
-                If the job title and link are within the same element on the
-                page, this can serve as your container
-              </li>
-              <li>
-                <a
-                  className="tooltipLink"
-                  target="_blank"
-                  href="https://www.w3schools.com/xml/xpath_syntax.asp"
-                >
-                  Xpath Guide
-                </a>
-              </li>
-            </ul>
-          </Box>
-        </Paper>
-      )}
-      {focusedElement === "titleXpath" && (
-        <Paper
-          elevation={24}
-          sx={{
-            padding: "3rem",
-            borderRadius: "2rem",
-            backgroundColor: "#3e3e42",
-          }}
-        >
-          <Box sx={{ color: "white" }}>
-            <p>
-              The Xpath to the element with the job title{" "}
-              <em>relative to the container</em>.
-            </p>
-            <p>
-              <em>Hints:</em>
-            </p>
-            <ul>
-              <li className="liSpacing">
-                If the job title and link are within the same element on the
-                page, this Xpath should be "."
-              </li>
-              <li>
-                <a
-                  className="tooltipLink"
-                  target="_blank"
-                  href="https://www.w3schools.com/xml/xpath_syntax.asp"
-                >
-                  Xpath Guide
-                </a>
-              </li>
-            </ul>
-          </Box>
-        </Paper>
-      )}
-      {focusedElement === "titleAttribute" && (
-        <Paper
-          elevation={24}
-          sx={{
-            padding: "3rem",
-            borderRadius: "2rem",
-            backgroundColor: "#3e3e42",
-          }}
-        >
-          <Box sx={{ color: "white" }}>
-            <p>
-              The attribute of the element defined by the title Xpath that
-              contains the job title.
-            </p>
-            <p>
-              <em>Hints:</em>
-            </p>
-            <ul>
-              <li className="liSpacing">This field is optional</li>
-              <li>
-                If no entry is provided, the text of the title Xpath element
-                will be used for the job title.
-              </li>
-            </ul>
-          </Box>
-        </Paper>
-      )}
-      {focusedElement === "link" && (
-        <Paper
-          elevation={24}
-          sx={{
-            padding: "3rem",
-            borderRadius: "2rem",
-            backgroundColor: "#3e3e42",
-          }}
-        >
-          <Box sx={{ color: "white" }}>
-            <p>
-              The Xpath to the element with the job link{" "}
-              <em>relative to the container</em>.
-            </p>
-            <p>
-              <em>Hints:</em>
-            </p>
-            <ul>
-              <li className="liSpacing">
-                If the job title and link are within the same element on the
-                page, this Xpath should be "."
-              </li>
-              <li>
-                <a
-                  className="tooltipLink"
-                  target="_blank"
-                  href="https://www.w3schools.com/xml/xpath_syntax.asp"
-                >
-                  Xpath Guide
-                </a>
-              </li>
-            </ul>
-          </Box>
-        </Paper>
-      )}
-      {focusedElement === "filterXpath" && (
-        <Paper
-          elevation={24}
-          sx={{
-            padding: "3rem",
-            borderRadius: "2rem",
-            backgroundColor: "#3e3e42",
-          }}
-        >
-          <Box sx={{ color: "white" }}>
-            <p>The Xpath to the filter element.</p>
-            <p>
-              <em>Hints:</em>
-            </p>
-            <ul>
-              <li>
-                <a
-                  className="tooltipLink"
-                  target="_blank"
-                  href="https://www.w3schools.com/xml/xpath_syntax.asp"
-                >
-                  Xpath Guide
-                </a>
-              </li>
-            </ul>
-          </Box>
-        </Paper>
-      )}
-
-      {focusedElement === "filterSelectValue" && (
-        <Paper
-          elevation={24}
-          sx={{
-            padding: "3rem",
-            borderRadius: "2rem",
-            backgroundColor: "#3e3e42",
-          }}
-        >
-          <Box sx={{ color: "white" }}>
-            <p>The value of the option to use in the filter select box.</p>
-          </Box>
-        </Paper>
+const DescriptionCard = ({ text, hints }) => (
+  <Paper
+    elevation={24}
+    sx={{
+      padding: "3rem",
+      borderRadius: "2rem",
+      backgroundColor: "#3e3e42",
+    }}
+  >
+    <Box sx={{ color: "white" }}>
+      <p>{text}</p>
+      {hints && (
+        <>
+          <p>
+            <em>Hints:</em>
+          </p>
+          <ul>
+            {hints.map((hint, index) =>
+              typeof hint === "string" ? (
+                <li key={index}>{hint}</li>
+              ) : (
+                <li key={index}>
+                  <a
+                    className="tooltipLink"
+                    target="_blank"
+                    rel="noreferrer"
+                    href={hint.link}
+                  >
+                    {hint.text}
+                  </a>
+                </li>
+              )
+            )}
+          </ul>
+        </>
       )}
     </Box>
-  );
+  </Paper>
+);
+
+export default function DescriptionBox({ focusedElement }) {
+  const content = useMemo(() => descriptions[focusedElement], [focusedElement]);
+
+  return <Box>{content && <DescriptionCard {...content} />}</Box>;
 }

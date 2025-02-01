@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import axios from "axios";
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
@@ -13,6 +13,8 @@ import {
   Typography,
   Fab,
   Divider,
+  CircularProgress,
+  Link,
 } from "@mui/material";
 import { Close } from "@mui/icons-material";
 import { DataGrid } from "@mui/x-data-grid";
@@ -26,76 +28,68 @@ export default function LinkList({
   jobs,
   setSnackbar,
 }) {
-  useEffect(() => {
-    const fetchLinkList = async () => {
-      setOpenLoader(true);
-      try {
-        let response = null;
-        response = await axios.get("/links/" + currentWebsiteRecordId);
-        if (response.status === 200) {
-          setJobs(response.data.links);
-          setCompany(response.data.company);
-          setRows(
-            response.data.links.map(function (job, index) {
-              return {
-                id: job["id"],
-                linkHTML:
-                  "<a class='jobLink' href='" +
-                  job["link"] +
-                  "'>" +
-                  job["title"] +
-                  "</a>",
-                viewed: job["viewed"],
-                created_at: job["created_at"],
-              };
-            })
-          );
-          setViewedLinks();
-        }
-      } catch (error) {
-        setSnackbar({
-          message: error.response.data.error,
-          type: "error",
-          open: true,
-        });
-      }
-      setOpenLoader(false);
-    };
+  const [searchText, setSearchText] = useState("");
+  const [company, setCompany] = useState("");
+  const [loading, setLoading] = useState(true);
 
-    fetchLinkList();
-  }, []);
-
-  const setViewedLinks = async () => {
+  const fetchLinkList = useCallback(async () => {
+    setOpenLoader(true);
+    setLoading(true);
     try {
-      const response = await axios.put("/links/" + currentWebsiteRecordId);
+      const { data } = await axios.get(`/links/${currentWebsiteRecordId}`);
+      setJobs(data.links);
+      setCompany(data.company);
+      await axios.put(`/links/${currentWebsiteRecordId}`); // Mark links as viewed
     } catch (error) {
       setSnackbar({
-        message: error.response.data.error,
+        message: error.response?.data?.error || "Failed to load links",
         type: "error",
         open: true,
       });
     }
+    setOpenLoader(false);
+    setLoading(false);
+  }, [currentWebsiteRecordId, setJobs, setSnackbar, setOpenLoader]);
+
+  useEffect(() => {
+    fetchLinkList();
+  }, [fetchLinkList]);
+
+  const handleSearch = (event) => {
+    setSearchText(event.target.value.toLowerCase());
   };
 
-  const [searchText, setSearchText] = useState("");
-  const [company, setCompany] = useState("");
+  const filteredRows = useMemo(() => {
+    return jobs
+      .map((job) => ({
+        id: job.id,
+        title: job.title,
+        link: job.link,
+        viewed: job.viewed,
+        created_at: job.created_at,
+      }))
+      .filter((row) =>
+        Object.values(row).some((field) =>
+          String(field).toLowerCase().includes(searchText)
+        )
+      );
+  }, [jobs, searchText]);
 
   const columns = [
     {
       field: "viewed",
       headerName: "",
       flex: 1,
-
-      renderCell: (params) => (
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            height: "100%",
-          }}
-        >
-          {params.value === 0 && (
+      renderCell: (params) =>
+        params.value === 0 ? (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+            }}
+          >
             <Box
               sx={{
                 width: "18px",
@@ -104,72 +98,26 @@ export default function LinkList({
                 borderRadius: "50%",
               }}
             />
-          )}
-        </Box>
-      ),
+          </Box>
+        ) : null,
     },
     { field: "created_at", headerName: "Date", flex: 2 },
     {
-      field: "linkHTML",
+      field: "title",
       headerName: "Job",
       flex: 4,
       renderCell: (params) => (
-        <Box
-          dangerouslySetInnerHTML={{ __html: params.value }}
-          sx={{
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-        />
+        <Link
+          href={params.row.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          sx={{ textDecoration: "none", color: "white", fontWeight: "bold" }}
+        >
+          {params.value}
+        </Link>
       ),
     },
   ];
-  const [rows, setRows] = useState([]);
-
-  const handleSearch = (event) => {
-    const value = event.target.value.toLowerCase();
-    setSearchText(value);
-
-    if (value) {
-      const filteredRows = jobs
-        .map(function (job, index) {
-          return {
-            id: job["id"],
-            linkHTML:
-              "<a class='jobLink' target='_blank' href='" +
-              job["link"] +
-              "'>" +
-              job["title"] +
-              "</a>",
-            created_at: job["created_at"],
-          };
-        })
-        .filter((row) =>
-          Object.values(row).some((field) =>
-            String(field).toLowerCase().includes(value)
-          )
-        );
-      setRows(filteredRows);
-    } else {
-      setRows(
-        jobs.map(function (job, index) {
-          return {
-            id: job["id"],
-            linkHTML:
-              "<a class='jobLink' target='_blank' href='" +
-              job["link"] +
-              "'>" +
-              job["title"] +
-              "</a>",
-            created_at: job["created_at"],
-          };
-        })
-      );
-    }
-  };
-
-  const paginationModel = { page: 0, pageSize: 10 };
 
   return (
     <Grow in={true}>
@@ -179,82 +127,82 @@ export default function LinkList({
         sx={{
           padding: "4rem",
           maxWidth: "1000px",
-          marginLeft: "auto",
-          marginRight: "auto",
+          margin: "auto",
         }}
       >
         <Box sx={{ width: "100%", marginBottom: "2rem" }}>
-          <Tooltip title={<span class="tooltipText">Return home</span>}>
+          <Tooltip title="Return home">
             <Fab
               color="primary"
               className="blueFab"
-              onClick={() => {
-                setVisibleComponent("WebsiteIndex");
-              }}
+              onClick={() => setVisibleComponent("WebsiteIndex")}
             >
               <Close />
             </Fab>
           </Tooltip>
         </Box>
+
         <Box sx={{ padding: "2rem 4rem 4rem 4rem" }}>
           <Typography
             variant="h3"
-            sx={{
-              display: "inline-block",
-              color: "white",
-              fontWeight: "normal",
-            }}
+            sx={{ color: "white", fontWeight: "normal" }}
           >
             {company} Jobs
           </Typography>
           <Divider
-            orientation="horizontal"
-            flexItem
+            sx={{ marginTop: "1rem", marginBottom: "2rem" }}
             className="whiteDivider"
-            sx={{
-              marginTop: "1rem",
-              marginBottom: "2rem",
-            }}
           />
-          <Box sx={{ width: "100%", display: "flex", justifyContent: "end" }}>
+
+          <Box
+            sx={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "end",
+              mb: 2,
+            }}
+          >
             <DarkTextField
               label="Search"
               value={searchText}
               onChange={handleSearch}
               width="200px"
-              sx={{ mb: 2 }}
             />
           </Box>
 
-          <DataGrid
-            rows={rows}
-            columns={columns}
-            initialState={{ pagination: { paginationModel } }}
-            sx={{
-              border: 0,
-              marginBottom: "1rem",
-              "& .MuiDataGrid-root": {
-                color: "white", // Text color
-                borderColor: "white", // Border color
-              },
-              "& .MuiDataGrid-cell": {
-                color: "white",
-                borderColor: "white", // Cell border color
-              },
-              "& .MuiDataGrid-columnHeaders": {
-                borderColor: "white", // Header border color
-              },
-              "& .MuiDataGrid-footerContainer": {
-                borderColor: "white", // Footer border color
-              },
-              "& .MuiTablePagination-root": {
-                color: "white", // Pagination text color
-              },
-              "& .MuiSvgIcon-root": {
-                color: "white", // Pagination icons color (e.g., arrows)
-              },
-            }}
-          />
+          {loading ? (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                marginTop: "2rem",
+              }}
+            >
+              <CircularProgress color="primary" />
+            </Box>
+          ) : filteredRows.length === 0 ? (
+            <Typography
+              variant="h5"
+              sx={{ color: "gray", textAlign: "center" }}
+            >
+              No job listings found.
+            </Typography>
+          ) : (
+            <DataGrid
+              rows={filteredRows}
+              columns={columns}
+              initialState={{
+                pagination: { paginationModel: { page: 0, pageSize: 10 } },
+                sorting: { sortModel: [{ field: "created_at", sort: "desc" }] },
+              }}
+              sx={{
+                border: 0,
+                marginBottom: "1rem",
+                "& .MuiDataGrid-root, & .MuiDataGrid-cell, & .MuiDataGrid-columnHeaders, & .MuiDataGrid-footerContainer, & .MuiTablePagination-root, & .MuiSvgIcon-root":
+                  { color: "white", borderColor: "white" },
+              }}
+            />
+          )}
         </Box>
       </Paper>
     </Grow>
