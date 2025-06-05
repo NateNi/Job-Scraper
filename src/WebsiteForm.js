@@ -9,6 +9,7 @@ import DarkTextField from "./DarkTextField";
 import DarkSelect from "./DarkSelect";
 import { Paper, Typography, Box, Fab, Tooltip, Divider } from "@mui/material";
 import { Delete, Add, FilterAlt, PlayArrow } from "@mui/icons-material";
+import DarkRadioGroup from "./DarkRadioGroup";
 
 export default function WebsiteForm({
   setFocusedElement,
@@ -210,6 +211,24 @@ export default function WebsiteForm({
       sx={{ padding: "4rem", borderRadius: "2rem", backgroundColor: "#3e3e42" }}
     >
       <form onSubmit={testWebsiteSubmit}>
+        <Typography
+          variant="subtitle2"
+          sx={{ color: "white", fontWeight: "normal" }}
+        >
+          Website Type
+        </Typography>
+        <Box sx={{ paddingBottom: "1.5rem", paddingLeft: "0.5rem" }}>
+          <DarkRadioGroup
+            name="websiteType"
+            value={websiteFormData.websiteType}
+            options={[
+              { value: "standard", label: "Standard" },
+              { value: "react", label: "React" },
+            ]}
+            onChange={handleChange}
+          />
+        </Box>
+
         <DarkSelect
           id="channel"
           label="Channel"

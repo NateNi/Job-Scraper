@@ -28,6 +28,7 @@ function App() {
     titleAttribute: "",
     linkXpath: "",
     channelId: "",
+    websiteType: "",
   });
   const [websiteFilterData, setWebsiteFilterData] = useState([]);
   const [websiteNewFilterData, setWebsiteNewFilterData] = useState([]);
