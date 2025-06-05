@@ -30,6 +30,8 @@ EXISTING_CHANNEL_REQUIRED_FIELDS = ['id', 'name']
 NEW_CHANNEL_REQUIRED_FIELDS = ['id', 'name']
 
 LOADING_TIMEOUT_PERIOD = 5
+REACT_DELAY_PERIOD = 1
+SCROLL_DELAY_PERIOD = 1
 
 webpageSourceData = None
 jobResults = None
@@ -129,7 +131,7 @@ def test_website():
             return jsonify({'error': 'Failed to initialize WebDriver'}), 500
 
         try:
-            jobs = get_jobs(driver, websiteForm['url'], websiteForm['company'], websiteForm['containerXpath'], websiteForm['titleXpath'], websiteForm['linkXpath'], websiteForm['titleAttribute'], filters, newFilters)
+            jobs = get_jobs(driver, websiteForm['websiteType'], websiteForm['url'], websiteForm['company'], websiteForm['containerXpath'], websiteForm['titleXpath'], websiteForm['linkXpath'], websiteForm['titleAttribute'], filters, newFilters)
         except Exception as e:
             app.logger.error(f"Error while executing get_jobs: {e}")
             driver.quit()
@@ -381,7 +383,7 @@ def run_scraper(website_id):
 
         # Run the website scraper
         try:
-            jobResults = get_jobs(driver, jobWebsiteResult['jobWebsite'][1], jobWebsiteResult['jobWebsite'][3], jobWebsiteResult['jobWebsite'][5], jobWebsiteResult['jobWebsite'][6], jobWebsiteResult['jobWebsite'][7],  jobWebsiteResult['jobWebsite'][8], filters)
+            jobResults = get_jobs(driver, jobWebsiteResult['jobWebsite'][9], jobWebsiteResult['jobWebsite'][1], jobWebsiteResult['jobWebsite'][3], jobWebsiteResult['jobWebsite'][5], jobWebsiteResult['jobWebsite'][6], jobWebsiteResult['jobWebsite'][7],  jobWebsiteResult['jobWebsite'][8], filters)
         except Exception as e:
             app.logger.error(f"Error while executing get_jobs: {e}")
             driver.quit()
@@ -480,7 +482,7 @@ def edit_website(website_id):
         jobWebsiteResult = fetch_job_website(app, connection['cursor'], connection['conn'], website_id)
         if not jobWebsiteResult['success']:
             return jsonify({'error': jobWebsiteResult['error']}), jobWebsiteResult['status']
-        website = {'id': jobWebsiteResult['jobWebsite'][0], 'url': jobWebsiteResult['jobWebsite'][1], 'company' : jobWebsiteResult['jobWebsite'][3], 'channelId': jobWebsiteResult['jobWebsite'][4], 'containerXpath': jobWebsiteResult['jobWebsite'][5], 'titleXpath': jobWebsiteResult['jobWebsite'][6], 'linkXpath': jobWebsiteResult['jobWebsite'][7], 'titleAttribute' : jobWebsiteResult['jobWebsite'][8]}
+        website = {'id': jobWebsiteResult['jobWebsite'][0], 'url': jobWebsiteResult['jobWebsite'][1], 'company' : jobWebsiteResult['jobWebsite'][3], 'channelId': jobWebsiteResult['jobWebsite'][4], 'containerXpath': jobWebsiteResult['jobWebsite'][5], 'titleXpath': jobWebsiteResult['jobWebsite'][6], 'linkXpath': jobWebsiteResult['jobWebsite'][7], 'titleAttribute' : jobWebsiteResult['jobWebsite'][8], 'websiteType' : jobWebsiteResult['jobWebsite'][9]}
 
         # Fetch the filters for the website scraper
         filterResults = fetch_filters_for_job_website(app, connection['cursor'], connection['conn'], website_id)
@@ -694,7 +696,7 @@ def applyFilters(filters, driver):
         app.logger.error(f"Unexpected error in applyFilters: {e}")
         return False
     
-def get_jobs(driver, url, company, containerXpath, titleXpath, linkXpath, titleAttribute, filters, newFilters = None):
+def get_jobs(driver, websiteType, url, company, containerXpath, titleXpath, linkXpath, titleAttribute, filters, newFilters = None):
     try:
         jobs = []
 
@@ -733,15 +735,25 @@ def get_jobs(driver, url, company, containerXpath, titleXpath, linkXpath, titleA
             else:
                 title = f'New {company} Job'
 
+            # If the website is a react style, select the job container and wait for the results to load
+            if (websiteType == 'react'):
+                driver.execute_script("arguments[0].scrollIntoView(true);", option)
+                time.sleep(SCROLL_DELAY_PERIOD)
+                option.click()
+                time.sleep(REACT_DELAY_PERIOD)
+
             # Get the job url, use default value if a link Xpath is not set
             link = None
             if (linkXpath):
                 try:
-                    link = option.find_element(By.XPATH, linkXpath).get_attribute('href')
+                    if (websiteType == 'react'):
+                        link = driver.find_elements(By.XPATH, linkXpath).get_attribute('href')
+                    else:
+                        link = option.find_element(By.XPATH, linkXpath).get_attribute('href')
                 except NoSuchElementException:
                         app.logger.warning(f"Link element not found using XPath: {linkXpath}. Using fallback link.")
             else:
-                link = url
+                link = driver.current_url
 
             jobs.append({'title': title, 'link': link})
 

@@ -8,4 +8,11 @@ def create_table():
     conn.commit()
     conn.close()
 
+def update_table():
+    conn = sqlite3.connect('jobs.db')
+    cursor = conn.cursor()
+    cursor.execute('''ALTER TABLE jobWebsites ADD COLUMN websiteType TEXT DEFAULT 'standard';''')
+    conn.commit()
+    conn.close()
+
 create_table()
