@@ -22,16 +22,17 @@ def scrape_all():
     
     cursor.execute("SELECT * FROM jobWebsites")
     jobWebsites = cursor.fetchall()
-    websites = [{'id': row[0], 'url': row[1], 'company': row[3], 'channel': row[4], 'containerXpath': row[5], 'titleXpath': row[6], 'linkXpath': row[7], 'titleAttribute': row[8], 'filters': processed_filters(fetch_filters_for_job_website(cursor, row[0]))} for row in jobWebsites]
+    websites = [{'id': row[0], 'url': row[1], 'company': row[3], 'channel': row[4], 'containerXpath': row[5], 'titleXpath': row[6], 'linkXpath': row[7], 'titleAttribute': row[8], 'websiteType': row[9], 'filters': processed_filters(fetch_filters_for_job_website(cursor, row[0]))} for row in jobWebsites]
 
     for website in websites:
         options = Options()
         options.add_argument('--headless=new')
+        options.add_argument('--window-size=1920,1080')
         driver = webdriver.Chrome(options=options)
-        jobResults = getJobs(driver, website['url'], website['company'], website['containerXpath'], website['titleXpath'], website['linkXpath'], website['titleAttribute'], website['filters'])
+        jobResults = getJobs(driver, website['websiteType'], website['url'], website['company'], website['containerXpath'], website['titleXpath'], website['linkXpath'], website['titleAttribute'], website['filters'])
         driver.quit()
 
-        cursor.execute(f"SELECT * FROM jobLinks where jobWebsiteId = '{website['id']}' ")
+        cursor.execute(f"SELECT * FROM jobLinks where jobWebsiteId = '{website['id']}' AND created_at >= date('now', '-60 days')")
         previouslySentLinkResults = cursor.fetchall()
         previouslySentLinks = [{'link': row[1], 'title': row[2]} for row in previouslySentLinkResults]
         
@@ -56,38 +57,52 @@ def fetch_filters_for_job_website(cursor, website_id):
 def processed_filters(filterResults):
     return [{'id': filterResult[0], 'filterXpath': filterResult[2], 'selectValue': filterResult[3], 'type': filterResult[4]} for filterResult in filterResults]
     
-def getJobs(driver, url, company, containerXpath, titleXpath, linkXpath, titleAttribute, filters):
-    jobs = []
+def getJobs(driver, websiteType, url, company, containerXpath, titleXpath, linkXpath, titleAttribute, filters):
+    try:
+        jobs = []
 
-    driver.get(url)
-    # Wait for the JavaScript content to load
-    time.sleep(5)
+        driver.get(url)
+        # Wait for the JavaScript content to load
+        time.sleep(5)
 
-    applyFilters(filters, driver)
+        applyFilters(filters, driver)
 
-    jobContainers = driver.find_elements(By.XPATH, containerXpath)
-    for option in jobContainers:
-        title = None
-        if (titleXpath):
-            try:
+        jobContainers = driver.find_elements(By.XPATH, containerXpath)
+        for option in jobContainers:
+
+            # Get the job title, use default value if a titleXpath is not set
+            title = None
+            if (titleXpath):
                 titleElement = option.find_element(By.XPATH, titleXpath)
                 title = titleElement.get_attribute(titleAttribute) if titleAttribute else titleElement.text
-            except NoSuchElementException:
-                print('Title element not found using XPath')
-        else:
-            title = f'New {company} Job'
+            else:
+                title = f'New {company} Job'
 
-        link = None
-        if (linkXpath):
-            try:
-                link = option.find_element(By.XPATH, linkXpath).get_attribute('href')
-            except NoSuchElementException:
-                print("Link element not found using XPath.")
-        else:
-            link = url
-        if link or title:
-            jobs.append({'title': title, 'link': link})
+            # If the website is a react style, select the job container and wait for the results to load
+            if (websiteType == 'react'):
+                driver.execute_script("arguments[0].scrollIntoView(true);", option)
+                time.sleep(1)
+                option.click()
+                time.sleep(1)
 
+            link = None
+            if (linkXpath):
+                try:
+                    if (websiteType == 'react'):
+                        link = driver.find_elements(By.XPATH, linkXpath).get_attribute('href')
+                    else:
+                        link = option.find_element(By.XPATH, linkXpath).get_attribute('href')
+                except NoSuchElementException:
+                    print("Link element not found using XPath.")
+            else:
+                link = driver.current_url
+            if link or title:
+                jobs.append({'title': title, 'link': link})
+
+    except Exception as e:
+        print(f"Unexpected error in get_jobs: {e}")
+        return []
+    
     return jobs
 
 def applyFilters(filters, driver):
@@ -107,6 +122,9 @@ def applyFilters(filters, driver):
     return True
 
 def send_message(conn, cursor, jobs, company, channelId, websiteId):
+    if not jobs:
+        return None
+
     if not channelId or not isinstance(channelId, int):
         return None
     

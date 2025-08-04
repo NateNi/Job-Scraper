@@ -1,7 +1,7 @@
 import sqlite3
 import datetime
 
-INITIALIZE_DB = '''CREATE TABLE IF NOT EXISTS jobWebsites (id INTEGER PRIMARY KEY, url VARCHAR NOT NULL, favicon BLOB, company VARCHAR NOT NULL, channelId INT, containerXpath VARCHAR NOT NULL, titleXpath VARCHAR NOT NULL, linkXpath VARCHAR NOT NULL, titleAttribute VARCHAR, websiteType TEXT DEFAULT 'standard', FOREIGN KEY ("channelId") REFERENCES "channels"("id"));
+INITIALIZE_DB = '''CREATE TABLE IF NOT EXISTS jobWebsites (id INTEGER PRIMARY KEY, url VARCHAR NOT NULL, favicon BLOB, company VARCHAR NOT NULL, channelId INT, containerXpath VARCHAR NOT NULL, titleXpath VARCHAR NOT NULL, linkXpath VARCHAR NOT NULL, titleAttribute VARCHAR, websiteType VARCHAR DEFAULT 'standard', FOREIGN KEY ("channelId") REFERENCES "channels"("id"));
                 CREATE TABLE IF NOT EXISTS jobWebsiteFilters (id INTEGER PRIMARY KEY, jobWebsiteId INT NOT NULL, filterXpath VARCHAR NOT NULL, selectValue VARCHAR, type VARCHAR NOT NULL, FOREIGN KEY ("jobWebsiteId") REFERENCES "jobWebsites"("id")); 
                 CREATE TABLE IF NOT EXISTS jobLinks (id INTEGER PRIMARY KEY, link VARCHAR NOT NULL, title VARCHAR, jobWebsiteId INTEGER NOT NULL, viewed INTEGER, created_at TIMESTAMP, FOREIGN KEY ("jobWebsiteId") REFERENCES "jobWebsites"("id")); 
                 CREATE TABLE IF NOT EXISTS channels (id INTEGER PRIMARY KEY, name VARCHAR NOT NULL); 
@@ -63,6 +63,16 @@ def update_setting(app, cursor, conn, setting):
 def get_job_links(app, cursor, conn, website_id):
     try:
         cursor.execute(f"SELECT * FROM jobLinks where jobWebsiteId = '{website_id}' ")
+        job_links = cursor.fetchall()
+    except sqlite3.Error as e:
+        app.logger.error(f"Error fetching job links: {e}")
+        conn.close()
+        return {'success': False, 'error': 'Failed to fetch job links', 'status': 500}
+    return {'success': True, 'job_links': job_links}
+
+def get_job_links_in_last_sixty_days(app, cursor, conn, website_id):
+    try:
+        cursor.execute(f"SELECT * FROM jobLinks where jobWebsiteId = '{website_id}' AND created_at >= date('now', '-60 days')")
         job_links = cursor.fetchall()
     except sqlite3.Error as e:
         app.logger.error(f"Error fetching job links: {e}")

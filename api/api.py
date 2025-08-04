@@ -86,7 +86,7 @@ def fetch_favicon(favicon_url):
     
 def initialize_webdriver():
     options = Options()
-    options.add_argument('--headless=new')
+    #options.add_argument('--headless=new')
     try:
         driver = webdriver.Chrome(options=options)
         return driver
@@ -392,7 +392,7 @@ def run_scraper(website_id):
         driver.quit()
 
         # Fetch previously sent job links
-        previouslySentLinkResults = get_job_links(app, connection['cursor'], connection['conn'], website_id)
+        previouslySentLinkResults = get_job_links_in_last_sixty_days(app, connection['cursor'], connection['conn'], website_id)
         if not previouslySentLinkResults['success']:
             return jsonify({'error': previouslySentLinkResults['error']}), previouslySentLinkResults['status']
         previouslySentLinks = [{'link': row[1], 'title': row[2]} for row in previouslySentLinkResults['job_links']]
@@ -541,7 +541,7 @@ def update_website(website_id):
         
         # Create the new Job Website Filter records
         for filter in newFilters:
-            jobWebsiteFilterCreateResult = store_job_website_filter(app, connection['cursor'], connection['conn'], filter, jobWebsiteCreateResult['jobWebsiteId'])
+            jobWebsiteFilterCreateResult = store_job_website_filter(app, connection['cursor'], connection['conn'], filter, website_id)
             if not jobWebsiteFilterCreateResult['success']:
                 return jsonify({'error': jobWebsiteFilterCreateResult['error']}), jobWebsiteFilterCreateResult['status']
     
@@ -565,7 +565,7 @@ def update_website(website_id):
                 return jsonify({'error': updateFilterResult['error']}), updateFilterResult['status']
        
          # Fetch previously sent job links
-        previouslySentLinkResults = get_job_links(app, connection['cursor'], connection['conn'], website_id)
+        previouslySentLinkResults = get_job_links_in_last_sixty_days(app, connection['cursor'], connection['conn'], website_id)
         if not previouslySentLinkResults['success']:
             return jsonify({'error': previouslySentLinkResults['error']}), previouslySentLinkResults['status']
         previouslySentLinks = [{'link': row[1], 'title': row[2]} for row in previouslySentLinkResults]
@@ -617,6 +617,10 @@ def delete_website(website_id):
         return jsonify({'error': 'An unexpected error occurred'}), 500
     
 def send_message(jobs, company, channelId, websiteId):
+    # If no jobs are provided, do nothing
+    if not jobs:
+        return None
+
     # If a slack channel is not set, do nothing
     if not channelId or not isinstance(channelId, int):
         return None

@@ -41,6 +41,7 @@ export default function WebsiteTest({
       titleXpath: "",
       titleAttribute: "",
       linkXpath: "",
+      websiteType: "",
     });
     setCurrentWebsiteRecordId("");
     setVisibleComponent("WebsiteIndex");

@@ -47,6 +47,7 @@ export default function WebsiteRecord({
       titleXpath: "",
       titleAttribute: "",
       linkXpath: "",
+      websiteType: "",
     });
     setCurrentWebsiteRecordId("");
   }, [
