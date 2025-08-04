@@ -86,7 +86,7 @@ def fetch_favicon(favicon_url):
     
 def initialize_webdriver():
     options = Options()
-    #options.add_argument('--headless=new')
+    options.add_argument('--headless=new')
     try:
         driver = webdriver.Chrome(options=options)
         return driver
